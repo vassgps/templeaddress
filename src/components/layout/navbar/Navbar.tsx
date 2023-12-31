@@ -60,13 +60,13 @@ const Navbar = () => {
           </li>
           <li>
             <button className="hover:opacity-75" onClick={()=>{router.push("/temple/add")}} >
-              AddTemple
+              Add Temple
             </button>
           </li>
          
           <li>
             <button className="hover:opacity-75" onClick={()=>{router.push("/service/add")}}  >
-              AddService
+              Add Service
             </button>
           </li>
          {token&& <li>

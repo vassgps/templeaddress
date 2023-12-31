@@ -5,18 +5,21 @@ const Content = () => {
     <div className="mt-5 grid lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x grid-cols-1 bg-white p-5">
       <Text
         border={false}
-        title="Peace of Mind"
-        description="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Eos magnam, esse corrupti at ducimus omnis dolorem facere, quod itaque quisquam, ad sint vel tempora? Sint illum quae quam ullam. Accusamus."
+        title="Divine Serenity"
+        description="Discover unparalleled peace amidst the sacred surroundings of ancient temples. Experience tranquility as you immerse yourself in the divine energy that echoes through the hallowed walls.
+        Experience the gentle whispers of devotion, the soothing melodies of rituals, and the serene ambiance that envelopes these sanctuaries."
       />
       <Text
         border={true}
-        title="100% Satisfaction"
-        description="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Eos magnam, esse corrupti at ducimus omnis dolorem facere, quod itaque quisquam, ad sint vel tempora? Sint illum quae quam ullam. Accusamus."
+        title="Spiritual Harmony Assured"
+        description="Delve into a world where spiritual contentment meets unwavering satisfaction. Our temple listings promise a seamless blend of traditions, offering a sanctuary for seekers of spiritual fulfillment.
+        Unravel the secrets of ancient wisdom and find solace in the harmony of rituals, ceremonies, and timeless traditions."
       />
       <Text
         border={true}
-        title="Set For Pastor"
-        description="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Eos magnam, esse corrupti at ducimus omnis dolorem facere, quod itaque quisquam, ad sint vel tempora? Sint illum quae quam ullam. Accusamus."
+        title="Sacred Temples Unveiled"
+        description="Embark on a journey to explore revered temples and sacred sites that echo with centuries of devotion. Unveil the profound history and significance of these architectural marvels, each with its unique story waiting to be discovered.
+        Engage in the spiritual narratives, rituals, and cultural marvels that define these remarkable heritage sites."
       />
     </div>
   );
