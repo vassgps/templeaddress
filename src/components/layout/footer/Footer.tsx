@@ -12,36 +12,35 @@ const Footers = () => {
               <div className="mb-10 w-full">
                 <p className="mb-7 text-base text-body-color dark:text-dark-6">
                   <strong>
-                    Company location :<br />
+                    Our location :<br />
                   </strong>
-                  PM Arcade Melmuri, PO, Alathurpedi, Malappuram, Kerala 676517
+                  VASS SYSTEMS, CyberPark, Kozhikode, Kerala 673017
                   <br />
                 </p>
 
                 <p className="flex items-center text-sm font-medium text-dark ">
                   <FaPhone />
 
-                  <span className="ml-2">+91 9496117171</span>
+                  <span className="ml-2">+91 79076 06844</span>
                 </p>
 
                 <p className="flex items-center mt-4 text-sm font-medium text-dark ">
                   <IoMailSharp />
 
-                  <span className="ml-2">info@gamil.com</span>
+                  <span className="ml-2">info@vasssystems.com</span>
                 </p>
               </div>
             </div>
 
             <LinkGroup header="Information">
-              <NavLink link="/#" label="Puja" />
-              <NavLink link="/#" label="Services" />
-              <NavLink link="/#" label="Temples" />
-              <NavLink link="/#" label="Hoils" />
-              <NavLink link="/#" label="Donation" />
+              <NavLink link="/#" label="Online Booking" />
+              <NavLink link="/#" label="Festivals" />
+              <NavLink link="/#" label="Travel Assistance" />
+              <NavLink link="/#" label="Hotels" />
             </LinkGroup>
             <LinkGroup header="Others">
-              <NavLink link="/#" label="Shop" />
-              <NavLink link="/#" label="Checkout" />
+              <NavLink link="/#" label="About us" />
+              <NavLink link="/#" label="Vision" />
               <NavLink link="/#" label="Donation" />
               <NavLink link="/#" label="Blog" />
             </LinkGroup>
@@ -53,7 +52,7 @@ const Footers = () => {
                 </h4>
                 <div className="mb-6 flex items-center">
                   <a
-                    href="#"
+                    href="https://www.facebook.com/templeaddress" target="_blank"
                     className="mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-stroke text-dark hover:border-texttext-text-color hover:bg-text-color hover:text-white dark:border-dark-3 dark:text-white dark:hover:border-texttext-text-color sm:mr-4 lg:mr-3 xl:mr-4"
                   >
                     <svg
