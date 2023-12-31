@@ -1,0 +1,9 @@
+.TempleForm{
+    background-color:  white;
+    background-image: url("../../../assets/Forms.png");
+    background-size: cover;
+}
+
+.TempleInput{
+    @apply outline-none py-3 pl-4 w-full bg-transparent border mt-2 rounded-lg border-black
+}
