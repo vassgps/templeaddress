@@ -16,7 +16,7 @@ const Card = ({ service, admin,data }: { service: boolean; admin?: boolean,data?
   useEffect(()=>{
     
     if(data.description.length>10){
-      const truncatedText = data.description.slice(0, 200);
+      const truncatedText = data.description.slice(0, 180);
       setDescription(truncatedText)
     }else{
       setDescription(data.description)
@@ -25,7 +25,7 @@ const Card = ({ service, admin,data }: { service: boolean; admin?: boolean,data?
 
   return (
     <>{!itemDelete &&data&& <div style={{ backgroundColor: "rgba(255, 255, 255, 0.77)" }}
-      className="min-h-80 w-full  md:flex grid items-center  gap-3 md:rounded-3xl  rounded-2xl">
+      className="min-h-72 w-full  md:flex grid items-center  gap-3 md:rounded-3xl  rounded-2xl">
       <div className="w-full  md:p-8 pt-0 p-4 pb-5 md:pt-8   pr-2  grid  md:col-start-2 md:col-end-3 col-start-0 col-end-1 order-2 md:order-1">
         <div className="flex justify-between">
           <h1 onClick={()=>router.push(`/service/${data.slug}`)}   className="font-poppins text-base font-semibold leading-6 tracking-normal text-left">
@@ -38,7 +38,7 @@ const Card = ({ service, admin,data }: { service: boolean; admin?: boolean,data?
          }
         </div>
         <p className=" font-poppins md:mt-2 mt-5   text-black text-xs font-normal leading-6 tracking-normal text-left">
-          {description}  {data.description.length>200&&"...." }  
+          {description}  {data.description.length>180&&"...." }  
         </p>
         <div className="flex justify-between mt-5 ">
           {service ? (
@@ -58,7 +58,7 @@ const Card = ({ service, admin,data }: { service: boolean; admin?: boolean,data?
       <div className="relative  h-72 w-full md:w-[470px] flex justify-center  md:pt-0 pt-5 items-center  lg:justify-end  order-1 md:order-2 ">
         <img
         loading="lazy"
-          className="h-48 md:h-72  w-48    md:w-full rounded-3xl object-cover"
+          className="h-48 md:h-72  w-48   md:w-full rounded-3xl object-cover"
           src={service?data.image:data.image}
           alt=""
         />

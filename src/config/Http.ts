@@ -47,8 +47,11 @@ const Http = () => {
 export default Http();
 
 const refreshToken = async () => {
+  
   const instance = axios.create({ baseURL, withCredentials: true });
-  const { data } = await instance.post("user/refresh-token");
+  const refresh=localStorage.getItem("refresh_token")
+  const { data } = await instance.post("user/refresh-token",{refresh});
+  
   if (data && data.access && data.refresh) {
     localStorage.setItem("access_token", data.access);
     localStorage.setItem("refresh_token", data.refresh);

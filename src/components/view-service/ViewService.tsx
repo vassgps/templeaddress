@@ -38,9 +38,9 @@ const ViewService =  ({ id }) => {
           {service ? (
             <div className=" lg:mx-40 mx-5 mt-5 mb-10">
               <div className=" grid  md:grid-cols-3 grid-cols-2  mt-10">
-                <div className="md:col-span-1 col-span-2 md:mx-0 mx-10 flex    ">
+                <div className="md:col-span-1 col-span-2 md:mx-0 mx-10 flex  justify-end   ">
                   <img
-                    className=" rounded-tr-2xl rounded-bl-2xl  h-max "
+                    className=" rounded-tr-2xl rounded-bl-2xl   h-64 "
                     src={service.image}
                     alt="temple History"
                   />
