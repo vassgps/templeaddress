@@ -164,16 +164,10 @@ const ServiceForm = ({
     if (edit || admin) {
       (async () => {
         setLoading(true);
-
         const { data } = await Http.get(`cms/temples/service-details/${id}`);
-
         if (data.success) {
-          setEditedFormData(data.data);
-          console.log(data.data);
-          
-          
+          setEditedFormData(data.data);          
           setSocialMedia(data.data.social_media[0]);
-
           setFormData(data.data);
           setSelectedGalleryImage(data.data?.gallery[0] || {});
           setLoading(false);
@@ -316,7 +310,17 @@ const ServiceForm = ({
             return router.push("/dashboard/services");
           }
         } else {
-          // coming soon
+          setLoading(false);
+          if(response.data){
+
+            const updatedFormError = { ...formError };
+            for (const key in response.data) {
+              if (updatedFormError.hasOwnProperty(`${key}_err`)) {
+                updatedFormError[`${key}_err`] = response.data[key][0];
+              }
+            }
+            setFormError(updatedFormError);
+          }
         }
 
         setLoading(false);
@@ -539,7 +543,7 @@ const ServiceForm = ({
             />
 
             <div>
-              <label htmlFor="account" className="block mb-2">
+              <label htmlFor="account" className="block mb-2 mt-2">
                 Booking Available
               </label>
               <select

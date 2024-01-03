@@ -119,7 +119,14 @@ const TempleForm = () => {
           successToast("Successfully created")
           return router.push("/dashboard/");
         }else{
-
+          setLoading(false);
+          const updatedFormError = { ...formError };
+          for (const key in data.data) {
+            if (updatedFormError.hasOwnProperty(`${key}_err`)) {
+              updatedFormError[`${key}_err`] = data.data[key][0];
+            }
+          }
+          setFormError(updatedFormError);
         }
         
         setLoading(false);
@@ -132,7 +139,7 @@ const TempleForm = () => {
         });
       }
     } else {
-      errorToast("Please enter your details")
+      errorToast("Please enter Temple details")
 
       setFormError({
         ...formError,

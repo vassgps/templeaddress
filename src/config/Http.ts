@@ -3,7 +3,6 @@ const baseURL = `${process.env.NEXT_PUBLIC_PYTHON_BASE_URL}`;
 
 const Http = () => {
   const instance = axios.create({ baseURL, withCredentials: true });
-
   instance.interceptors.request.use(async (request) => {
     const token = localStorage.getItem("access_token");
     if (token) {
@@ -34,7 +33,7 @@ const Http = () => {
             return error?.response || { error: "An error occurred" };
           }
         } else if (status === 500) {
-          window.location.href = "/server-error";
+          // window.location.href = "/server-error";
         }
       }
       return error?.response || { error: "An error occurred" };
@@ -47,7 +46,6 @@ const Http = () => {
 export default Http();
 
 const refreshToken = async () => {
-  
   const instance = axios.create({ baseURL, withCredentials: true });
   const refresh=localStorage.getItem("refresh_token")
   const { data } = await instance.post("user/refresh-token",{refresh});

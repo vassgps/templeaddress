@@ -72,7 +72,7 @@ export const registerValiDate = (formData, setFormError, formError) => {
     valid = false;
   } else {
     const capitalRegex = /[A-Z]/;
-    if (!capitalRegex.test(password)) {
+    if (!capitalRegex.test(formData.password)) {
       password_err = "Password must contain at least one capital letter";
     }
   }
@@ -272,7 +272,7 @@ export const templeValiDate = (formData, setFormError, formError) => {
     mobile_err = "Please enter your mobile number";
     valid = false;
   } else if (!isPhoneNumber(formData?.mobile)) {
-    personal_number_err = "mobile should have 10 digits";
+    mobile_err = "mobile should have 10 digits";
     valid = false;
   }
   if (!formData.description || formData.description.trim() == "") {
@@ -308,7 +308,6 @@ export const withdrawForm = (
   let account_number_err = "";
   let ifsc_code_err = "";
   let upi_code_err = "";
-  let paymentMethod_err = "";
   let valid = true;
 
   if (!formData.name || formData.name.trim() == "") {
@@ -349,6 +348,31 @@ export const withdrawForm = (
   });
   return valid;
 };
+
+export const poojaForm=(formData, setFormError, formError)=>{
+  let valid = true;
+  let name_err=""
+  let description_err=""
+
+  if (!formData.name || formData.name.trim() == "") {
+    name_err = "Please enter your name ";
+    valid = false;
+  }
+
+  if (!formData.description || formData.description.trim() == "") {
+    description_err = "Please enter your description ";
+    valid = false;
+  }
+
+  setFormError({
+    ...formError,
+    name_err,
+    description_err,
+    common_err:""
+  });
+  return valid;
+}
+
 
 export const resetPasswordForm = (formData, setFormError, formError) => {
   let password_err = "";

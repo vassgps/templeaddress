@@ -5,7 +5,7 @@ import { IoMailSharp } from "react-icons/io5";
 const Footers = () => {
   return (
     <>
-      <footer className="flex justify-center z-10 bg-primary text-white pb-10 pt-20 mt-10 dark:bg-dark ">
+      <footer className="flex justify-center z-10 bg-primary text-white  pb-10 pt-20 mt-10 dark:bg-dark ">
         <div className="flex justify-center mx-10 md:mx-40  ">
           <div className="-mx-4  flex-wrap w-full grid grid-cols-1 md:grid-cols-4">
             <div className="w-full px-4 ">
