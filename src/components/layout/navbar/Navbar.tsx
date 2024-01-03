@@ -2,13 +2,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
 import Styles from "./navbar.module.css";
 import close from "../../../assets/close.svg";
 import menu from "../../../assets/menu.svg";
-import { User } from "@/models/interfaces";
 import { successToast } from "@/toasts/toasts";
-import { post } from "@/Api/Api";
 import Http from "@/config/Http";
 
 const Navbar = () => {

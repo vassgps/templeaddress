@@ -2,8 +2,8 @@ import ProtectRouter from '@/components/auth/authenticationRoute/protectRouter'
 import TitleCard from '@/components/ui/titleCard/TitleCard'
 import React from 'react'
 import dynamic from 'next/dynamic'
-const ServiceForm = dynamic(() => import('@/components/serviceForm/ServiceForm'))
 import Navbar from "@/components/layout/navbar/Navbar";
+const ServiceForm = dynamic(() => import('@/components/serviceForm/ServiceForm'))
 const Footer = dynamic(() => import('@/components/layout/footer/Footer'))
 const Content = dynamic(() => import('@/components/content/Content'))
 

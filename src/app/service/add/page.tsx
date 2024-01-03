@@ -1,11 +1,11 @@
 import Content from '@/components/content/Content'
 import dynamic from 'next/dynamic'
-const TitleCard = dynamic(() => import('@/components/ui/titleCard/TitleCard'))
-import Navbar from "@/components/layout/navbar/Navbar";
-const ServiceForm = dynamic(() => import('@/components/serviceForm/ServiceForm'))
-const Footer = dynamic(() => import('@/components/layout/footer/Footer'))
 import templeImage from '@/assets/service-1.jpg';
 import ProtectRouter from '@/components/auth/authenticationRoute/protectRouter';
+import Navbar from "@/components/layout/navbar/Navbar";
+const TitleCard = dynamic(() => import('@/components/ui/titleCard/TitleCard'))
+const ServiceForm = dynamic(() => import('@/components/serviceForm/ServiceForm'))
+const Footer = dynamic(() => import('@/components/layout/footer/Footer'))
 
 const page = () => {
   return (

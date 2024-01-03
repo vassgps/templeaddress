@@ -37,7 +37,6 @@ const About = () => {
         <h2 className=" lg:text-lg text-base text-left leading-33  font-poppins tracking-normal" >Global Heritage Listings</h2>
         <h1 className="flex  md:text-3xl text-2xl leading-33  font-poppins text-black font-semibold leading-53 tracking-normal text-left">JOURNEY INTO  <p className="flex leading-33  font-poppins tracking-normal md:text-3xl text-2xl font-medium leading-53 text-primary ml-2 text-left"> HINDU RITUALS</p></h1>
         <p  className="description w-full  font-medium leading-7 lg:leading-9" >Embark on a journey with TempleAddress.com, where rituals meet everyday life. Engage in our age-old practices that honor gods and goddesses, connecting us to the eternal cycle of existence </p>
-        {/* <h1 className="font-poppins text-base underline  font-semibold  leading-8 tracking-normal text-left">Read More </h1> */}
       </div>
     </div>
   );

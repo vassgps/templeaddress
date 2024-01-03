@@ -1,15 +1,24 @@
-import { auth } from '@/config/auth';
-import { redirect } from 'next/navigation';
-import React, { ReactNode } from "react";
-import {User} from "@/models/interfaces"
+"use client";
+import React, { ReactNode, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-async function AdminProtectRouter({ children }:{children: ReactNode})  {  
-  const session = await auth();   
-  if(!session || !(session?.user as User)||(session?.user as User)?.role!=="adminRole") {
-    return redirect("/admin/login")
-  }
-  if(session && (session?.user as User) && (session?.user as User)?.accessToken && (session?.user as User)?.role==="adminRole")  return <>{children}</>;else return redirect("/admin/login")
+ function AdminProtectRouter({ children }: { children: ReactNode }) {
+  const router = useRouter();
+ const token=typeof window !== "undefined"?localStorage.getItem("access_token"):null
+ const role=typeof window !== "undefined"?localStorage.getItem("role"):null
+ const key=process.env.NEXT_PUBLIC_JWT_ACCESS_SECRET
 
+  useEffect(() => {
+    const checkToken = async () => {
+      if (typeof window !== "undefined") {
+        if (!token ||role!="admin_role_"+key) {
+          await router.push("/admin/login");
+        }
+      }
+    };
+    checkToken();
+  }, [token,role,key]);
+  return <>{children}</>;
 }
 
 export default AdminProtectRouter;

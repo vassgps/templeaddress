@@ -1,7 +1,7 @@
 import React from "react";
 import dynamic from 'next/dynamic'
-const ViewService = dynamic(() => import('@/components/view-service/ViewService'))
 import Navbar from "@/components/layout/navbar/Navbar";
+const ViewService = dynamic(() => import('@/components/view-service/ViewService'))
 const Footer = dynamic(() => import('@/components/layout/footer/Footer'))
 const TitleCard = dynamic(() => import('@/components/ui/titleCard/TitleCard'))
 

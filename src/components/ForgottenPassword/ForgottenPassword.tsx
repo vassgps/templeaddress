@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import Button from "../ui/button/Button";
 import Input from "../ui/input/Input";
 import LoadingButton from "../ui/loadingButton/LoadingButton";
-import { post } from "@/Api/Api";
 import { successToast } from "@/toasts/toasts";
 import { useRouter } from "next/navigation";
 const emailRegex = /^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
