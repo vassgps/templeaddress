@@ -35,7 +35,7 @@ const ViewTemple =({ templeId }) => {
             <div className="  mt-5">
               <div className="flex w-full   justify-center items-center">
                 <Image
-                  className="rounded-2xl h-[60vh]"
+                  className="rounded-2xl  h-96 "
                   src={temple?.image}
                   width={1000}
                   height={10}

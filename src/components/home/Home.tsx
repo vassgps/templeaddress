@@ -1,9 +1,7 @@
-"use client";
+  "use client";
 
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-
 import image from "../../assets/new.png";
 import "../about/about.css";
 import Card from "@/components/ui/Card/Card";
@@ -12,7 +10,6 @@ import { Service, Temple } from "@/models/interfaces";
 import Loader from "@/components/ui/loader/Loader";
 import SelectOption from "./select-option/SelectOption";
 import NotFound from "../not-found/NotFound";
-import { get } from "@/Api/Api";
 import Http from "@/config/Http";
 const Pagination = React.lazy(() => import('@/components/ui/pagination/Pagination'));
 const ViewAll = React.lazy(() => import('./view-All/ViewAll'));

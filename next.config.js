@@ -5,6 +5,7 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["typeorm"],
   },
+  
   images: {
     domains: ["antiquebetabucket.s3.ap-south-1.amazonaws.com","templesaddress.s3.amazonaws.com"],
   },
