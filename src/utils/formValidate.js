@@ -97,6 +97,8 @@ export const serviceValiDate = (formData, setFormError, formError) => {
   let booking_available_err = "";
   let contact_number_err = "";
   let website_err=""
+  let map_url_err=""
+  
   let valid = true;
 
   if (
@@ -107,6 +109,14 @@ export const serviceValiDate = (formData, setFormError, formError) => {
     website_err = " Please enter a valid website link ";
     valid = false;
   }
+
+  if (!formData.map_url || formData.map_url.trim() == "") {
+    map_url_err = "Please Add Google Map Link ";
+    valid = false;
+  }else if(!isValidWebsite(formData.map_url)){
+    map_url_err = "Please enter a valid Google Map Link"
+  }
+
   
   if (!formData.name || formData.name.trim() == "") {
     name_err = "Please enter your name ";
@@ -148,6 +158,7 @@ export const serviceValiDate = (formData, setFormError, formError) => {
     email_err,
     description_err,
     location_err,
+    map_url_err,
     consulting_time_err,
     service_areas_err,
     booking_available_err,
@@ -164,19 +175,19 @@ export const socialmediaValiDate = (formData, setFormError, formError) => {
   let youtube_link_err = "";
   
   
- if (formData.whatsapp_number.trim().length > 0  &&!isPhoneNumber(formData?.whatsapp_number)) {
+ if (formData?.whatsapp_number.trim().length > 0  &&!isPhoneNumber(formData?.whatsapp_number)) {
   whatsapp_number_err = "Phone should have 10 digits";
     valid = false;
   }
-  if (formData.youtube_link &&formData.youtube_link.trim().length > 0 &&!isValidWebsite(formData.youtube_link)) {
+  if (formData?.youtube_link &&formData?.youtube_link.trim().length > 0 &&!isValidWebsite(formData?.youtube_link)) {
     youtube_link_err = " Please enter a valid youtube link ";
     valid = false;
   }
-  if (formData.facebook_link &&formData.facebook_link.trim().length > 0 &&!isValidWebsite(formData.facebook_link)) {
+  if (formData?.facebook_link &&formData?.facebook_link.trim().length > 0 &&!isValidWebsite(formData?.facebook_link)) {
     facebook_link_err = " Please enter a valid facebook link ";
     valid = false;
   }
-  if (formData.instagram_link &&formData.instagram_link.trim().length > 0 &&!isValidWebsite(formData.instagram_link)) {
+  if (formData?.instagram_link &&formData?.instagram_link.trim().length > 0 &&!isValidWebsite(formData?.instagram_link)) {
     instagram_link_err = " Please enter a valid instagram link ";
     valid = false;
   }

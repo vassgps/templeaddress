@@ -13,6 +13,7 @@ import Loader from "../ui/loader/Loader";
 import Input from "../ui/input/Input";
 import { errorToast, successToast } from "@/toasts/toasts";
 import Http from "@/config/Http";
+import CropShow from "@/components/crop-show/Img-Crop";
 
 const ServiceForm = ({
   id,
@@ -26,6 +27,7 @@ const ServiceForm = ({
   const router = useRouter();
   const galleryImageRef = useRef(null);
   const fileInputRef = useRef(null);
+  const [crop, setCrop] = useState(false);
 
   const [submit, setSubmit] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -41,6 +43,7 @@ const ServiceForm = ({
   const [enable_booking, setEnable_booking] = useState(false);
   const [editedFormData, setEditedFormData] = useState<ServiceForm | null>();
   const [service_area, setService_area] = useState("");
+  const [cropImage, setCropImage] = useState<{key:string,image:string}|null>(null);
 
   const [formData, setFormData] = useState<ServiceForm>({
     name: "",
@@ -166,6 +169,8 @@ const ServiceForm = ({
 
         if (data.success) {
           setEditedFormData(data.data);
+          console.log(data.data);
+          
           
           setSocialMedia(data.data.social_media[0]);
 
@@ -193,21 +198,33 @@ const ServiceForm = ({
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFormError({
+      ...formError,
+      image_err: "",
+    }); 
     const fileInput = e.target;
     const file = fileInput.files && fileInput.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setFile(file);
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "text/plain",
+      "image/gif",
+      "image/avif"
+    ];
+    
+    if (file && allowedTypes.includes(file.type)) {
+      setCrop(true)
       const reader = new FileReader();
       reader.onload = (event: ProgressEvent<FileReader>) => {
         if (event.target && event.target.result) {
-          setSelectedImage(event.target.result as string);
+          setCropImage({key:"image",image:event.target.result + ""})
         }
       };
       reader.readAsDataURL(file);
     } else {
       setFormError({
         ...formError,
-        image_err: "Please select a valid image file.",
+        image_err: "Please select a valid file type (JPG, PNG,gif,avif,plain).",
       });
     }
   };
@@ -328,13 +345,16 @@ const ServiceForm = ({
   const handleGalleryFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const fileInput = e.target;
     const file = fileInput.files && fileInput.files[0];
-    if (file && file.type.startsWith("image/")) {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "text/plain",
+      "image/gif",
+      "image/avif"
+    ];
+    if (file && allowedTypes.includes(file.type)) {
       if (replaceIndex !== "") {
-        setGalleryImageFile((prevGalleryImageFile) => {
-          const updatedGalleryImageFile = { ...prevGalleryImageFile };
-          updatedGalleryImageFile[replaceIndex] = file;
-          return updatedGalleryImageFile;
-        });
+        
       } else {
         if (formData?.gallery?.length > 0) {
           newKey = Object.keys(selectedGalleryImage).find(
@@ -358,26 +378,19 @@ const ServiceForm = ({
             newKey = "image_1";
           }
         }
-        setGalleryImageFile((prevGalleryImageFile) => {
-          const updatedGalleryImageFile = { ...prevGalleryImageFile };
-          updatedGalleryImageFile[newKey] = file;
-          return updatedGalleryImageFile;
-        });
+      
       }
 
       const reader = new FileReader();
       reader.onload = (event: ProgressEvent<FileReader>) => {
         if (event.target && event.target.result) {
           if (replaceIndex !== "") {
-            setSelectedGalleryImage((prevSelectedGalleryImage) => ({
-              ...prevSelectedGalleryImage,
-              [replaceIndex]: event.target.result as string,
-            }));
+            setCropImage({
+              key: replaceIndex,
+              image: event.target.result + "",
+            });
           } else {
-            setSelectedGalleryImage((prevSelectedGalleryImage) => ({
-              ...prevSelectedGalleryImage,
-              [newKey]: event.target.result as string,
-            }));
+            setCropImage({ key: newKey, image: event.target.result + "" });
           }
         }
       };
@@ -386,7 +399,7 @@ const ServiceForm = ({
     } else {
       setFormError({
         ...formError,
-        gallery_image_err: "Please select a valid image file.",
+        gallery_image_err: "Please select a valid file type (JPG, PNG,gif,avif,plain).",
       });
     }
   };
@@ -549,6 +562,15 @@ const ServiceForm = ({
               title={"mobile Number"}
               name={"mobile"}
             />
+              <Input
+                  err={formError?.map_url_err}
+                  submit={submit}
+                  handleChange={handleChange}
+                  value={formData?.map_url || ""}
+                  type={"text"}
+                  title={"Google Map Link"}
+                  name={"map_url"}
+                />
             {(edit || admin) && (
               <>
                 <Input
@@ -616,15 +638,7 @@ const ServiceForm = ({
                   title={"Google Map Embed Link"}
                   name={"embedded_url"}
                 />
-                <Input
-                  err={formError?.map_url_err}
-                  submit={submit}
-                  handleChange={handleChange}
-                  value={formData?.map_url || ""}
-                  type={"text"}
-                  title={"Google Map Link"}
-                  name={"map_url"}
-                />
+              
                 <h1 className="md:col-span-2 text-primary font-semibold w-full text-left  text-xl underline">
                   Social media
                 </h1>
@@ -673,7 +687,7 @@ const ServiceForm = ({
                   title={"Youtube Link"}
                   name={"youtube_link"}
                 />
-                {/* <div className="md:col-span-2">
+                <div className="md:col-span-2">
 
                  <div className="flex">
               <Input
@@ -705,7 +719,7 @@ const ServiceForm = ({
                   </div>{" "}
                 </div>
               ))}
-                </div> */}
+                </div>
 
 
                 <h1 className="md:col-span-2  text-primary font-semibold w-full text-left  text-xl underline">
@@ -869,6 +883,8 @@ const ServiceForm = ({
                 />
               </div>
             </div>
+            {(cropImage &&  cropImage?.key!="" && cropImage?.image!="") && <CropShow setSelectedImg={crop? setSelectedImage: setSelectedGalleryImage} setFileImg={crop? setFile:  setGalleryImageFile} cropItem={crop} cropImage={cropImage} setCropImage={setCropImage}/>}
+
           </div>
         </>
       ) : (

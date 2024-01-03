@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, ChangeEvent, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { MdFindReplace } from "react-icons/md";
 import Image from "next/image";
+import { FaCropAlt } from "react-icons/fa";
 import fileImage from "../../../assets/fileImage.png";
 import Styles from "../templeForm/templeForm.module.css";
 import Button from "@/components/ui/button/Button";
@@ -13,15 +14,21 @@ import Loader from "@/components/ui/loader/Loader";
 import { successToast } from "@/toasts/toasts";
 import { IoMdClose } from "react-icons/io";
 import Http from "@/config/Http";
-
+import CropShow from "@/components/crop-show/Img-Crop";
 
 const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
   const fileInputRef = useRef(null);
   const fileQrInputRef = useRef(null);
+  const [crop, setCrop] = useState(false);
 
   const galleryImageRef = useRef(null);
   const router = useRouter();
   const [submit, setSubmit] = useState(false);
+  const [cropImage, setCropImage] = useState<{
+    key: string;
+    image: string;
+  } | null>(null);
+
   const [loading, setLoading] = useState(true);
   // for thumbnail Image
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -57,7 +64,7 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
 
   const [formData, setFormData] = useState<TempleForm>({
     images: [],
-    zipcode:"",
+    zipcode: "",
     time_slot_1: "",
     upi_qr: "",
     email: "",
@@ -89,7 +96,7 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
   });
   const [formError, setFormError] = useState({
     name_err: "",
-    zipcode_err:"",
+    zipcode_err: "",
     whatsapp_number_err: "",
     time_slot_3_err: "",
     time_slot_1_err: "",
@@ -148,7 +155,7 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
   }, [id]);
 
   const addDeity = () => {
-    if(deity&&!formData.deity_list.includes(deity)){
+    if (deity && !formData.deity_list.includes(deity)) {
       setFormError({
         ...formError,
         deity_list_err: "",
@@ -158,7 +165,7 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
         deity_list: [...prevFormData.deity_list, deity],
       }));
       setDeity("");
-    }else{
+    } else {
       setFormError({
         ...formError,
         deity_list_err: " Deity already exists or is empty",
@@ -177,21 +184,26 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
     });
   };
 
-  let newKey = null;
   const handleGalleryFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    let newKey = null;
     const fileInput = e.target;
     const file = fileInput.files && fileInput.files[0];
-    if (file && file.type.startsWith("image/")) {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "text/plain",
+      "image/gif",
+      "image/avif",
+    ];
+    if (file && allowedTypes.includes(file.type)) {
+      setCrop(false);
+
       if (replaceIndex !== "") {
-        setGalleryImageFile((prevGalleryImageFile) => {
-          const updatedGalleryImageFile = { ...prevGalleryImageFile };
-          updatedGalleryImageFile[replaceIndex] = file;
-          return updatedGalleryImageFile;
-        });
       } else {
         if (formData?.gallery?.length > 0) {
           newKey = Object.keys(selectedGalleryImage).find(
-            (key) => selectedGalleryImage[key] === null && key.startsWith("image_")
+            (key) =>
+              selectedGalleryImage[key] === null && key.startsWith("image_")
           );
         } else {
           if (galleryImageFile && Object.keys(galleryImageFile).length > 0) {
@@ -210,26 +222,17 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
             newKey = "image_1";
           }
         }
-        setGalleryImageFile((prevGalleryImageFile) => {
-          const updatedGalleryImageFile = { ...prevGalleryImageFile };
-          updatedGalleryImageFile[newKey] = file;
-          return updatedGalleryImageFile;
-        });
       }
-
       const reader = new FileReader();
       reader.onload = (event: ProgressEvent<FileReader>) => {
         if (event.target && event.target.result) {
           if (replaceIndex !== "") {
-            setSelectedGalleryImage((prevSelectedGalleryImage) => ({
-              ...prevSelectedGalleryImage,
-              [replaceIndex]: event.target.result as string,
-            }));
+            setCropImage({
+              key: replaceIndex,
+              image: event.target.result + "",
+            });
           } else {
-            setSelectedGalleryImage((prevSelectedGalleryImage) => ({
-              ...prevSelectedGalleryImage,
-              [newKey]: event.target.result as string,
-            }));
+            setCropImage({ key: newKey, image: event.target.result + "" });
           }
         }
       };
@@ -238,46 +241,45 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
     } else {
       setFormError({
         ...formError,
-        gallery_image_err: "Please select a valid image file.",
+        gallery_image_err:
+          "Please select a valid file type (JPG, PNG,gif,avif,plain).",
       });
     }
   };
 
   const handleFileChange = (
     e: ChangeEvent<HTMLInputElement>,
-    setFileImg,
-    setSelectedImg,
+    image: string,
     err: string
   ) => {
     setFormError({
       ...formError,
       [err]: "",
     });
+
     const fileInput = e.target;
     const file = fileInput.files && fileInput.files[0];
     const allowedTypes = [
       "image/jpeg",
       "image/png",
-      "application/pdf",
       "text/plain",
-      "application/vnd.ms-excel",
+      "image/gif",
+      "image/avif",
     ];
 
     if (file && allowedTypes.includes(file.type)) {
-      setFileImg(file);
+      setCrop(true);
       const reader = new FileReader();
       reader.onload = (event: ProgressEvent<FileReader>) => {
         if (event.target && event.target.result) {
-          console.log(event.target.result as string);
-
-          setSelectedImg((event.target.result + "") as string);
+          setCropImage({ key: image, image: event.target.result + "" });
         }
       };
       reader.readAsDataURL(file);
     } else {
       setFormError({
         ...formError,
-        [err]: "Please select a valid file type (JPG, PNG, PDF, TXT, XLS).",
+        [err]: "Please select a valid file type (JPG, PNG,gif,avif,plain).",
       });
       fileInput.value = "";
     }
@@ -338,12 +340,10 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
       if (file) {
         newformData.append("image", file);
       }
-      if(formData.deity_list.length>0){
-
+      if (formData.deity_list.length > 0) {
         newformData.append("deity_list", JSON.stringify(formData.deity_list));
-      }else{
+      } else {
         newformData.append("deity_list", JSON.stringify([]));
-
       }
 
       let { data } = await Http.patch(
@@ -352,27 +352,32 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
       );
 
       if (data.success) {
-        if(galleryImageFile){
+        if (galleryImageFile) {
           const galleryFormData = new FormData();
-          
+
           for (const key in galleryImageFile) {
             galleryFormData.append(key, galleryImageFile[key]);
           }
           galleryFormData.append("temple_uuid", formData.uuid);
-          if (formData?.gallery?.length > 0) {                        
-            const uuid=formData?.gallery[0].uuid
-            await Http.put(`cms/temples/temple-gallery/${uuid}/`,galleryFormData)
+          if (formData?.gallery?.length > 0) {
+            const uuid = formData?.gallery[0].uuid;
+            await Http.put(
+              `cms/temples/temple-gallery/${uuid}/`,
+              galleryFormData
+            );
           } else {
-            galleryFormData.append("status", 'true');
-           await Http.post("cms/temples/temple-gallery-details/",galleryFormData);
+            galleryFormData.append("status", "true");
+            await Http.post(
+              "cms/temples/temple-gallery-details/",
+              galleryFormData
+            );
           }
           successToast("Temples edited successfully");
           return router.push("/dashboard/");
-        }else{
+        } else {
           successToast("Temples edited successfully");
-            return router.push("/dashboard/");
+          return router.push("/dashboard/");
         }
-        
       } else {
         setLoading(false);
         const updatedFormError = { ...formError };
@@ -435,7 +440,7 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
                   </span>
                 </label>
               ) : (
-                <div className=" mt-3 w-[40vh] min-h-40 flex justify-center items-center rounded-lg">
+                <div className=" mt-3 w-[40vh]  min-h-40 flex justify-center items-center rounded-lg">
                   <div className=" relative ">
                     <Image
                       width={300}
@@ -468,9 +473,7 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
               )}
 
               <input
-                onChange={(e) =>
-                  handleFileChange(e, setFile, setSelectedImage, "image_err")
-                }
+                onChange={(e) => handleFileChange(e, "image", "image_err")}
                 id="file-upload"
                 type="file"
                 name="fileUpload"
@@ -520,7 +523,7 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
             title={"Landmark"}
             name={"landmark"}
           />
-           <Input
+          <Input
             err={formError.zipcode_err}
             submit={submit}
             handleChange={handleChange}
@@ -718,14 +721,7 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
             <label className="block ">Qr Code</label>
 
             <input
-              onChange={(e) =>
-                handleFileChange(
-                  e,
-                  setQrCodeImageFile,
-                  setSelectedQrCodeImage,
-                  "upi_qr_err"
-                )
-              }
+              onChange={(e) => handleFileChange(e, "upi_qr", "upi_qr_err")}
               className={` ${
                 selectedQrCodeImage || formData.upi_qr ? " hidden " : " block "
               }   outline-none py-2 pl-4 w-full bg-transparent border mt-2 rounded-lg border-black`}
@@ -882,11 +878,13 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
                         className="h-52 w-full"
                         alt="file Image"
                       />
-                      <div
-                        onClick={() => galleryImageClick(key)}
-                        className="absolute top-0 right-0 cursor-pointer bg-white m-1 rounded-lg text-primary"
-                      >
-                        {React.createElement(MdFindReplace, { size: "40" })}
+                      <div className="absolute flex gap-2 top-0 right-0 cursor-pointer  m-1 rounded-lg text-primary">
+                        <span
+                          onClick={() => galleryImageClick(key)}
+                          className="bg-white"
+                        >
+                          {React.createElement(MdFindReplace, { size: "40" })}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -926,6 +924,27 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
               />
             </div>
           </div>
+          {cropImage && cropImage?.key != "" && cropImage?.image != "" && (
+            <CropShow
+              setSelectedImg={
+                crop
+                  ? cropImage.key == "image"
+                    ? setSelectedImage
+                    : setSelectedQrCodeImage
+                  : setSelectedGalleryImage
+              }
+              setFileImg={
+                crop
+                  ? cropImage.key == "image"
+                    ? setFile
+                    : setQrCodeImageFile
+                  : setGalleryImageFile
+              }
+              cropItem={crop}
+              cropImage={cropImage}
+              setCropImage={setCropImage}
+            />
+          )}
         </div>
       ) : (
         <div className="flex justify-center items-center w-full  h-full">
