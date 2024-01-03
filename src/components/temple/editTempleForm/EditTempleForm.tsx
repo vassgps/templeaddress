@@ -3,7 +3,6 @@ import React, { useState, ChangeEvent, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MdFindReplace } from "react-icons/md";
 import Image from "next/image";
-import { FaCropAlt } from "react-icons/fa";
 import fileImage from "../../../assets/fileImage.png";
 import Styles from "../templeForm/templeForm.module.css";
 import Button from "@/components/ui/button/Button";
@@ -11,7 +10,7 @@ import Input from "@/components/ui/input/Input";
 import { socialmediaValiDate, templeValiDate } from "@/utils/formValidate";
 import { TempleForm } from "@/models/interfaces";
 import Loader from "@/components/ui/loader/Loader";
-import { successToast } from "@/toasts/toasts";
+import { errorToast, successToast } from "@/toasts/toasts";
 import { IoMdClose } from "react-icons/io";
 import Http from "@/config/Http";
 import CropShow from "@/components/crop-show/Img-Crop";
@@ -74,7 +73,6 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
     time_slot_3: "",
     image: "",
     name: "",
-    offerings: {},
     embedded_url: "",
     landmark: "",
     location: "",
@@ -389,6 +387,8 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
         setFormError(updatedFormError);
       }
     } else {
+      errorToast("Please enter valid details")
+
       setFormError({
         ...formError,
         common_err: "Please enter valid details",

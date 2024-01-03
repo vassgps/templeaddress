@@ -166,35 +166,6 @@ export interface Temple {
   ifse_code?: string;
   upi_id?: string;
   qr_code?: string;
-  offerings: {
-    offering_1?: {
-      heading: string;
-      description: string;
-    };
-    offering_2?: {
-      heading: string;
-      description: string;
-    };
-    offering_3?: {
-      heading: string;
-      description: string;
-    };
-    offering_4?: {
-      heading: string;
-      description: string;
-    };
-  };
-
-  temple_timing: {
-    general_timings?: {
-      time?: string;
-      program?: string;
-    };
-    lunch_dinner?: {
-      time?: string;
-      program?: string;
-    };
-  };
 }
 
 export interface TempleForm {
@@ -231,27 +202,19 @@ export interface TempleForm {
   ifsc_code?: string;
   upi_id?: string;
   upi_qr?: string;
-  offerings: {
-    offering_1?: {
-      heading: string;
-      description: string;
-    };
-    offering_2?: {
-      heading: string;
-      description: string;
-    };
-    offering_3?: {
-      heading: string;
-      description: string;
-    };
-    offering_4?: {
-      heading: string;
-      description: string;
-    };
-  };
 
   
 }
 
 
 
+
+export interface Pooja{
+  amount:number;
+  name:string
+  booking_available?:boolean;
+  description:string;
+  temple_uuid?:string;
+  uuid?:string;
+  code?:string;
+}

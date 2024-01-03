@@ -2,13 +2,11 @@
 import React from "react";
 import ProtectRouter from "@/components/auth/authenticationRoute/protectRouter";
 import dynamic from 'next/dynamic'
-const Dashboard = dynamic(() => import('@/components/dashboard/Dashboard'))
 import Navbar from "@/components/layout/navbar/Navbar";
+const Dashboard = dynamic(() => import('@/components/dashboard/Dashboard'))
 const Footer = dynamic(() => import('@/components/layout/footer/Footer'))
 
 const page = ({searchParams}) => {
-  
-
   return (
     <ProtectRouter>
     <div className="flex flex-col min-h-screen">

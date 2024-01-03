@@ -2,6 +2,7 @@ import React from "react";
 import { SiGooglemaps } from "react-icons/si";
 import { MdLocationPin } from "react-icons/md";
 import { useRouter } from "next/navigation";
+
 const Location = ({location,googleMapLink}:{googleMapLink:string,location?:string}) => {
   const router=useRouter()
 
@@ -20,7 +21,7 @@ const Location = ({location,googleMapLink}:{googleMapLink:string,location?:strin
 
         <h1
           style={{ color: " rgba(255, 0, 0, 1)" }}
-          className=" font-poppins ml-2 text-xs pt-1 font-semibold tracking-normal "
+          className=" font-poppins ml-1 text-xs pt-1 font-semibold tracking-normal "
           >
           { location}
         </h1>

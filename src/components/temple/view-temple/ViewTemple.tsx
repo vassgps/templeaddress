@@ -20,8 +20,7 @@ const ViewTemple =({ templeId }) => {
 
   useEffect(() => {
     (async () => {      
-      const {data}  = await Http.get(`cms/temples/temple-details/${templeId}`);      
-      
+      const {data}  = await Http.get(`cms/temples/temple-details/${templeId}`);    
       setTemple(data.data)
       setLoading(false)
     })();
@@ -109,7 +108,7 @@ const ViewTemple =({ templeId }) => {
                   </div>
                 </div>
                 <div className="grid grid-cols-1  md:grid-cols-2 gap-8">
-                {temple.pooja_details&&  temple.pooja_details.map((item,index)=>(<Offerings
+                   {temple.pooja_details&&  temple.pooja_details.map((item,index)=>(<Offerings
                     key={index+item.name}
                     title={item.name}
                     description={item.description}

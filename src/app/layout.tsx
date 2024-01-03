@@ -19,10 +19,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      
-        <ToastConfig />
       <Provider>
-        <body className={inter.className}>{children}</body>
+        <body className={inter.className}>
+        <ToastConfig />
+          {children}
+          </body>
       </Provider>
     </html>
   );

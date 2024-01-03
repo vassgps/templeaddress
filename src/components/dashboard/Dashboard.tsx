@@ -8,7 +8,6 @@ import Loader from "../ui/loader/Loader";
 import SelectOption from "../home/select-option/SelectOption";
 import Search from "../ui/search/Search";
 import { Service, Temple } from "@/models/interfaces";
-import { get } from "@/Api/Api";
 import NotFound from "../not-found/NotFound";
 import { useRouter } from "next/navigation";
 import Http from "@/config/Http";
