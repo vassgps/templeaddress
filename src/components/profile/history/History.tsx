@@ -84,8 +84,6 @@ const History = () => {
                             <td className="text-center py-2">{item?.txn_id}</td>
                             <td className="text-center py-2">{item?.txn_data?.txn_date}</td>
                             <td className="text-center py-2">{item?.txn_data?.amount}</td>
-
-
                             <td className="text-center py-2">{item?.txn_id?"success":"pending"}</td>
                           </tr>
                         )}
