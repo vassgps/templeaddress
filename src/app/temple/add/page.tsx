@@ -1,6 +1,5 @@
 import ProtectRouter from '@/components/auth/authenticationRoute/protectRouter'
 import React from 'react'
-
 import dynamic from 'next/dynamic'
 import Navbar from "@/components/layout/navbar/Navbar";
 const TempleForms = dynamic(() => import('@/components/temple/templeForm/TempleForm'))
