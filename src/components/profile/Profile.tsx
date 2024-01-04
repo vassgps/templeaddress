@@ -27,7 +27,6 @@ const Profile = () => {
     (async()=>{
       setLoading(true)
       const {data}  = await Http.get("user/profile/");    
-        
       setUser(data.data);
       setLoading(false)
       getAmount()

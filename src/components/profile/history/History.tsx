@@ -9,9 +9,7 @@ const History = () => {
 
   useEffect(() => {
     (async () => {
-      const { data: datas } = await Http.get("user/wallet/");
-      console.log(datas.data.results);
-      
+      const { data: datas } = await Http.get("user/wallet/");      
       setData(datas.data.results);
     })();
   }, []);

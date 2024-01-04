@@ -27,7 +27,6 @@ const ServicesTable = ({  search }) => {
     (async () => {
       setLoading(true);
       const {data} = await Http.get(`cms/temples/service-details/?search=${search}&limit=6&offset=${pageName === "adminServices" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)  
-      
       setLoading(false);
       setItems(data.data.results);
       setTotalPage(Math.ceil(Number(data?.data?.count)/6));

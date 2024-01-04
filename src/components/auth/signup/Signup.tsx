@@ -68,7 +68,6 @@ const Signup = () => {
           successToast("Registration Successful, Please Login")
           router.push("/login")
       }else{        
-        console.log(data);
         const updatedFormError = { ...formError };
 
         for (const key in data.data.error) {

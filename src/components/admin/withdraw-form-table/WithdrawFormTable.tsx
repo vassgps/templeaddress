@@ -30,9 +30,7 @@ const WithdrawFormTable = ({  search }) => {
       
       const {data} = await Http.get(`/user/wallet/admin?search=${search}&limit=6&offset=${pageName === "adminWithdrawForm"&&Number(newPage)!=0?Number(newPage)-1: 0}`)  
       setLoading(false);      
-      setItems(data.data.results);
-      console.log(data?.data?.count);
-      
+      setItems(data.data.results);      
       setTotalPage(Math.ceil(Number(data?.data?.count)/6));
     })();
   }, [search,newPage]);

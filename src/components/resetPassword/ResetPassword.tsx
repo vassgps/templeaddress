@@ -38,15 +38,11 @@ const ResetPassword = ({ setOpen }) => {
     setSubmit(true);
     if (valid) {
       setLoading(true);
-      const {data}  = await Http.put("user/change-password/",formData);   
-      console.log(data);
-         
+      const {data}  = await Http.put("user/change-password/",formData); 
       if (data.success) {
         successToast("Password Reset successfully");
         setOpen(false);
-      } else {
-        console.log("koko");
-        
+      } else {        
         const updatedFormError = { ...formError };        
         for (const key in data.data.error) {
           if (updatedFormError.hasOwnProperty(`${key}_err`)) {            
