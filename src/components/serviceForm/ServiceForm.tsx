@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { MdFindReplace } from "react-icons/md";
 import { IoMdClose } from "react-icons/io";
-import fileImage from "../../assets/fileImage.png";
 import Styles from "./ServiceForm.module.css";
 import Button from "../ui/button/Button";
 import { serviceValiDate, socialmediaValiDate } from "@/utils/formValidate";
@@ -456,7 +455,7 @@ const ServiceForm = ({
               <label htmlFor="file-upload" id="file-drag">
                 <div className=" border border-black w-72  h-40  flex justify-center items-center rounded-lg">
                   <div>
-                    <Image src={fileImage} className="ml-10" alt="file Image" />
+                    <Image height={50} width={60} src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704346903055'  className="ml-10" alt="file Image" />
                     <h1 className="mt-5">Upload Your image</h1>
                   </div>
                 </div>
