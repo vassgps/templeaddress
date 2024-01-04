@@ -81,7 +81,7 @@ const WithdrawForm = () => {
     if (valid) {
       if(Number(formData.money)<=wallet){
         setLoading(true);
-        const {data} = await Http.post("user/wallet/", {txn_data:{account_number:formData.account_number, payment_method: paymentMethod,name:formData.name,ifsc_code:formData.ifsc_code,upi_code:formData.upi_code},user:user.id,points:Number(formData.money)})
+        const {data} = await Http.post("user/wallet/", {txn_data:{account_number:formData.account_number, payment_method: paymentMethod,name:formData.name,ifsc_code:formData.ifsc_code,upi_code:formData.upi_code,status:false},user:user.id,points:Number(formData.money)})
         if (data.success) {
           successToast("withdraw Form submitted successfully");
           router.push("/profile");

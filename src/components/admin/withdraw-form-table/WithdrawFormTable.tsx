@@ -26,7 +26,7 @@ const WithdrawFormTable = ({  search }) => {
     }
     (async () => {
       setLoading(true);
-      const {data} = await Http.get(`user/wallet/?search=${search}&limit=6&offset=${pageName === "adminWithdrawForm" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)  
+      const {data} = await Http.get(`/user/wallet/admin?search=${search}&limit=6&offset=${pageName === "adminWithdrawForm"&&Number(newPage)!=0?Number(newPage)-1 : 0}`)  
        console.log(data.data);
       setLoading(false);
       setItems(data.data.results);
@@ -61,7 +61,12 @@ const WithdrawFormTable = ({  search }) => {
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100  py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                           Name
                         </th>
-                      
+                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                          Date
+                        </th>
+                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                          Type
+                        </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                           Payment Method
                         </th>
@@ -77,21 +82,14 @@ const WithdrawFormTable = ({  search }) => {
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                         Amount
                         </th>
-                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          coins
-                        </th>
+
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                           status
                         </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                         Tranaction Id
                         </th>
-                        <th className=" text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Phone Number
-                        </th>
-                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Email
-                        </th>
+                        
                       </tr>
                     </thead>
 
@@ -104,7 +102,7 @@ const WithdrawFormTable = ({  search }) => {
                 </div>
             </div>}
 
-            {Math.floor(totalPage) > 0 && (
+            {Math.floor(totalPage) > 1 && (
               <Pagination
               currentPage={page}
               count={totalPage}

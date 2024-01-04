@@ -3,7 +3,7 @@ import { IoMdCloseCircle } from "react-icons/io";
 import { errorToast, successToast } from "@/toasts/toasts";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/ui/input/Input";
-import { put } from "@/Api/Api";
+// import { put } from "@/Api/Api";
 import LoadingButton from "@/components/ui/loadingButton/LoadingButton";
 
 const Forms = ({ setOpen, id, setActive ,setTranactionId}) => {
@@ -29,20 +29,20 @@ const Forms = ({ setOpen, id, setActive ,setTranactionId}) => {
       return setTranaction_id_err("Please enter a valid  Tranaction id");
     } else {
       setTranaction_id_err("");
-      const data = await put(`admin/withdraw-forms-list/status-success`, {
-        form_id: id,
-        tranaction_id,
-      });
+      // const data = await put(`admin/withdraw-forms-list/status-success`, {
+      //   form_id: id,
+      //   tranaction_id,
+      // });
       setLoading(false);
 
-      if (data.status) {
-        setTranactionId(tranaction_id)
-        successToast(`status changed  successfully`);
-        setActive(data.withdrawForm.status);
-        setOpen(false);
-      } else {
-        errorToast(data.message);
-      }
+      // if (data.status) {
+      //   setTranactionId(tranaction_id)
+      //   successToast(`status changed  successfully`);
+      //   setActive(data.withdrawForm.status);
+      //   setOpen(false);
+      // } else {
+      //   errorToast(data.message);
+      // }
     }
   };
   return (

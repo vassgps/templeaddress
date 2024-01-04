@@ -18,7 +18,7 @@ const tr = ({ item }: { item: Temple }) => {
     setActive(item.status);
   }, [item]);
 
-  const handleSubmit = async (value) => {
+  const handleSubmit = async (value:boolean) => {
     setLoading(true);    
     const { data } = await Http.post(`utils/toggle-status/`, {
       slug: "templedata",
