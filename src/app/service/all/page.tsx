@@ -37,7 +37,7 @@ const page = () => {
         }
       }
     
-      const {data} = await Http.get(`cms/temples/service-details/?search=${search}&limit=8&offset=${pageName === "allService" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)         
+      const {data} = await Http.get(`cms/temples/service-details/?filter=public_listing&search=${search}&limit=8&offset=${pageName === "allService" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)         
 
       setServices(data?.data?.results)
       setTotalPage(Number(data?.data?.count)/8)

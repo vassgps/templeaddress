@@ -2,7 +2,6 @@
 import React, { lazy, useEffect, useState } from "react";
 import { Service } from "@/models/interfaces";
 import Button from "@/components/ui/button/Button";
-import { put } from "@/Api/Api";
 import { useRouter } from "next/navigation";
 const ConfirmationPopup = lazy(() => import("@/components/admin/confirmationPopup/confirmationPopup"));
 const LoadingButton = lazy(() => import("@/components/ui/loadingButton/LoadingButton"));

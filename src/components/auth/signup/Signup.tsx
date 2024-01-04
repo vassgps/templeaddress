@@ -2,12 +2,10 @@
 import React, {  useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { FaLock, FaLockOpen } from "react-icons/fa";
 
 import signup_img from "../../../assets/signup_img.jpg";
 import Styles from "./register.module.css";
-import { post } from "@/Api/Api";
 import { useRouter, useSearchParams } from "next/navigation";
 import { registerValiDate } from "@/utils/formValidate";
 import { errorToast, successToast } from "@/toasts/toasts";
