@@ -40,12 +40,7 @@ const Login = ({admin}:{admin?:boolean}) => {
 
   const handleSubmit = async () => {
     setSubmit(true);
-    // const checkValid: boolean = await loginValiDate(
-    //   formData,
-    //   setFormError,
-    //   formError
-    // );
-    const checkValid=true
+    const checkValid: boolean = await loginValiDate(formData,setFormError,formError);
     if (checkValid) {
       setLoading(true);
         const {data} = await Http.post(`user/login/`, formData)        
