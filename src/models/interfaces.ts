@@ -5,10 +5,11 @@ export interface User {
   mobile_number:string;
   first_name:string;
   user_id: string;
+  referred_by: string;
   refresh_token: string;
   coins: number;
   referral_code: string;
-  active: boolean;
+  status: boolean;
   is_delete: boolean;
   created_at: Date;
   updated_at: Date;
@@ -78,10 +79,14 @@ export interface InputProps {
 
 export interface Service {
   map_url:string;
+  slug:string;
   acc_number:string;
   bank_name:string;
   gallery:any;
   social_media:any;
+  status:boolean;
+  mobile:string;
+  uuid:string;
   account_name:string;
   id: number;
   ifsc_code:string;
@@ -120,6 +125,9 @@ export interface Service {
 
 export interface Temple {
   social_media:any
+  telephone:string;
+  email:string;
+  slug:string;
   image:string;
   deity_list: string[];
   gallery:any;
@@ -140,7 +148,7 @@ export interface Temple {
   id: string;
   temple_id:string;
   donations_text:string;
-  active: boolean;
+  status: boolean;
   is_delete: boolean;
   created_at: string;
   updated_at: string;

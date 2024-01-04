@@ -82,7 +82,7 @@ const History = () => {
                             </td>
                             <td className="text-center py-2">{item?.points}</td>
                             <td className="text-center py-2">{item?.txn_id}</td>
-                            <td className="text-center py-2">{item?.status}</td>
+                            <td className="text-center py-2">{item?.txn_data?.status?"success":"pending"}</td>
                           </tr>
                         )}
                       </>

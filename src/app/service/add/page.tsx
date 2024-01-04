@@ -1,6 +1,5 @@
 import Content from '@/components/content/Content'
 import dynamic from 'next/dynamic'
-import templeImage from '@/assets/service-1.jpg';
 import ProtectRouter from '@/components/auth/authenticationRoute/protectRouter';
 import Navbar from "@/components/layout/navbar/Navbar";
 const TitleCard = dynamic(() => import('@/components/ui/titleCard/TitleCard'))
@@ -12,7 +11,7 @@ const page = () => {
     <ProtectRouter>
     <div className='flex flex-col min-h-screen'>
       <Navbar/>
-      <TitleCard image={templeImage} title="Service > Add Service" />
+      <TitleCard image='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704350307989' title="Service > Add Service" />
       <div className=" lg:mx-40 mx-5 mt-5 mb-10">
         <ServiceForm edit={false}/>
         <Content/>

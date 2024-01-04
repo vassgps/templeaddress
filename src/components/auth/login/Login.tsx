@@ -4,8 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaLock, FaLockOpen } from "react-icons/fa";
-
-import login_img from "../../../assets/login_img.jpg";
 import Styles from "./login.module.css";
 import { loginValiDate } from "@/utils/formValidate";
 import { errorToast, successToast } from "@/toasts/toasts";
@@ -42,19 +40,15 @@ const Login = ({admin}:{admin?:boolean}) => {
 
   const handleSubmit = async () => {
     setSubmit(true);
-    const checkValid: boolean = await loginValiDate(
-      formData,
-      setFormError,
-      formError
-    );
+    const checkValid: boolean = await loginValiDate(formData,setFormError,formError);
     if (checkValid) {
       setLoading(true);
         const {data} = await Http.post(`user/login/`, formData)        
         if (data.success) {
           successToast("Logged successfully");
           localStorage.clear();
-          setLoading(false);          
-            if(data.data.scope=== 2||data.data.scope=== 3){              
+          setLoading(false);                    
+            if(data.data.scope== 2||data.data.scope== 3){              
               localStorage.setItem("access_token",data.access_token)
               localStorage.setItem("refresh_token",data.refresh_token)
               localStorage.setItem("role",`admin_role_${process.env.NEXT_PUBLIC_JWT_ACCESS_SECRET}`)
@@ -87,7 +81,7 @@ const Login = ({admin}:{admin?:boolean}) => {
         <div className="relative w-[130vh]  h-[20%] md:h-[100vh] hidden md:block">
           <Image
             alt="Login"
-            src={login_img}
+            src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704349249616'
             width={1000}
             height={1000}
             className={`${Styles["img-box"]} rounded-r-3xl absolute top-0 left-0 w-full h-full object-cover`}

@@ -74,6 +74,7 @@ export const registerValiDate = (formData, setFormError, formError) => {
     const capitalRegex = /[A-Z]/;
     if (!capitalRegex.test(formData.password)) {
       password_err = "Password must contain at least one capital letter";
+    valid = false;
     }
   }
   setFormError({
@@ -375,25 +376,21 @@ export const poojaForm=(formData, setFormError, formError)=>{
 
 
 export const resetPasswordForm = (formData, setFormError, formError) => {
-  let password_err = "";
-  let reset_password_err = "";
+  let old_password_err = "";
+  let new_password_err = "";
   let valid = true;
-  if (
-    formData.reset_password?.trim() == "" ||
-    formData.reset_password.length < 5
-  ) {
-    reset_password_err =
-      "reset password must be longer than or equal to 5 characters";
+  if (formData.new_password?.trim() == "" ||formData.new_password.length < 5) {
+    new_password_err ="reset password must be longer than or equal to 5 characters";
     valid = false;
   }
-  if (formData.password?.trim() == "" || formData.password.length < 5) {
-    password_err = "password must be longer than or equal to 5 characters";
+  if (formData.old_password?.trim() == "" || formData.old_password.length < 5) {
+    old_password_err = "password must be longer than or equal to 5 characters";
     valid = false;
   }
   setFormError({
     ...formError,
-    reset_password_err,
-    password_err,
+    new_password_err,
+    old_password_err,
     common_err: "",
   });
   return valid;

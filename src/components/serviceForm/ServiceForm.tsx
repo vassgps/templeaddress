@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { MdFindReplace } from "react-icons/md";
 import { IoMdClose } from "react-icons/io";
-import fileImage from "../../assets/fileImage.png";
 import Styles from "./ServiceForm.module.css";
 import Button from "../ui/button/Button";
 import { serviceValiDate, socialmediaValiDate } from "@/utils/formValidate";
@@ -240,10 +239,10 @@ const ServiceForm = ({
       social_media_err
     );
     if (valid && valid2) {
-      if (file || edit ) {
+      if (file || edit ||admin) {
         setLoading(true);
         let response;
-        if (edit) {
+        if (edit ||admin) {
           const newformData = new FormData();
           for (const key in formData) {
             if (editedFormData[key] != formData[key] && key!="service_areas") {
@@ -267,6 +266,7 @@ const ServiceForm = ({
           for (const key in formData) {
             newformData.append(key, formData[key]);
           }
+        newformData.append("status", 'true');
           newformData.append("image", file);
           let { data } = await Http.post(
             "cms/temples/service-details/",
@@ -276,8 +276,7 @@ const ServiceForm = ({
         }
         const { success } = response;
         if (success) {
-          if (edit) {
-
+          if (edit||admin) {
             if (galleryImageFile) {
               const galleryFormData = new FormData();
               for (const key in galleryImageFile) {
@@ -300,19 +299,30 @@ const ServiceForm = ({
                 );
               }
               successToast("Service edited successfully");
-              return router.push("/dashboard/services");
+              if(admin){
+                router.push("/admin/services");
+              }else{
+                return router.push("/dashboard/services");
+              }
             } else {
               successToast("Service edited successfully");
-              return router.push("/dashboard/services");
-            }
+              if(admin){
+                router.push("/admin/services");
+              }else{
+                return router.push("/dashboard/services");
+              }            }
           } else {
             successToast("Service added successfully");
-            return router.push("/dashboard/services");
+            if(admin){
+              router.push("/admin/services");
+            }else{
+              return router.push("/dashboard/services");
+            }        
+          
           }
         } else {
           setLoading(false);
           if(response.data){
-
             const updatedFormError = { ...formError };
             for (const key in response.data) {
               if (updatedFormError.hasOwnProperty(`${key}_err`)) {
@@ -323,7 +333,7 @@ const ServiceForm = ({
           }
         }
 
-        setLoading(false);
+       
       } else {
         errorToast("Please select your image");
 
@@ -445,7 +455,7 @@ const ServiceForm = ({
               <label htmlFor="file-upload" id="file-drag">
                 <div className=" border border-black w-72  h-40  flex justify-center items-center rounded-lg">
                   <div>
-                    <Image src={fileImage} className="ml-10" alt="file Image" />
+                    <Image height={50} width={60} src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704346903055'  className="ml-10" alt="file Image" />
                     <h1 className="mt-5">Upload Your image</h1>
                   </div>
                 </div>

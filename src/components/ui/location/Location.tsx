@@ -1,10 +1,8 @@
 import React from "react";
 import { SiGooglemaps } from "react-icons/si";
 import { MdLocationPin } from "react-icons/md";
-import { useRouter } from "next/navigation";
 
 const Location = ({location,googleMapLink}:{googleMapLink:string,location?:string}) => {
-  const router=useRouter()
 
   if (!location && !googleMapLink) {
     return null;
