@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaLock, FaLockOpen } from "react-icons/fa";
 
-import signup_img from "../../../assets/signup_img.jpg";
 import Styles from "./register.module.css";
 import { useRouter, useSearchParams } from "next/navigation";
 import { registerValiDate } from "@/utils/formValidate";
@@ -102,7 +101,7 @@ const Signup = () => {
         className={`${Styles["image-div"]} relative  w-[130vh] h-[20%] md:h-[100vh] hidden md:block`}
       >
         <Image
-          src={signup_img}
+          src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704350565121'
           width={1000}
           alt="image"
           height={1000}

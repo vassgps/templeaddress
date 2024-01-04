@@ -1,7 +1,6 @@
 import Image from "next/image";
 import React from "react";
 
-import templeTiming from "../../../../assets/TempleTiming.jpg";
 import { Temple } from "@/models/interfaces";
 
 const TempleTiming = ({ temple }: { temple: Temple }) => {
@@ -9,7 +8,9 @@ const TempleTiming = ({ temple }: { temple: Temple }) => {
     <div className="flex w-full bg-white mt-10 ">
       <div className="p-2  md:block hidden">
         <Image
-          src={templeTiming}
+          src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704352683024'
+          height={1000}
+          width={1000}
           className="h-[40vh] w-[50vh] rounded-3xl py-3"
           alt="temple History"
         />

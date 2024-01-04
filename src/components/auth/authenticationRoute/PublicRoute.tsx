@@ -9,12 +9,14 @@ import React, { ReactNode, useEffect } from "react";
 
   useEffect(() => {
     const checkToken = async () => {
+      if (typeof window !== "undefined") {
       if (token&& role==="user_role") {
         await router.push("/");
       }
+    }
     };
     checkToken();
-  }, [token,role]);
+  }, [role,token]);
 
   return <>{children}</>;
 }

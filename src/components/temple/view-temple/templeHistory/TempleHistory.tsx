@@ -1,6 +1,5 @@
 import Image from "next/image";
 import React from "react";
-import templeHistory from "../../../../assets/templeHistory.png";
 import "../../../../components/about/about.css";
 import Text from "../text/Text";
 import { IoLogoYoutube } from "react-icons/io";
@@ -69,8 +68,8 @@ const TempleHistory = ({
         )}
       </div>
       </div>
-      <div className="md:col-span-1 h-80 col-span-2 md:mx-0 mx-10 flex  mt-7 ">
-        <Image className="  " src={templeHistory} alt="temple History" />
+      <div className="md:col-span-1 h-80 col-span-2 md:mx-0 mx-10 flex mt-5 md:mt-7 ">
+        <Image width={1000} height={1000} src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704352411213' alt="temple History" />
       </div>
      
     </div>

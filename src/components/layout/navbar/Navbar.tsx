@@ -11,6 +11,8 @@ import Http from "@/config/Http";
 const Navbar = () => {
   const [toggle, setToggle] = useState(false);
   const tokens =typeof window !== "undefined" ?localStorage.getItem("access_token") :null
+  const role =typeof window !== "undefined" ?localStorage.getItem("role") :null
+
 
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
@@ -23,10 +25,10 @@ const Navbar = () => {
       }
     };
     document.addEventListener("mousedown", handler);
-    if (tokens) {
+    if (tokens&& role==="user_role") {
       setToken(tokens);
     }
-  }, [tokens]);
+  }, [tokens,role]);
 
   const signOutHandel = async () => {    
       await Http.post("user/logout/", {});

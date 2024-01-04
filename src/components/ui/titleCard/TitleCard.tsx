@@ -1,7 +1,6 @@
 import React from 'react';
-import templeImage from '../../../assets/temple-img-1.jpg';
 
-const TitleCard = ({ title ,image}: { title: string,image?:any }) => {
+const TitleCard = ({ title ,image}: { title: string,image?:string }) => {
   return (
     <div
       className='flex justify-center opacity-75 items-center h-40 w-full'
@@ -11,7 +10,7 @@ const TitleCard = ({ title ,image}: { title: string,image?:any }) => {
       }}
     >
       <img
-        src={image?image.src:templeImage.src}
+        src={image?image:'https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704352251183'}
         alt={title}
         loading="lazy"
         style={{
