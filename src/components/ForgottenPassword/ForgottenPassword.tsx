@@ -29,7 +29,8 @@ const ForgottenPassword = () => {
 
   const handlecChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    if (e.target.value.length > 5) {
+    const capitalRegex = /[A-Z]/;
+    if (e.target.value.length > 5&& capitalRegex.test(e.target.value)) {
       setFormError((prevFormData) => ({
         ...prevFormData,
         common_err: "",
@@ -37,7 +38,7 @@ const ForgottenPassword = () => {
     } else {
       return setFormError((prevFormData) => ({
         ...prevFormData,
-        common_err: "Please enter a valid password",
+        common_err: "Password must contain at least one capital letter and be at least 5 characters long",
       }));
     }
   };

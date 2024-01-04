@@ -30,6 +30,12 @@ export const loginValiDate = (formData, setFormError, formError) => {
   if (formData.password?.trim() == "" || formData.password.length < 5) {
     password_err = "password must be longer than or equal to 5 characters";
     valid = false;
+  } else {
+    const capitalRegex = /[A-Z]/;
+    if (!capitalRegex.test(formData.password)) {
+      password_err = "Password must contain at least one capital letter";
+      valid = false;
+    }
   }
 
   setFormError({
@@ -74,7 +80,7 @@ export const registerValiDate = (formData, setFormError, formError) => {
     const capitalRegex = /[A-Z]/;
     if (!capitalRegex.test(formData.password)) {
       password_err = "Password must contain at least one capital letter";
-    valid = false;
+      valid = false;
     }
   }
   setFormError({
@@ -97,9 +103,9 @@ export const serviceValiDate = (formData, setFormError, formError) => {
   let service_areas_err = "";
   let booking_available_err = "";
   let contact_number_err = "";
-  let website_err=""
-  let map_url_err=""
-  
+  let website_err = "";
+  let map_url_err = "";
+
   let valid = true;
 
   if (
@@ -114,11 +120,10 @@ export const serviceValiDate = (formData, setFormError, formError) => {
   if (!formData.map_url || formData.map_url.trim() == "") {
     map_url_err = "Please Add Google Map Link ";
     valid = false;
-  }else if(!isValidWebsite(formData.map_url)){
-    map_url_err = "Please enter a valid Google Map Link"
+  } else if (!isValidWebsite(formData.map_url)) {
+    map_url_err = "Please enter a valid Google Map Link";
   }
 
-  
   if (!formData.name || formData.name.trim() == "") {
     name_err = "Please enter your name ";
     valid = false;
@@ -174,25 +179,38 @@ export const socialmediaValiDate = (formData, setFormError, formError) => {
   let instagram_link_err = "";
   let whatsapp_number_err = "";
   let youtube_link_err = "";
-  
-  
- if (formData?.whatsapp_number.trim().length > 0  &&!isPhoneNumber(formData?.whatsapp_number)) {
-  whatsapp_number_err = "Phone should have 10 digits";
+
+  if (
+    formData?.whatsapp_number.trim().length > 0 &&
+    !isPhoneNumber(formData?.whatsapp_number)
+  ) {
+    whatsapp_number_err = "Phone should have 10 digits";
     valid = false;
   }
-  if (formData?.youtube_link &&formData?.youtube_link.trim().length > 0 &&!isValidWebsite(formData?.youtube_link)) {
+  if (
+    formData?.youtube_link &&
+    formData?.youtube_link.trim().length > 0 &&
+    !isValidWebsite(formData?.youtube_link)
+  ) {
     youtube_link_err = " Please enter a valid youtube link ";
     valid = false;
   }
-  if (formData?.facebook_link &&formData?.facebook_link.trim().length > 0 &&!isValidWebsite(formData?.facebook_link)) {
+  if (
+    formData?.facebook_link &&
+    formData?.facebook_link.trim().length > 0 &&
+    !isValidWebsite(formData?.facebook_link)
+  ) {
     facebook_link_err = " Please enter a valid facebook link ";
     valid = false;
   }
-  if (formData?.instagram_link &&formData?.instagram_link.trim().length > 0 &&!isValidWebsite(formData?.instagram_link)) {
+  if (
+    formData?.instagram_link &&
+    formData?.instagram_link.trim().length > 0 &&
+    !isValidWebsite(formData?.instagram_link)
+  ) {
     instagram_link_err = " Please enter a valid instagram link ";
     valid = false;
   }
-  
 
   setFormError({
     ...formError,
@@ -202,7 +220,7 @@ export const socialmediaValiDate = (formData, setFormError, formError) => {
     youtube_link_err,
     common_err: "",
   });
-  return valid
+  return valid;
 };
 
 export const templeValiDate = (formData, setFormError, formError) => {
@@ -321,7 +339,6 @@ export const withdrawForm = (
     valid = false;
   }
 
-
   if (paymentMethod === "Upi" && formData.upi_code.trim() == "") {
     upi_code_err = "Please enter your upi code ";
     valid = false;
@@ -340,7 +357,7 @@ export const withdrawForm = (
   setFormError({
     ...formError,
     name_err,
-    paymentMethod_err:"",
+    paymentMethod_err: "",
     money_err,
     account_number_err,
     ifsc_code_err,
@@ -350,10 +367,10 @@ export const withdrawForm = (
   return valid;
 };
 
-export const poojaForm=(formData, setFormError, formError)=>{
+export const poojaForm = (formData, setFormError, formError) => {
   let valid = true;
-  let name_err=""
-  let description_err=""
+  let name_err = "";
+  let description_err = "";
 
   if (!formData.name || formData.name.trim() == "") {
     name_err = "Please enter your name ";
@@ -369,23 +386,36 @@ export const poojaForm=(formData, setFormError, formError)=>{
     ...formError,
     name_err,
     description_err,
-    common_err:""
+    common_err: "",
   });
   return valid;
-}
-
+};
 
 export const resetPasswordForm = (formData, setFormError, formError) => {
   let old_password_err = "";
   let new_password_err = "";
   let valid = true;
-  if (formData.new_password?.trim() == "" ||formData.new_password.length < 5) {
-    new_password_err ="reset password must be longer than or equal to 5 characters";
+  const capitalRegex = /[A-Z]/;
+
+  if (formData.new_password?.trim() == "" || formData.new_password.length < 5) {
+    new_password_err =
+      "reset password must be longer than or equal to 5 characters";
     valid = false;
+  }else {
+    if (!capitalRegex.test(formData.password)) {
+      old_password_err = "Password must contain at least one capital letter";
+      valid = false;
+    }
   }
+
   if (formData.old_password?.trim() == "" || formData.old_password.length < 5) {
     old_password_err = "password must be longer than or equal to 5 characters";
     valid = false;
+  } else {
+    if (!capitalRegex.test(formData.password)) {
+      old_password_err = "Password must contain at least one capital letter";
+      valid = false;
+    }
   }
   setFormError({
     ...formError,
