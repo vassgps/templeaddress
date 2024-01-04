@@ -4,9 +4,9 @@ import ServiceTr from "./serviceTr/ServiceTr";
 import Pagination from "@/components/ui/pagination/Pagination";
 import { Service } from "@/models/interfaces";
 import Search from "@/components/ui/search/Search";
-import { get } from "@/Api/Api";
 import Loader from "@/components/ui/loader/Loader";
 import NotFound from "@/components/not-found/NotFound";
+import Http from "@/config/Http";
 
 const ServicesTable = ({  search }) => {
   const [loading, setLoading] = useState(true);
@@ -26,10 +26,11 @@ const ServicesTable = ({  search }) => {
     }
     (async () => {
       setLoading(true);
-      const data = await get(`/admin/service-list/${pageName==="adminServices"?newPage:1}?search=${search}`);
+      const {data} = await Http.get(`cms/temples/service-details/?search=${search}&limit=6&offset=${pageName === "adminServices" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)  
+      
       setLoading(false);
-      setItems(data.items);
-      setTotalPage(data.totalCount);
+      setItems(data.data.results);
+      setTotalPage(Math.ceil(Number(data?.data?.count)/6));
     })();
   }, [search,newPage]);
   
@@ -64,7 +65,7 @@ const ServicesTable = ({  search }) => {
                           Name
                         </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Contact Number
+                        Mobile Number
                         </th>
                        
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">

@@ -8,7 +8,7 @@ import LoadingButton from "@/components/ui/loadingButton/LoadingButton";
 import { successToast } from "@/toasts/toasts";
 
 const Tr = ({ user }: { user: User }) => {
-  const [active, setActive] = useState(user.active);
+  const [active, setActive] = useState(user.status);
   const [loading, setLoading] = useState(false);
   const [blockPopup, setBlockPopup] = useState(false);
   const handleSubmit = async () => {
@@ -25,42 +25,43 @@ const Tr = ({ user }: { user: User }) => {
     <>
       <tr>
         <th className="text-center border-t-0  px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4  text-blueGray-700 ">
-          {user.name}
+          {user.first_name}
         </th>
         <td className="text-center border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 ">
           {user?.email}
         </td>
         <td className="text-center border-t-0 px-6 align-center border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-          {user.phone_number}
+          {user.mobile_number}
         </td>
         <td className="text-center border-t-0 px-6 align-center border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-          {user.referrer?.email}
+          {user.referred_by}
         </td>
         <td className="text-center border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-          {user.coins}
+          {user.wallet_balance}
         </td>
         <td className="text-center border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
           {active ? (
+            <>
+            {!loading ? (
+              <Button
+                onClick={handleSubmit}
+                name="unblock"
+                bg={true}
+                bgColor={"bg-block"}
+                tick={false}
+              />
+            ) : (
+              <LoadingButton/>
+            )}
+          </>
+          ) : (
+            
             <Button
               onClick={() => setBlockPopup(true)}
               name="Block"
               bg={true}
               tick={false}
             />
-          ) : (
-            <>
-              {!loading ? (
-                <Button
-                  onClick={handleSubmit}
-                  name="unblock"
-                  bg={true}
-                  bgColor={"bg-block"}
-                  tick={false}
-                />
-              ) : (
-                <LoadingButton/>
-              )}
-            </>
           )}
         </td>
       </tr>

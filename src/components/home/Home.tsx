@@ -37,12 +37,12 @@ const Home = ({ service, search }: { search?: string; service: boolean }) => {
       setLoading(true);
 
       if (service) {
-        const {data} = await Http.get(`cms/temples/service-details/?search=${search}&limit=4&offset=${pageName === "service" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)         
+        const {data} = await Http.get(`cms/temples/service-details/?filter=public_listing&search=${search}&limit=4&offset=${pageName === "service" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)         
         setItems(data?.data?.results);
         setTotalPage(Math.ceil(Number(data?.data?.count)/4));
         setLoading(false);
       } else {
-        const {data} = await Http.get(`cms/temples/temple-details/?search=${search}&limit=4&offset=${pageName === "temple" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`);        
+        const {data} = await Http.get(`cms/temples/temple-details/?filter=public_listing&search=${search}&limit=4&offset=${pageName === "temple" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`);        
         setItems(data?.data?.results);
         setTotalPage(Math.ceil(Number(data?.data?.count)/4));
         setLoading(false);

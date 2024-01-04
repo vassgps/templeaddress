@@ -4,9 +4,9 @@ import Pagination from "@/components/ui/pagination/Pagination";
 import Search from "@/components/ui/search/Search";
 import React, { useEffect, useState } from "react";
 import WithdrawTr from "./withdrawTr/WithdrawTr";
-import { get } from "@/Api/Api";
 import Loader from "@/components/ui/loader/Loader";
 import NotFound from "@/components/not-found/NotFound";
+import Http from "@/config/Http";
 
 const WithdrawFormTable = ({  search }) => {
   const [loading, setLoading] = useState(true);
@@ -26,10 +26,11 @@ const WithdrawFormTable = ({  search }) => {
     }
     (async () => {
       setLoading(true);
-      const data = await get(`/admin/withdraw-forms-list/${pageName==="adminWithdrawForm"?newPage:1}?search=${search}`);
+      const {data} = await Http.get(`user/wallet/?search=${search}&limit=6&offset=${pageName === "adminWithdrawForm" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)  
+       console.log(data.data);
       setLoading(false);
-      setItems(data.items);
-      setTotalPage(data.totalCount);
+      setItems(data.data.results);
+      setTotalPage(Math.ceil(Number(data?.data?.count)/6));
     })();
   }, [search,newPage]);
 

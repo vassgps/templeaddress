@@ -240,10 +240,10 @@ const ServiceForm = ({
       social_media_err
     );
     if (valid && valid2) {
-      if (file || edit ) {
+      if (file || edit ||admin) {
         setLoading(true);
         let response;
-        if (edit) {
+        if (edit ||admin) {
           const newformData = new FormData();
           for (const key in formData) {
             if (editedFormData[key] != formData[key] && key!="service_areas") {
@@ -267,6 +267,7 @@ const ServiceForm = ({
           for (const key in formData) {
             newformData.append(key, formData[key]);
           }
+        newformData.append("status", 'true');
           newformData.append("image", file);
           let { data } = await Http.post(
             "cms/temples/service-details/",
@@ -276,8 +277,7 @@ const ServiceForm = ({
         }
         const { success } = response;
         if (success) {
-          if (edit) {
-
+          if (edit||admin) {
             if (galleryImageFile) {
               const galleryFormData = new FormData();
               for (const key in galleryImageFile) {
@@ -300,19 +300,30 @@ const ServiceForm = ({
                 );
               }
               successToast("Service edited successfully");
-              return router.push("/dashboard/services");
+              if(admin){
+                router.push("/admin/services");
+              }else{
+                return router.push("/dashboard/services");
+              }
             } else {
               successToast("Service edited successfully");
-              return router.push("/dashboard/services");
-            }
+              if(admin){
+                router.push("/admin/services");
+              }else{
+                return router.push("/dashboard/services");
+              }            }
           } else {
             successToast("Service added successfully");
-            return router.push("/dashboard/services");
+            if(admin){
+              router.push("/admin/services");
+            }else{
+              return router.push("/dashboard/services");
+            }        
+          
           }
         } else {
           setLoading(false);
           if(response.data){
-
             const updatedFormError = { ...formError };
             for (const key in response.data) {
               if (updatedFormError.hasOwnProperty(`${key}_err`)) {
@@ -323,7 +334,7 @@ const ServiceForm = ({
           }
         }
 
-        setLoading(false);
+       
       } else {
         errorToast("Please select your image");
 

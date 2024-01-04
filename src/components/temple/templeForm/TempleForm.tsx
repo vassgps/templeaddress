@@ -112,6 +112,9 @@ const TempleForm = () => {
           newformData.append(key, formData[key]);
         }
         newformData.append("image", file);
+        newformData.append("status", 'true');
+
+         
         let {data} = await Http.post("cms/temples/temple-details/",newformData);
         const {  success } = data;
 
@@ -126,6 +129,7 @@ const TempleForm = () => {
               updatedFormError[`${key}_err`] = data.data[key][0];
             }
           }
+          
           setFormError(updatedFormError);
         }
         

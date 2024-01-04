@@ -42,19 +42,20 @@ const Login = ({admin}:{admin?:boolean}) => {
 
   const handleSubmit = async () => {
     setSubmit(true);
-    const checkValid: boolean = await loginValiDate(
-      formData,
-      setFormError,
-      formError
-    );
+    // const checkValid: boolean = await loginValiDate(
+    //   formData,
+    //   setFormError,
+    //   formError
+    // );
+    const checkValid=true
     if (checkValid) {
       setLoading(true);
         const {data} = await Http.post(`user/login/`, formData)        
         if (data.success) {
           successToast("Logged successfully");
           localStorage.clear();
-          setLoading(false);          
-            if(data.data.scope=== 2||data.data.scope=== 3){              
+          setLoading(false);                    
+            if(data.data.scope== 2||data.data.scope== 3){              
               localStorage.setItem("access_token",data.access_token)
               localStorage.setItem("refresh_token",data.refresh_token)
               localStorage.setItem("role",`admin_role_${process.env.NEXT_PUBLIC_JWT_ACCESS_SECRET}`)

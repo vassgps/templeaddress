@@ -43,7 +43,6 @@ const Dashboard = ({
     }
     (async () => {
       setLoading(true);
-
       if (service) {
         const {data}=await Http.get(`cms/temples/service-details/?filter=my_listing&search=${search}&limit=4&offset=${pageName === "dashboardService" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`);
           setItems(data?.data?.results);

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 const ConfirmationPopup = lazy(() => import("@/components/admin/confirmationPopup/confirmationPopup"));
 const LoadingButton = lazy(() => import("@/components/ui/loadingButton/LoadingButton"));
 import { successToast } from "@/toasts/toasts";
+import Http from "@/config/Http";
 
 const ServiceTr = ({ item }: { item: Service }) => {
   const router=useRouter()
@@ -15,15 +16,18 @@ const ServiceTr = ({ item }: { item: Service }) => {
   const [blockPopup, setBlockPopup] = useState(false);
   
   useEffect(()=>{
-     setActive(item.active)
+     setActive(item.status)
   },[])
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (value) => {
     setLoading(true);
-    const data = await put(`admin/service-list/active`, { id: item.service_id });
-    if (data&&data.status) {
+    const { data } = await Http.post(`utils/toggle-status/`, {
+      slug: "servicedata",
+      obj_id: item.uuid,
+      status: value
+    });    
+    if (data&&data.success) {
       successToast(`${active?"Blocked":" UnBlocked"} successfully`);
-
       setActive(!active);
       setBlockPopup(false);
     }
@@ -33,13 +37,13 @@ const ServiceTr = ({ item }: { item: Service }) => {
       <>
     <tr>
       <th className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-center text-blueGray-700">
-        {item?.user_id?.email}
+        {item?.email}
       </th>
       <td className="text-center border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
         {item.name}
       </td>
       <td className="text-center border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-        {item.contact_number}
+        {item.mobile}
       </td>
       
       <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-center">
@@ -48,7 +52,7 @@ const ServiceTr = ({ item }: { item: Service }) => {
      
       <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-center">
         <Button
-          onClick={() => router.push(`/admin/services/edit/${item.service_id}`)}
+          onClick={() => router.push(`/admin/services/edit/${item.uuid}`)}
           name="Edit"
           bg={true}
           tick={false}
@@ -62,34 +66,35 @@ const ServiceTr = ({ item }: { item: Service }) => {
             bg={true}
             tick={false}
           />
+         
         ) : (
           <>
-            {!loading ? (
-              <Button
-                onClick={handleSubmit}
-                name="unblock"
-                bg={true}
-                bgColor={"bg-block"}
-                tick={false}
-              />
-            ) : (
-              <LoadingButton/>
-            )}
-          </>
+          {!loading ? (
+            <Button
+              onClick={()=>handleSubmit(true)}
+              name="unblock"
+              bg={true}
+              bgColor={"bg-block"}
+              tick={false}
+            />
+          ) : (
+            <LoadingButton/>
+          )}
+        </>
         )}
       </td>
       <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 ">
      
         <a
           target="_blank" 
-            href={` ${process.env.NEXT_PUBLIC_BASE_URL}service/${item.service_id}`}
+            href={` ${process.env.NEXT_PUBLIC_BASE_URL}service/${item.slug}`}
             className="bg-primary flex h-12    rounded-lg py-3 px-5 mr-5 text-sm md:text-base   hover:opacity-75 text-white font-semibold"
           >
             view
           </a>
       </td>
     </tr>
-    {blockPopup &&<ConfirmationPopup message="Are you sure you want to Block this service" setBlockPopup={setBlockPopup} loading={loading} handleSubmit={handleSubmit}/>}
+    {blockPopup &&<ConfirmationPopup message="Are you sure you want to Block this service" setBlockPopup={setBlockPopup} loading={loading} handleSubmit={()=>handleSubmit(false)}/>}
     </>
   );
 };

@@ -352,7 +352,6 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
       if (data.success) {
         if (galleryImageFile) {
           const galleryFormData = new FormData();
-
           for (const key in galleryImageFile) {
             galleryFormData.append(key, galleryImageFile[key]);
           }
@@ -371,10 +370,18 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
             );
           }
           successToast("Temples edited successfully");
-          return router.push("/dashboard/");
+          if(admin){
+            return router.push("/admin/temples");
+          }else{
+            return router.push("/dashboard/");
+          }
         } else {
           successToast("Temples edited successfully");
-          return router.push("/dashboard/");
+          if(admin){
+            return router.push("/admin/temples");
+          }else{
+            return router.push("/dashboard/");
+          }
         }
       } else {
         setLoading(false);
