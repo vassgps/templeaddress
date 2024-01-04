@@ -9,12 +9,13 @@ import Http from "@/config/Http";
 
 const Tr = ({ user }: { user: User }) => {
   const [active, setActive] = useState(user.status);
+  
   const [loading, setLoading] = useState(false);
   const [blockPopup, setBlockPopup] = useState(false);
   const handleSubmit = async (value:boolean) => {
-    setLoading(true);
+    setLoading(true);    
     const { data } = await Http.post(`utils/toggle-status/`, {
-      slug: "Customuser",
+      slug: "customuser",
       obj_id: user.uuid,
       status: value
     }); 
@@ -68,6 +69,9 @@ const Tr = ({ user }: { user: User }) => {
             )}
           </>
           )}
+        </td>
+        <td className="text-center border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 ">
+          {user?.username}
         </td>
       </tr>
       {blockPopup && (
