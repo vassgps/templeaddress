@@ -23,9 +23,8 @@ function ProtectRouter({ children }: { children: ReactNode }) {
     };
     checkToken();
   }, [role,token]);
-  if (token && role === "user_role") {
     return <>{children}</>;
-  } 
+  
 }
 
 export default ProtectRouter;

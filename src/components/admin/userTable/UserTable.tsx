@@ -29,9 +29,8 @@ const UserTable =  ({ search}) => {
       setLoading(true);
       const {data} = await Http.get(`user/view-users/?search=${search}&limit=6&offset=${pageName === "adminUsers" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)         
       setLoading(false);
-      setItems(data.data.results);
+      setItems(data.data.results);      
       setTotalPage(Math.ceil(Number(data?.data?.count)/6));
-
     })();
   
   }, [search,newPage]);

@@ -36,7 +36,7 @@ const AddPooja = ({ id, edit }: { id: string; edit?: boolean }) => {
         const { data } = await Http.get(`cms/temples/pooja-details/${id}`);
 
         if (data.success) {
-            setEnable_booking(data.data.booking_available)
+          setEnable_booking(data.data.booking_available)
           setEditedFormData(data.data);
           setFormData(data.data);
         } else {

@@ -26,10 +26,11 @@ const WithdrawFormTable = ({  search }) => {
     }
     (async () => {
       setLoading(true);
-      const {data} = await Http.get(`/user/wallet/admin?search=${search}&limit=6&offset=${pageName === "adminWithdrawForm"&&Number(newPage)!=0?Number(newPage)-1 : 0}`)  
-       console.log(data.data);
-      setLoading(false);
-      setItems(data.data.results);
+      console.log(pageName === "adminWithdrawForm"&&Number(newPage)!=0?Number(newPage)-1 : 0);
+      
+      const {data} = await Http.get(`/user/wallet/admin?search=${search}&limit=6&offset=${pageName === "adminWithdrawForm"&&Number(newPage)!=0?Number(newPage)-1: 0}`)  
+      setLoading(false);      
+      setItems(data.data.results);      
       setTotalPage(Math.ceil(Number(data?.data?.count)/6));
     })();
   }, [search,newPage]);
@@ -57,12 +58,9 @@ const WithdrawFormTable = ({  search }) => {
                   <table className="items-center bg-transparent w-full border-collapse ">
                     <thead>
                       <tr>
-                       
-                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100  py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Name
-                        </th>
+                     
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Date
+                          Date And Time
                         </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                           Type
@@ -71,16 +69,17 @@ const WithdrawFormTable = ({  search }) => {
                           Payment Method
                         </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Upi Code
+                          Upi Code/Account Number
                         </th>
-                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Account Number
-                        </th>
+                       
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                           Ifsc code
                         </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                         Amount
+                        </th>
+                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                        Paid Amount
                         </th>
 
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
@@ -89,13 +88,21 @@ const WithdrawFormTable = ({  search }) => {
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                         Tranaction Id
                         </th>
-                        
+                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                        Paid Date
+                        </th>
+                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100  py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                          Name
+                        </th>
+                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                        Paid Bank
+                        </th>
                       </tr>
                     </thead>
 
                     <tbody>
                       {items.map((item) => (
-                        <WithdrawTr key={item.id} item={item} />
+                        <WithdrawTr key={item.id} data={item} />
                       ))}
                     </tbody>
                   </table>
