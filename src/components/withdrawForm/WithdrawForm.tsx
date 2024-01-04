@@ -39,9 +39,7 @@ const WithdrawForm = () => {
     (async () => {
       setLoading(true);
       const {data}  = await Http.get("user/profile/");
-      const {data: dashboardData}  = await Http.get("cms/temples/dashboard/");
-      console.log(data);
-          
+      const {data: dashboardData}  = await Http.get("cms/temples/dashboard/");          
       if (data.success) {
         if (Number(data.data.wallet_balance) * Number(dashboardData.data.coin_value) > 0) {
           setUser(data.data);

@@ -26,14 +26,12 @@ const Profile = () => {
   useEffect(() => {
     (async()=>{
       setLoading(true)
-      const {data}  = await Http.get("user/profile/");      
+      const {data}  = await Http.get("user/profile/");    
+        
       setUser(data.data);
       setLoading(false)
       getAmount()
-      
     })()
-    
-    
   }, []);
   async function getAmount(){
     const {data}  = await Http.get("cms/temples/dashboard/");    
@@ -121,7 +119,7 @@ const Profile = () => {
                       tick={false}
                       onClick={() => router.push("/withdraw-form")}
                       bg={true}
-                      name="withdraw money"
+                      name="withdraw Amount"
                     />
                   )}
                   {
