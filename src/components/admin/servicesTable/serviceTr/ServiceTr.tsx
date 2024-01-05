@@ -86,7 +86,7 @@ const ServiceTr = ({ item }: { item: Service }) => {
      
         <a
           target="_blank" 
-            href={` ${process.env.NEXT_PUBLIC_BASE_URL}service/${item.slug}`}
+            href={`/service/${item.slug}`}
             className="bg-primary flex h-12    rounded-lg py-3 px-5 mr-5 text-sm md:text-base   hover:opacity-75 text-white font-semibold"
           >
             view
