@@ -876,7 +876,7 @@ const ServiceForm = ({
                     name="fileUpload"
                     accept="image/*"
                     className={`${
-                      Object.keys(selectedGalleryImage)
+                      selectedGalleryImage&& Object.keys(selectedGalleryImage)
                       .filter(
                         (key) =>key.startsWith("image_") &&selectedGalleryImage[key] !== null).length== 8 &&
                       "hidden"
