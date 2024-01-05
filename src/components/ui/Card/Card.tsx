@@ -42,9 +42,9 @@ const Card = ({
           className="min-h-72 w-full  md:flex grid items-center  gap-3 md:rounded-3xl  rounded-2xl"
         >
           <div className="w-full  md:p-8 pt-0 p-4 pb-5 md:pt-8   pr-2  grid  md:col-start-2 md:col-end-3 col-start-0 col-end-1 order-2 md:order-1">
-            <div className="flex justify-between">
+            <div className="flex justify-between cursor-pointer">
               <h1
-                onClick={() => router.push(`/service/${data.slug}`)}
+                onClick={() => router.push( `${service ? `/service/${data.slug}` : `/temple/${data.slug}`}`)}
                 className="font-poppins text-base font-semibold leading-6 tracking-normal text-left"
               >
                 {data.name}
