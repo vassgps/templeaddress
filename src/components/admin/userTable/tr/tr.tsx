@@ -9,6 +9,7 @@ import Http from "@/config/Http";
 
 const Tr = ({ user }: { user: User }) => {
   const [active, setActive] = useState(user.status);
+  console.log(user);
   
   const [loading, setLoading] = useState(false);
   const [blockPopup, setBlockPopup] = useState(false);
