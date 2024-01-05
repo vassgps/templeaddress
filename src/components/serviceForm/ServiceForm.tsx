@@ -357,6 +357,10 @@ const ServiceForm = ({
   };
   let newKey = null;
   const handleGalleryFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFormError({
+      ...formError,
+      gallery_image_err: "",
+    });
     const fileInput = e.target;
     const file = fileInput.files && fileInput.files[0];
     const allowedTypes = [
@@ -871,7 +875,12 @@ const ServiceForm = ({
                     type="file"
                     name="fileUpload"
                     accept="image/*"
-                    className={` outline-none py-2 pl-4 w-full bg-transparent border mt-2 rounded-lg border-black`}
+                    className={`${
+                      Object.keys(selectedGalleryImage)
+                      .filter(
+                        (key) =>key.startsWith("image_") &&selectedGalleryImage[key] !== null).length== 8 &&
+                      "hidden"
+                    }  outline-none py-2 pl-4 w-full bg-transparent border mt-2 rounded-lg border-black`}
                   />
 
                   <span className="text-[red] text-[13px]">
