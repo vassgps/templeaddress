@@ -3,8 +3,8 @@ import React, {  useState } from "react";
 import { IoMdCloseCircle } from "react-icons/io";
 import Button from "../ui/button/Button";
 import { FaLock, FaLockOpen } from "react-icons/fa";
-import { put } from "@/Api/Api";
 import { errorToast, successToast } from "@/toasts/toasts";
+import Http from "@/config/Http";
 
 const ResetPassword = ({ setOpen }) => {
   const [submit, setSubmit] = useState(false);
@@ -13,12 +13,12 @@ const ResetPassword = ({ setOpen }) => {
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    reset_password: "",
-    password: "",
+    new_password: "",
+    old_password: "",
   });
   const [formError, setFormError] = useState({
-    reset_password_err: "",
-    password_err: "",
+    new_password_err: "",
+    old_password_err: "",
     common_err: "",
   });
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,23 +38,23 @@ const ResetPassword = ({ setOpen }) => {
     setSubmit(true);
     if (valid) {
       setLoading(true);
-      const data = await put("auth/resetPassword", formData);
-      if (data.status) {
+      const {data}  = await Http.put("user/change-password/",formData); 
+      if (data.success) {
         successToast("Password Reset successfully");
-
         setOpen(false);
-      } else {
-        errorToast(data.message)
-
-        setFormError({
-          ...formError,
-          common_err: data.message,
-        });
+      } else {        
+        const updatedFormError = { ...formError };        
+        for (const key in data.data.error) {
+          if (updatedFormError.hasOwnProperty(`${key}_err`)) {            
+            updatedFormError[`${key}_err`] = data.data.error[key];
+          }
+        }
+        updatedFormError.common_err="Check your password, something is wrong. Please try again. "
+        setFormError(updatedFormError)
       }
       setLoading(false);
     } else {
       errorToast("Please enter your details")
-
       setFormError({
         ...formError,
         common_err: "Please enter your details",
@@ -64,7 +64,7 @@ const ResetPassword = ({ setOpen }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black opacity-50"></div>
-      <div className="absolute md:w-1/3 border-2 border-primary rounded-xl p-5  overflow-y-auto overflow-x-hidden  top-60 bg-white  z-50 justify-center items-center w-full">
+      <div className="absolute md:w-1/3 border-2 border-primary rounded-xl p-5  overflow-y-auto overflow-x-hidden   bg-white  z-50 justify-center items-center w-full">
         <div className="flex text-primary cursor-pointer w-full justify-end">
           <span onClick={() => setOpen(false)}>
             {React.createElement(IoMdCloseCircle, { size: "30" })}
@@ -77,10 +77,10 @@ const ResetPassword = ({ setOpen }) => {
           <div className="flex border mt-2 rounded-lg border-black">
             <input
               type={`${!show_password ? "password" : "text"}`}
-              name="password"
+              name="old_password"
               id="password"
               onChange={handleChange}
-              value={formData.password}
+              value={formData.old_password}
               className={`outline-none py-3 pl-4 w-full  bg-transparent`}
             />
 
@@ -97,22 +97,22 @@ const ResetPassword = ({ setOpen }) => {
           </div>
           {submit && (
             <span className="text-[red] text-[13px]">
-              {formError.password_err}
+              {formError.old_password_err}
             </span>
           )}
         </div>
 
         <div className="w-full mt-5">
           <label className="block " htmlFor={"name"}>
-            Reset Password
+            New Password
           </label>
           <div className="flex border mt-2 rounded-lg border-black">
             <input
               type={`${!show_reset_password ? "password" : "text"}`}
-              name="reset_password"
-              id="reset_password"
+              name="new_password"
+              id="new_password"
               onChange={handleChange}
-              value={formData.reset_password}
+              value={formData.new_password}
               className={`outline-none py-3 pl-4 w-full  bg-transparent`}
             />
 
@@ -128,7 +128,7 @@ const ResetPassword = ({ setOpen }) => {
           </div>
           {submit && (
             <span className="text-[red] text-[13px]">
-              {formError.reset_password_err}
+              {formError.new_password_err}
             </span>
           )}
         </div>

@@ -5,11 +5,10 @@ import { Service } from "@/models/interfaces";
 import Loader from "@/components/ui/loader/Loader";
 import Search from "@/components/ui/search/Search";
 import {  useSearchParams } from 'next/navigation'
-import { get } from "@/Api/Api";
-import dynamic from 'next/dynamic'
-const ServiceCard = dynamic(() => import('@/components/ui/Card/Card'))
 import Navbar from "@/components/layout/navbar/Navbar";
 import Http from "@/config/Http";
+import dynamic from 'next/dynamic'
+const ServiceCard = dynamic(() => import('@/components/ui/Card/Card'))
 const Pagination = dynamic(() => import('@/components/ui/pagination/Pagination'))
 const Footer = dynamic(() => import('@/components/layout/footer/Footer'))
 const TitleCard = dynamic(() => import('@/components/ui/titleCard/TitleCard'))
@@ -38,7 +37,7 @@ const page = () => {
         }
       }
     
-      const {data} = await Http.get(`cms/temples/service-details/?search=${search}&limit=8&offset=${pageName === "allService" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)         
+      const {data} = await Http.get(`cms/temples/service-details/?filter=public_listing&search=${search}&limit=8&offset=${pageName === "allService" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)         
 
       setServices(data?.data?.results)
       setTotalPage(Number(data?.data?.count)/8)

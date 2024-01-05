@@ -3,17 +3,13 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { FaLock, FaLockOpen } from "react-icons/fa";
-
-import login_img from "../../../assets/login_img.jpg";
 import Styles from "./login.module.css";
 import { loginValiDate } from "@/utils/formValidate";
-import { post } from "@/Api/Api";
 import { errorToast, successToast } from "@/toasts/toasts";
 import Http from "@/config/Http";
 
-const Login = ({ admin }: { admin?: boolean }) => {
+const Login = ({admin}:{admin?:boolean}) => {
   const [submit, setSubmit] = useState(false);
   const [loading, setLoading] = useState(false);
   const [show_password, setShowPassword] = useState(false);
@@ -44,85 +40,33 @@ const Login = ({ admin }: { admin?: boolean }) => {
 
   const handleSubmit = async () => {
     setSubmit(true);
-    const checkValid: boolean = await loginValiDate(
-      formData,
-      setFormError,
-      formError
-    );
-
+    const checkValid: boolean = await loginValiDate(formData,setFormError,formError);
     if (checkValid) {
       setLoading(true);
-      if (admin) {
-        const {
-          status,
-          message,
-          admin,
-          accessToken,
-          accessTokenExp,
-          refreshToken,
-          role,
-          errors,
-        } = await post("admin/login", formData);
-
-        if (status && role) {
-          try {
-            successToast("Logged successfully");
-            localStorage.clear();
-            await signIn("credentials", {
-              email: admin.email,
-              accessTokenExp,
-              id: admin.id,
-              accessToken,
-              role,
-              refreshToken,
-              redirect: true,
-              callbackUrl: "/admin/users/",
-            });
-          } catch (error) {
-            router.push("/admin");
-          }
-          setLoading(false);
-        } else {
-          setLoading(false);
-        }
-        if (errors?.length > 0 && !status) {
-          let common_err = errors[0];
-          errorToast(common_err);
-          setFormError({
-            ...formError,
-            common_err,
-          });
-        }
-        if (message && !status) {
-          let common_err = message;
-          errorToast(common_err);
-
-          setFormError({
-            ...formError,
-            common_err,
-          });
-        }
-      } else {
-        
-        const {data} = await Http.post(`user/login/`, formData)
-        console.log(data);
-        
+        const {data} = await Http.post(`user/login/`, formData)        
         if (data.success) {
           successToast("Logged successfully");
           localStorage.clear();
-          localStorage.setItem("access_token",data.access_token)
-          localStorage.setItem("refresh_token",data.refresh_token)
-          setLoading(false);
-          router.push("/")
+          setLoading(false);                    
+            if(data.data.scope== 2||data.data.scope== 3){              
+              localStorage.setItem("access_token",data.access_token)
+              localStorage.setItem("refresh_token",data.refresh_token)
+              localStorage.setItem("role",`admin_role_${process.env.NEXT_PUBLIC_JWT_ACCESS_SECRET}`)
+              router.push("/admin/users")
+            }else{
+              localStorage.setItem("role","user_role")
+              localStorage.setItem("access_token",data.access_token)
+              localStorage.setItem("refresh_token",data.refresh_token)
+              router.push("/")
+            }
         } else {
           setLoading(false);
+          errorToast(data.data.error)
           setFormError({
             ...formError,
             common_err: data.data.error,
           });
         }
-       
-      }
     } else {
       setFormError({
         ...formError,
@@ -137,7 +81,7 @@ const Login = ({ admin }: { admin?: boolean }) => {
         <div className="relative w-[130vh]  h-[20%] md:h-[100vh] hidden md:block">
           <Image
             alt="Login"
-            src={login_img}
+            src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704349249616'
             width={1000}
             height={1000}
             className={`${Styles["img-box"]} rounded-r-3xl absolute top-0 left-0 w-full h-full object-cover`}

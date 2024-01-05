@@ -1,11 +1,10 @@
 import React from "react";
 import ProtectRouter from "@/components/auth/authenticationRoute/protectRouter";
-
 import dynamic from 'next/dynamic'
-const Profile = dynamic(() => import('@/components/profile/Profile'))
 import Navbar from "@/components/layout/navbar/Navbar";
 const Footer = dynamic(() => import('@/components/layout/footer/Footer'))
 const TitleCard = dynamic(() => import('@/components/ui/titleCard/TitleCard'))
+const Profile = dynamic(() => import('@/components/profile/Profile'))
 
 
 const page =() => {

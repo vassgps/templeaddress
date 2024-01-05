@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import ReactCrop, { centerCrop, makeAspectCrop } from "react-image-crop";
+import React, { useEffect, useState } from "react";
+import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { IoMdCloseCircle } from "react-icons/io";
 import Button from "../ui/button/Button";
@@ -23,6 +23,9 @@ const Cropper: React.FC<Props> = ({
 }) => {
   const [error, setError] = useState("");
   const [aspect, setAspect] = useState(cropImage.key == "upi_qr" ? 1 : 2);
+  useEffect(()=>{
+    setAspect(cropImage.key == "upi_qr" ? 1 : 2)
+  },[cropImage.key])
 
   const [crop, setCrop] = useState<any>({
     unit: "%",

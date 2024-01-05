@@ -8,7 +8,6 @@ import Loader from "../ui/loader/Loader";
 import SelectOption from "../home/select-option/SelectOption";
 import Search from "../ui/search/Search";
 import { Service, Temple } from "@/models/interfaces";
-import { get } from "@/Api/Api";
 import NotFound from "../not-found/NotFound";
 import { useRouter } from "next/navigation";
 import Http from "@/config/Http";
@@ -44,7 +43,6 @@ const Dashboard = ({
     }
     (async () => {
       setLoading(true);
-
       if (service) {
         const {data}=await Http.get(`cms/temples/service-details/?filter=my_listing&search=${search}&limit=4&offset=${pageName === "dashboardService" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`);
           setItems(data?.data?.results);

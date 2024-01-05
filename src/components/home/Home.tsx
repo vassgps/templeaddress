@@ -1,8 +1,6 @@
-  "use client";
-
+"use client";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import image from "../../assets/new.png";
 import "../about/about.css";
 import Card from "@/components/ui/Card/Card";
 import Search from "@/components/ui/search/Search";
@@ -11,6 +9,7 @@ import Loader from "@/components/ui/loader/Loader";
 import SelectOption from "./select-option/SelectOption";
 import NotFound from "../not-found/NotFound";
 import Http from "@/config/Http";
+
 const Pagination = React.lazy(() => import('@/components/ui/pagination/Pagination'));
 const ViewAll = React.lazy(() => import('./view-All/ViewAll'));
 
@@ -37,12 +36,12 @@ const Home = ({ service, search }: { search?: string; service: boolean }) => {
       setLoading(true);
 
       if (service) {
-        const {data} = await Http.get(`cms/temples/service-details/?search=${search}&limit=4&offset=${pageName === "service" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)         
+        const {data} = await Http.get(`cms/temples/service-details/?filter=public_listing&search=${search}&limit=4&offset=${pageName === "service" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)         
         setItems(data?.data?.results);
         setTotalPage(Math.ceil(Number(data?.data?.count)/4));
         setLoading(false);
       } else {
-        const {data} = await Http.get(`cms/temples/temple-details/?search=${search}&limit=4&offset=${pageName === "temple" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`);        
+        const {data} = await Http.get(`cms/temples/temple-details/?filter=public_listing&search=${search}&limit=4&offset=${pageName === "temple" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`);        
         setItems(data?.data?.results);
         setTotalPage(Math.ceil(Number(data?.data?.count)/4));
         setLoading(false);
@@ -59,7 +58,7 @@ const Home = ({ service, search }: { search?: string; service: boolean }) => {
           </h1>
           <div className=" justify-between md:flex hidden mt-2">
             <hr className="w-36 h-1    bg-primary" />
-            <Image className="absolute ml-28" loading="lazy" src={image} alt="image" />
+            <Image width={200} height={100} className="absolute ml-28" loading="lazy" src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704349750665' alt="image" />
             <hr className="w-36   h-1  bg-primary" />
           </div>
         </div>

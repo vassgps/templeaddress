@@ -1,7 +1,6 @@
 import PublicRoute from "@/components/auth/authenticationRoute/PublicRoute";
 import React from "react";
 import dynamic from 'next/dynamic'
- 
 const ForgottenPassword = dynamic(() => import('@/components/ForgottenPassword/ForgottenPassword'))
 import Navbar from "@/components/layout/navbar/Navbar";
 const Footer = dynamic(() => import('@/components/layout/footer/Footer'))

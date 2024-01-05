@@ -38,12 +38,7 @@ const Text = ({
 }) => {
   return (
     <div className="lg:flex items-center">
-      {/* <div
-        className={`${
-          border &&
-          "lg:border-l-2 lg:border-t-0 border-l-0 lg:h-32 lg:mx-0  mx-20 border-t-2  border-gray-300 "
-        }`}
-      ></div> */}
+     
       <div className="p-5 ">
         <h1 className="font-poppins text-xl font-semibold text-primary tracking-normal text-left ">
           {title}

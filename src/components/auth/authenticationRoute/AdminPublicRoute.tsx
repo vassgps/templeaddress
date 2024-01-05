@@ -1,16 +1,23 @@
-import { auth } from "@/config/auth";
-import { redirect } from "next/navigation";
-import {User} from "@/models/interfaces"
-import React, { ReactNode } from "react";
-async function AdminPublicRoute({ children }:{children: ReactNode}){
-const session = await auth();
+"use client";
+import { useRouter } from "next/navigation";
+import React, { ReactNode, useEffect } from "react";
 
-  if (session && (session?.user as User) && (session?.user as User)?.accessToken) {    
-    if((session?.user as User)?.role==="adminRole"){
-      return redirect("/admin/users");
-    } 
-  }
+ function AdminPublicRoute({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const token=typeof window !== "undefined"?localStorage.getItem("access_token"):null
+  const role=typeof window !== "undefined"?localStorage.getItem("role"):null
+  const key=process.env.NEXT_PUBLIC_JWT_ACCESS_SECRET
+
+  useEffect(() => {
+    const checkToken = async () => {
+      if (token&& role==="admin_role_"+key) {
+        await router.push("/admin/users");
+      }
+    };
+    checkToken();
+  }, [token,role,key]);
+
   return <>{children}</>;
-};
+}
 
 export default AdminPublicRoute;

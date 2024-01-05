@@ -1,4 +1,3 @@
-import { get } from "@/Api/Api";
 import Http from "@/config/Http";
 import React, { useEffect, useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
@@ -10,9 +9,7 @@ const History = () => {
 
   useEffect(() => {
     (async () => {
-      const { data: datas } = await Http.get("user/wallet/");
-      console.log(datas.data.results);
-
+      const { data: datas } = await Http.get("user/wallet/");      
       setData(datas.data.results);
     })();
   }, []);
@@ -36,36 +33,36 @@ const History = () => {
                   <span className="slider round"></span>
                 </label>
               </div>
-            <div
-              onClick={() => setOpen(!open)}
-              className={`${open && "rotate-180"} cursor-pointer`}
-            >
+            <div onClick={() => setOpen(!open)} className={`${open && "rotate-180"} cursor-pointer`}>
               {React.createElement(IoIosArrowDown, { size: "40" })}
             </div>
           </div>
-
           {open && (
             <div className="flex w-full overflow-auto p-5">
               <table className="table-auto font-Poppins  ml-5     tracking-normal w-full ">
                 <thead>
                   <tr>
-                    <th className="py-3 bg-slate-100">No</th>
+                    <th className="py-3 bg-slate-100 whitespace-nowrap p-5">No</th>
                     <th className="py-3 bg-slate-100">Type</th>
 
-                    <th className="py-3 bg-slate-100">Payment Method</th>
-                    <th className="py-3 bg-slate-100">
+                    <th className="py-3 bg-slate-100 whitespace-nowrap p-5">Payment Method</th>
+                    <th className="py-3 bg-slate-100 whitespace-nowrap p-5">
                       Upi Code / Account Number
                     </th>
-                    <th className="py-3 bg-slate-100">Ifsc Code</th>
-                    <th className="py-3 bg-slate-100">Amount</th>
-                    <th className="py-3 bg-slate-100">Tranaction Id</th>
-                    <th className="py-3 bg-slate-100">Status</th>
+                    <th className="py-3 bg-slate-100 whitespace-nowrap p-5">Ifsc Code</th>
+                    <th className="py-3 bg-slate-100 whitespace-nowrap p-5">Amount</th>
+                    <th className="py-3 bg-slate-100 whitespace-nowrap p-5">Tranaction Id</th>
+                    <th className="py-3 bg-slate-100 whitespace-nowrap p-5">PAID Date</th>
+                    <th className="py-3 bg-slate-100 whitespace-nowrap p-5">PAID AMOUNT</th>
+
+
+                    <th className="py-3 bg-slate-100 whitespace-nowrap p-5">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.length > 0 &&
                     data.map((item, index) => (
-                      <>
+                      <React.Fragment key={item.id}>
                         {((isChecked&&item.txn_type === "DR")||(!isChecked&& item.txn_type=== "CR")) && (
                           <tr key={item.id}>
                             <td className="text-center py-2">{index + 1}</td>
@@ -83,10 +80,12 @@ const History = () => {
                             </td>
                             <td className="text-center py-2">{item?.points}</td>
                             <td className="text-center py-2">{item?.txn_id}</td>
-                            <td className="text-center py-2">{item?.status}</td>
+                            <td className="text-center py-2">{item?.txn_data?.txn_date}</td>
+                            <td className="text-center py-2">{item?.txn_data?.amount}</td>
+                            <td className="text-center py-2">{item?.txn_id?"success":"pending"}</td>
                           </tr>
                         )}
-                      </>
+                      </React.Fragment>
                     ))}
                 </tbody>
               </table>

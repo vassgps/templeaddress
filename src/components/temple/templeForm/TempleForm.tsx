@@ -2,7 +2,6 @@
 import React, { useState, ChangeEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import fileImage from "../../../assets/fileImage.png";
 import Styles from "./templeForm.module.css";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/ui/input/Input";
@@ -112,6 +111,9 @@ const TempleForm = () => {
           newformData.append(key, formData[key]);
         }
         newformData.append("image", file);
+        newformData.append("status", 'true');
+
+         
         let {data} = await Http.post("cms/temples/temple-details/",newformData);
         const {  success } = data;
 
@@ -119,7 +121,15 @@ const TempleForm = () => {
           successToast("Successfully created")
           return router.push("/dashboard/");
         }else{
-
+          setLoading(false);
+          const updatedFormError = { ...formError };
+          for (const key in data.data) {
+            if (updatedFormError.hasOwnProperty(`${key}_err`)) {
+              updatedFormError[`${key}_err`] = data.data[key][0];
+            }
+          }
+          
+          setFormError(updatedFormError);
         }
         
         setLoading(false);
@@ -132,7 +142,7 @@ const TempleForm = () => {
         });
       }
     } else {
-      errorToast("Please enter your details")
+      errorToast("Please enter Temple details")
 
       setFormError({
         ...formError,
@@ -153,7 +163,7 @@ const TempleForm = () => {
               <label htmlFor="file-upload" id="file-drag">
                 <div className=" border border-black w-72  h-40  flex justify-center items-center rounded-lg">
                   <div>
-                    <Image src={fileImage} className="ml-10" alt="file Image" />
+                    <Image height={50} width={60} src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704346903055' className="ml-10" alt="file Image" />
                     <h1 className="mt-5">Upload Your image</h1>
                   </div>
                 </div>

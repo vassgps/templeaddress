@@ -2,18 +2,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
 import Styles from "./navbar.module.css";
 import close from "../../../assets/close.svg";
 import menu from "../../../assets/menu.svg";
-import { User } from "@/models/interfaces";
 import { successToast } from "@/toasts/toasts";
-import { post } from "@/Api/Api";
 import Http from "@/config/Http";
 
 const Navbar = () => {
   const [toggle, setToggle] = useState(false);
   const tokens =typeof window !== "undefined" ?localStorage.getItem("access_token") :null
+  const role =typeof window !== "undefined" ?localStorage.getItem("role") :null
+
 
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
@@ -26,10 +25,10 @@ const Navbar = () => {
       }
     };
     document.addEventListener("mousedown", handler);
-    if (tokens) {
+    if (tokens&& role==="user_role") {
       setToken(tokens);
     }
-  }, [tokens]);
+  }, [tokens,role]);
 
   const signOutHandel = async () => {    
       await Http.post("user/logout/", {});

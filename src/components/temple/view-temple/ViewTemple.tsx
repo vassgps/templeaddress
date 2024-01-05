@@ -8,7 +8,6 @@ import AccountDetails from "./accountDetails/AccountDetails";
 import Text from "./text/Text";
 import Loader from "@/components/ui/loader/Loader";
 import { Temple } from "@/models/interfaces";
-import googleImage from "../../../assets/GoogleMap.png";
 import Image from "next/image";
 import GoogleMapEmbed from "@/components/GoogleMapEmbed/GoogleMapEmbed";
 import Gallery from "@/components/ui/gallery/Gallery";
@@ -20,8 +19,7 @@ const ViewTemple =({ templeId }) => {
 
   useEffect(() => {
     (async () => {      
-      const {data}  = await Http.get(`cms/temples/temple-details/${templeId}`);      
-      
+      const {data}  = await Http.get(`cms/temples/temple-details/${templeId}`);    
       setTemple(data.data)
       setLoading(false)
     })();
@@ -70,7 +68,9 @@ const ViewTemple =({ templeId }) => {
                     <div className="flex justify-between  mt-5 lg:w-[40%]">
                       <a href={temple.map_url} target="_blank"  className="flex ">
                         <Image
-                          src={googleImage}
+                          width={60}
+                          height={60}
+                          src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704347648395'
                           alt="googleMapImg"
                           className="w-4 h-4"
                         />
@@ -109,7 +109,7 @@ const ViewTemple =({ templeId }) => {
                   </div>
                 </div>
                 <div className="grid grid-cols-1  md:grid-cols-2 gap-8">
-                {temple.pooja_details&&  temple.pooja_details.map((item,index)=>(<Offerings
+                   {temple.pooja_details&&  temple.pooja_details.map((item,index)=>(<Offerings
                     key={index+item.name}
                     title={item.name}
                     description={item.description}

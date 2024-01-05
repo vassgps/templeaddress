@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import Button from "../ui/button/Button";
 import Input from "../ui/input/Input";
 import LoadingButton from "../ui/loadingButton/LoadingButton";
-import { post } from "@/Api/Api";
 import { successToast } from "@/toasts/toasts";
 import { useRouter } from "next/navigation";
 const emailRegex = /^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
@@ -30,7 +29,8 @@ const ForgottenPassword = () => {
 
   const handlecChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    if (e.target.value.length > 5) {
+    const capitalRegex = /[A-Z]/;
+    if (e.target.value.length > 5&& capitalRegex.test(e.target.value)) {
       setFormError((prevFormData) => ({
         ...prevFormData,
         common_err: "",
@@ -38,7 +38,7 @@ const ForgottenPassword = () => {
     } else {
       return setFormError((prevFormData) => ({
         ...prevFormData,
-        common_err: "Please enter a valid password",
+        common_err: "Password must contain at least one capital letter and be at least 5 characters long",
       }));
     }
   };

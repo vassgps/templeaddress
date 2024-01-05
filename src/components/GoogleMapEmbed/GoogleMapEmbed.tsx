@@ -3,12 +3,9 @@
 import { useEffect, useState } from "react";
 
 const GoogleMapEmbed = ({ data }:{data:any}) => {
-  
    const [srcAttribute, setSrcAttribute] = useState<string | null>(null);
-
    useEffect(() => {
     const tempDiv = typeof window !== 'undefined' ? document.createElement('div') : null;
-
      tempDiv.innerHTML = data;
       const iframeElement = tempDiv.firstChild as HTMLIFrameElement;
       const src = iframeElement.src;
