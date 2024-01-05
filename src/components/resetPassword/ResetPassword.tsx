@@ -101,6 +101,7 @@ const ResetPassword = ({ setOpen }) => {
             </span>
           )}
         </div>
+        
 
         <div className="w-full mt-5">
           <label className="block " htmlFor={"name"}>

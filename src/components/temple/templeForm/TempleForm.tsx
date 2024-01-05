@@ -9,9 +9,15 @@ import { templeValiDate } from "@/utils/formValidate";
 import Loader from "@/components/ui/loader/Loader";
 import { errorToast, successToast } from "@/toasts/toasts";
 import Http from "@/config/Http";
+import CropShow from "@/components/crop-show/Img-Crop";
 
 const TempleForm = () => {
   const fileInputRef = useRef(null);
+  const [crop, setCrop] = useState(false);
+  const [cropImage, setCropImage] = useState<{
+    key: string;
+    image: string;
+  } | null>(null);
   const router = useRouter();
   const [submit, setSubmit] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -60,14 +66,20 @@ const TempleForm = () => {
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const fileInput = e.target;
     const file = fileInput.files && fileInput.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setFile(file);
-     
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "text/plain",
+      "image/gif",
+      "image/avif",
+    ];
+    if (file && allowedTypes.includes(file.type)) {
+      setCrop(true);
+
       const reader = new FileReader();
       reader.onload =async (event: ProgressEvent<FileReader>) => {
         if (event.target && event.target.result) {
-
-          setSelectedImage(event.target.result as string);
+          setCropImage({ key: 'image', image: event.target.result + "" });
         }
       };
       reader.readAsDataURL(file);
@@ -272,7 +284,15 @@ const TempleForm = () => {
             title={"Description"}
             name={"description"}
           />
-
+  {cropImage && cropImage?.key != "" && cropImage?.image != "" && (
+            <CropShow
+              setSelectedImg={setSelectedImage}
+              setFileImg={setFile}
+              cropItem={crop}
+              cropImage={cropImage}
+              setCropImage={setCropImage}
+            />
+          )}
           <div className="flex-row">
             <div className="w-full justify-center items-center">
               {submit && (
