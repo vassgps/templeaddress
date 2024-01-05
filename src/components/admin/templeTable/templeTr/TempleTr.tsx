@@ -85,7 +85,7 @@ const tr = ({ item }: { item: Temple }) => {
         <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 ">
           <a
           target="_blank" 
-            href={` ${process.env.NEXT_PUBLIC_BASE_URL}temple/${item.slug}`}
+            href={`/temple/${item.slug}`}
             className="bg-primary flex h-12    rounded-lg py-3 px-5 mr-5 text-sm md:text-base   hover:opacity-75 text-white font-semibold"
           >
             view
