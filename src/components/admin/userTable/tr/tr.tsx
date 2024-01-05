@@ -8,9 +8,7 @@ import { successToast } from "@/toasts/toasts";
 import Http from "@/config/Http";
 
 const Tr = ({ user }: { user: User }) => {
-  const [active, setActive] = useState(user.status);
-  console.log(user);
-  
+  const [active, setActive] = useState(user.status);  
   const [loading, setLoading] = useState(false);
   const [blockPopup, setBlockPopup] = useState(false);
   const handleSubmit = async (value:boolean) => {
