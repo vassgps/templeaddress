@@ -398,11 +398,10 @@ export const resetPasswordForm = (formData, setFormError, formError) => {
   const capitalRegex = /[A-Z]/;
 
   if (formData.new_password?.trim() == "" || formData.new_password.length < 5) {
-    new_password_err =
-      "reset password must be longer than or equal to 5 characters";
+    new_password_err ="reset password must be longer than or equal to 5 characters";
     valid = false;
   }else {
-    if (!capitalRegex.test(formData.password)) {
+    if (!capitalRegex.test(formData.new_password)) {
       old_password_err = "Password must contain at least one capital letter";
       valid = false;
     }
@@ -411,12 +410,11 @@ export const resetPasswordForm = (formData, setFormError, formError) => {
   if (formData.old_password?.trim() == "" || formData.old_password.length < 5) {
     old_password_err = "password must be longer than or equal to 5 characters";
     valid = false;
-  } else {
-    if (!capitalRegex.test(formData.password)) {
+  } else if (!capitalRegex.test(formData.old_password)) {
       old_password_err = "Password must contain at least one capital letter";
       valid = false;
-    }
   }
+  
   setFormError({
     ...formError,
     new_password_err,
