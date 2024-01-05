@@ -4,9 +4,9 @@ import Pagination from "@/components/ui/pagination/Pagination";
 import Search from "@/components/ui/search/Search";
 import Tr from "./tr/tr";
 import { User } from "@/models/interfaces";
-import { get } from "@/Api/Api";
 import Loader from "@/components/ui/loader/Loader";
 import NotFound from "@/components/not-found/NotFound";
+import Http from "@/config/Http";
 
 const UserTable =  ({ search}) => {
 
@@ -27,10 +27,10 @@ const UserTable =  ({ search}) => {
     }
     (async () => {
       setLoading(true);
-      const data = await get(`/admin/users-list/${pageName==="adminUsers"?newPage:1}?search=${search}`);
+      const {data} = await Http.get(`user/view-users/?search=${search}&limit=6&offset=${pageName === "adminUsers" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)         
       setLoading(false);
-      setItems(data.items);
-      setTotalPage(data.totalCount);
+      setItems(data.data.results);      
+      setTotalPage(Math.ceil(Number(data?.data?.count)/6));
     })();
   
   }, [search,newPage]);
@@ -75,6 +75,9 @@ const UserTable =  ({ search}) => {
                       </th>
                       <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                         status
+                      </th>
+                      <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                        user name
                       </th>
                     </tr>
                   </thead>

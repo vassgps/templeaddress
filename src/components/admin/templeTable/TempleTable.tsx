@@ -5,9 +5,9 @@ import TempleTr from "./templeTr/TempleTr";
 import Pagination from "@/components/ui/pagination/Pagination";
 import { Temple } from "@/models/interfaces";
 import Search from "@/components/ui/search/Search";
-import { get } from "@/Api/Api";
 import Loader from "@/components/ui/loader/Loader";
 import NotFound from "@/components/not-found/NotFound";
+import Http from "@/config/Http";
 
 const TempleTable = ({  search }) => {
   const [loading, setLoading] = useState(true);
@@ -27,10 +27,10 @@ const TempleTable = ({  search }) => {
     }
     (async () => {
       setLoading(true);
-      const data = await get(`/admin/temples-list/${pageName==="adminTemple"?newPage:1}?search=${search}`);
+      const {data} = await Http.get(`cms/temples/temple-details/?search=${search}&limit=6&offset=${pageName === "adminTemple" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`)              
       setLoading(false);
-      setItems(data.items);
-      setTotalPage(data.totalCount);
+      setItems(data.data.results);
+      setTotalPage(Math.ceil(Number(data?.data?.count)/6));
     })();
   }, [search,newPage]);
 
@@ -63,10 +63,10 @@ const TempleTable = ({  search }) => {
                         Temple Name
                       </th>
                       <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                        personal_number
+                      Mobile number
                       </th>
                       <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                        contact_number
+                      telephone
                       </th>
                       <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                         state

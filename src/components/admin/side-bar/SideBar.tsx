@@ -5,10 +5,8 @@ import { MdTempleBuddhist } from "react-icons/md";
 import { FaServicestack } from "react-icons/fa";
 import { FcMoneyTransfer } from "react-icons/fc";
 import { CiLogout } from "react-icons/ci";
-import Link from "next/link";
-import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { BiSolidCoinStack } from "react-icons/bi";
+import Http from "@/config/Http";
 
 const SideBar = ({ children }) => {
   const router = useRouter();
@@ -20,9 +18,8 @@ const SideBar = ({ children }) => {
       name: "Withdraw forms",
       icon: FcMoneyTransfer,
       link: "/admin/withdraw-forms",
-    },
-    { name: "Coin", icon: BiSolidCoinStack, link: "/admin/coin" },
-  ];
+    }
+    ];
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -30,7 +27,8 @@ const SideBar = ({ children }) => {
 
   if (!mounted) return <></>;
   const signOutHandel = async () => {
-    await signOut();
+    await Http.post("user/logout/", {});
+    localStorage.clear()
     router.push("/admin/login");
   };
 

@@ -9,7 +9,7 @@ const Button = ({ name , bgColor,bg ,tick ,onClick}: {bgColor?:string, name: str
   return (
     <>
       {bg ? (
-          <button onClick={onClick} type="button" className={`${bgColor?bgColor:" bg-primary "}  flex h-12    rounded-lg py-3 px-5 mr-5 text-sm md:text-base   hover:opacity-75 text-white font-semibold`}>
+          <button onClick={onClick} type="button" className={`${bgColor?bgColor:" bg-primary "}  flex    rounded-lg py-3 px-5  text-sm md:text-base   hover:opacity-75 text-white font-semibold`}>
             {tick && <div className="relative mr-2 w-5 mt-0.5 ">
               <Image className="" src={tickiconbg} alt="tickiconbg" />
               <Image className="absolute bottom-1 ml-0.5 " src={tickicon}  alt="tickicon"/>

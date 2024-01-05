@@ -5,7 +5,6 @@ import TitleCard from "@/components/ui/titleCard/TitleCard";
 import { Temple } from "@/models/interfaces";
 import Loader from "@/components/ui/loader/Loader";
 import {  useSearchParams } from "next/navigation";
-import { get } from "@/Api/Api";
 import dynamic from 'next/dynamic'
 const TempleCard = dynamic(() => import('@/components/ui/Card/Card'))
 import Navbar from "@/components/layout/navbar/Navbar";
@@ -35,7 +34,7 @@ const page = () => {
           setPage(1);
         }
       }
-      const {data} = await Http.get(`cms/temples/temple-details/?search=${search}&limit=8&offset=${pageName === "allTemple" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`);        
+      const {data} = await Http.get(`cms/temples/temple-details/?filter=public_listing&search=${search}&limit=8&offset=${pageName === "allTemple" &&Number(newPage)!=0?  Number(newPage)-1 : 0}`);        
 
       setTemples(data?.data?.results)
       setTotalPage(Number(data?.data?.count)/8)

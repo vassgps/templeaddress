@@ -11,7 +11,7 @@ const page = ({params}) => {
   return (
     <div className='flex flex-col min-h-screen'>
       <Navbar />
-      <TitleCard image={templeImage} title="Home > Details" />
+      <TitleCard title="Home > Details" />
       <div className=" lg:mx-40 mx-5 mb-10">
         <ViewTemple templeId={params.id}/>
       </div>

@@ -6,7 +6,7 @@ const ConfirmationPopup = ({ setBlockPopup,loading,handleSubmit ,message}) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center ">
       <div className="absolute inset-0 bg-black opacity-50"></div>
-      <div className="absolute md:w-1/3 border-2 border-primary   mx-10 rounded-xl p-10  overflow-y-auto overflow-x-hidden  top-60 bg-white  z-50 justify-center items-center w-full">
+      <div className="absolute md:w-1/3 border-2 border-primary   mx-10 rounded-xl p-10  overflow-y-auto overflow-x-hidden   bg-white  z-50 justify-center items-center w-full">
         <p className="font-Poppins  text-sm mr-10  text-center font-semibold tracking-normal ">
            {message}?
         </p>

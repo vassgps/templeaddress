@@ -4,9 +4,9 @@ import Pagination from "@/components/ui/pagination/Pagination";
 import Search from "@/components/ui/search/Search";
 import React, { useEffect, useState } from "react";
 import WithdrawTr from "./withdrawTr/WithdrawTr";
-import { get } from "@/Api/Api";
 import Loader from "@/components/ui/loader/Loader";
 import NotFound from "@/components/not-found/NotFound";
+import Http from "@/config/Http";
 
 const WithdrawFormTable = ({  search }) => {
   const [loading, setLoading] = useState(true);
@@ -26,10 +26,12 @@ const WithdrawFormTable = ({  search }) => {
     }
     (async () => {
       setLoading(true);
-      const data = await get(`/admin/withdraw-forms-list/${pageName==="adminWithdrawForm"?newPage:1}?search=${search}`);
-      setLoading(false);
-      setItems(data.items);
-      setTotalPage(data.totalCount);
+      console.log(pageName === "adminWithdrawForm"&&Number(newPage)!=0?Number(newPage)-1 : 0);
+      
+      const {data} = await Http.get(`/user/wallet/admin?search=${search}&limit=6&offset=${pageName === "adminWithdrawForm"&&Number(newPage)!=0?Number(newPage)-1: 0}`)  
+      setLoading(false);      
+      setItems(data.data.results);      
+      setTotalPage(Math.ceil(Number(data?.data?.count)/6));
     })();
   }, [search,newPage]);
 
@@ -56,20 +58,20 @@ const WithdrawFormTable = ({  search }) => {
                   <table className="items-center bg-transparent w-full border-collapse ">
                     <thead>
                       <tr>
-                       
-                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100  py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Name
+                     
+                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                          Date And Time
                         </th>
-                      
+                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                          Type
+                        </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                           Payment Method
                         </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Upi Code
+                          Upi Code/Account Number
                         </th>
-                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Account Number
-                        </th>
+                       
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                           Ifsc code
                         </th>
@@ -77,33 +79,37 @@ const WithdrawFormTable = ({  search }) => {
                         Amount
                         </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          coins
+                        Paid Amount
                         </th>
+
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                           status
                         </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
                         Tranaction Id
                         </th>
-                        <th className=" text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Phone Number
+                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                        Paid Date
+                        </th>
+                        <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100  py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
+                          Name
                         </th>
                         <th className="text-center px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold ">
-                          Email
+                        Paid Bank
                         </th>
                       </tr>
                     </thead>
 
                     <tbody>
                       {items.map((item) => (
-                        <WithdrawTr key={item.id} item={item} />
+                        <WithdrawTr key={item.id} data={item} />
                       ))}
                     </tbody>
                   </table>
                 </div>
             </div>}
 
-            {Math.floor(totalPage) > 0 && (
+            {Math.floor(totalPage) > 1 && (
               <Pagination
               currentPage={page}
               count={totalPage}
