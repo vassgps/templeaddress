@@ -184,6 +184,10 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
   const handleGalleryFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     let newKey = null;
     const fileInput = e.target;
+    setFormError({
+      ...formError,
+      gallery_image_err: "",
+    });
     const file = fileInput.files && fileInput.files[0];
     const allowedTypes = [
       "image/jpeg",
@@ -875,10 +879,7 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
               {selectedGalleryImage &&
                 Object.keys(selectedGalleryImage)
                   .filter(
-                    (key) =>
-                      key.startsWith("image_") &&
-                      selectedGalleryImage[key] !== null
-                  )
+                    (key) =>key.startsWith("image_") &&selectedGalleryImage[key] !== null)
                   .map((key) => (
                     <div className="mt-2 relative " key={key}>
                       <img
@@ -905,8 +906,9 @@ const EditTempleForm = ({ id, admin }: { id: string; admin?: boolean }) => {
               name="fileUpload"
               accept="image/*"
               className={`${
-                galleryImageFile &&
-                Object.keys(galleryImageFile).length === 8 &&
+                Object.keys(selectedGalleryImage)
+                .filter(
+                  (key) =>key.startsWith("image_") &&selectedGalleryImage[key] !== null).length== 8 &&
                 "hidden"
               } outline-none py-2 pl-4 w-full bg-transparent border mt-2 rounded-lg border-black`}
             />

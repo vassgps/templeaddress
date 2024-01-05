@@ -62,7 +62,7 @@ const Signup = () => {
 
     if (Valid) {
       setLoading(true)
-      const {data} = await Http.post(`user/register/`, formData) 
+      const {data} = await Http.post(`user/register/`, {...formData,status:true}) 
       setLoading(false)
       if (data?.success) {
           successToast("Registration Successful, Please Login")
@@ -82,9 +82,7 @@ const Signup = () => {
             ...formError,
             common_err: data.data.error,
           });
-          }        
-
-        
+          }       
       }
     } else {
       setFormError({
