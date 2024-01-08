@@ -69,7 +69,7 @@ const TempleHistory = ({
       </div>
       </div>
       <div className="md:col-span-1 h-80 col-span-2 md:mx-0 mx-10 flex mt-5 md:mt-7 ">
-        <Image width={1000} height={1000} src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704352411213' alt="temple History" />
+        <Image className="rounded-tr-3xl rounded-bl-3xl" width={1000} height={1000} src='https://antiquebetabucket.s3.ap-south-1.amazonaws.com/file1704689553046' alt="temple History" />
       </div>
      
     </div>
