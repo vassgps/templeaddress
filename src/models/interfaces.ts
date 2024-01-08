@@ -66,7 +66,7 @@ export interface ServiceForm {
 }
 
 export interface InputProps {
-  type: "text" | "password" | "email" | "radio" | "number";
+  type: "text" | "password" | "email" | "radio" | "number"|'Date';
   err?: string;
   title: string;
   name: string;

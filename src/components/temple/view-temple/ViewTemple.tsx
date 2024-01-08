@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import TempleHistory from "./templeHistory/TempleHistory";
-import Offerings from "./offerings/Offerings";
 import TempleTiming from "./templeTiming/TempleTiming";
 import AccountDetails from "./accountDetails/AccountDetails";
 import Text from "./text/Text";
@@ -97,36 +96,11 @@ const ViewTemple =({ templeId }) => {
             </div>
             <AccountDetails temple={temple} />
             <TempleTiming temple={temple} />
-
-            {temple.pooja_details && temple.pooja_details.length > 0 && (
-              <>
-                <div className=" mx-auto flex justify-center w-full pb-10  mt-5">
-                  <div>
-                    <h1 className="font-Poppins text-2xl font-semibold   tracking-normal text-left">
-                    Pooja Details
-                    </h1>
-                    <hr className=" w-36  h-0.5  bg-primary" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1  md:grid-cols-2 gap-8">
-                   {temple.pooja_details&&  temple.pooja_details.map((item,index)=>(<Offerings
-                    key={index+item.name}
-                    title={item.name}
-                    description={item.description}
-                    amount={item.amount}
-                    booking_available={item.booking_available}
-                  />))}
-               
-                </div>
-                <div className="w-full mt-5"></div>
-              </>
-            )}
             {temple.embedded_url && (
               <div className="mt-5">
                 <h1 className="font-Poppins text-2xl mb-2 font-semibold   tracking-normal text-left">
                   Location :-
                 </h1>
-
                 <GoogleMapEmbed data={temple.embedded_url} />
               </div>
             )}
