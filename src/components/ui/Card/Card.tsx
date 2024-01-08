@@ -112,7 +112,7 @@ const Card = ({
               src={service ? data.image : data.image}
               alt=""
             />
-            {admin && !service&&(
+            {!service&&(
               <>
                 {open ? (
                   <div

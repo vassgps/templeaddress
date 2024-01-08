@@ -48,13 +48,15 @@ const Login = ({admin}:{admin?:boolean}) => {
           successToast("Logged successfully");
           localStorage.clear();
           setLoading(false);                    
-            if(data.data.scope== 2||data.data.scope== 3){              
+            if(data.data.scope== 2||data.data.scope== 3){   
+              localStorage.setItem("id",data.data.uuid)                         
               localStorage.setItem("access_token",data.access_token)
               localStorage.setItem("refresh_token",data.refresh_token)
               localStorage.setItem("role",`admin_role_${process.env.NEXT_PUBLIC_JWT_ACCESS_SECRET}`)
               router.push("/admin/users")
             }else{
               localStorage.setItem("role","user_role")
+              localStorage.setItem("id",data.data.uuid)
               localStorage.setItem("access_token",data.access_token)
               localStorage.setItem("refresh_token",data.refresh_token)
               router.push("/")

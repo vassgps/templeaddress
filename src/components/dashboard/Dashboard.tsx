@@ -24,10 +24,8 @@ const Dashboard = ({
   const router = useRouter();
   const [items, setItems] = useState<Service[] | Temple[] | undefined>();
   const [page, setPage] = useState(1);
-  const newPage =
-    typeof window !== "undefined" ? localStorage.getItem("page") : null;
-  const pageName =
-    typeof window !== "undefined" ? localStorage.getItem("pageName") : null;
+  const newPage =typeof window !== "undefined" ? localStorage.getItem("page") : null;
+  const pageName =typeof window !== "undefined" ? localStorage.getItem("pageName") : null;
 
   useEffect(() => {
     if (newPage) {

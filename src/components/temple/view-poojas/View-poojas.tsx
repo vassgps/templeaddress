@@ -9,29 +9,33 @@ import NotFoud from "@/components/view-service/404NotFoud/404NotFoud";
 import Loader from "@/components/ui/loader/Loader";
 
 const ViewPoojas = ({ templeId }: { templeId: string }) => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [admin, setAdmin] = useState(true);
+
   const [poojas, setPoojas] = useState<Pooja[] |null| undefined>(null);
   const router = useRouter();
+  const id =typeof window !== "undefined" ? localStorage.getItem("id") : null;
+
   useEffect(() => {
     (async () => {
       setLoading(true);
       const { data } = await Http.get(`cms/temples/temple-details/${templeId}`);
-      if (data.success) {
+      if (data.success) {        
+        setAdmin(data.data.created_by==id)
         setPoojas(data.data.pooja_details);
       }else{
         setPoojas(undefined);
-
       }
         setLoading(false);
       
     })();
-  }, [templeId]);
+  }, [templeId,id]);
 
   return (
     <>
       {!loading ? (
         <>
-          {(poojas != undefined &&poojas&& poojas.length>0 )&& (
+          {(poojas != undefined &&poojas&& poojas.length>0 )&&admin&& (
             <div className="flex mt-5 justify-center">
               <Button
                 name="Add Pooja"
@@ -48,7 +52,7 @@ const ViewPoojas = ({ templeId }: { templeId: string }) => {
                 {poojas &&
                   poojas.map((item, index) => (
                     <Offerings
-                      admin={true}
+                      admin={admin}
                       uuid={item.uuid}
                       key={index + item.uuid}
                       title={item.name}
@@ -60,7 +64,7 @@ const ViewPoojas = ({ templeId }: { templeId: string }) => {
               </div>
               <div className="w-full mt-5"></div>
             </>
-          ) : poojas != undefined ? (
+          ) : poojas != undefined && admin? (
             <div className="border-2 border-primary rounded-xl flex justify-center mt-5 items-center h-40">
               <button
                 onClick={() => router.push(`/temple/${templeId}/add-pooja`)}
@@ -74,7 +78,7 @@ const ViewPoojas = ({ templeId }: { templeId: string }) => {
               </button>
             </div>
           ) : (
-            <> {!poojas && poojas === undefined && <NotFoud />}</>
+            <> {!poojas && poojas === undefined ? <NotFoud />: <NotFoud Poojas={'Poojas'} />}</>
           )}
         </>
       ) : (
