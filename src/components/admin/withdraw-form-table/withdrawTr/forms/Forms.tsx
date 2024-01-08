@@ -106,7 +106,7 @@ const Forms = ({ setOpen, id, setItem }) => {
             submit={submit}
             handleChange={(e) => setDate(e.target.value)}
             value={date}
-            type={"text"}
+            type={"Date"}
             title={"Date"}
             name={"date"}
           />

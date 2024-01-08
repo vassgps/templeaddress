@@ -52,7 +52,6 @@ const WithdrawTr = ({ data }) => {
         </td>
 
         <td className="text-center border-t-0 h-full flex justify-center   align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-          {/* onChange={handlePopup} */}
           {!loading ? (
             <>
               {!item?.txn_id ? (

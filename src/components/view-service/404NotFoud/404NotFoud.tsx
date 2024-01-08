@@ -1,11 +1,11 @@
 import React from 'react'
 
-const NotFoud = () => {
+const NotFoud = ({Poojas}:{Poojas?:string}) => {
   return (
     <div className="border-2 border-primary  mt-5 rounded-xl flex justify-center items-center h-40">
     <div>
       <h1 className="font-Poppins mb-5 mr-5 whitespace-nowrap md:text-5xl  text-3xl text-primary  text-center font-semibold tracking-normal ">
-        404 Not foud
+        {Poojas?Poojas:"404"} Not foud
       </h1>
       <div className="flex w-full justify-center">
         <a
