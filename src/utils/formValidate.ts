@@ -104,7 +104,6 @@ export const serviceValiDate = (formData, setFormError, formError) => {
   let booking_available_err = "";
   let contact_number_err = "";
   let website_err = "";
-  let map_url_err = "";
 
   let valid = true;
 
@@ -117,12 +116,7 @@ export const serviceValiDate = (formData, setFormError, formError) => {
     valid = false;
   }
 
-  if (!formData.map_url || formData.map_url.trim() == "") {
-    map_url_err = "Please Add Google Map Link ";
-    valid = false;
-  } else if (!isValidWebsite(formData.map_url)) {
-    map_url_err = "Please enter a valid Google Map Link";
-  }
+ 
 
   if (!formData.name || formData.name.trim() == "") {
     name_err = "Please enter your name ";
@@ -164,7 +158,6 @@ export const serviceValiDate = (formData, setFormError, formError) => {
     email_err,
     description_err,
     location_err,
-    map_url_err,
     consulting_time_err,
     service_areas_err,
     booking_available_err,
@@ -229,7 +222,6 @@ export const templeValiDate = (formData, setFormError, formError) => {
   let town_err = "";
   let deity_err = "";
   let mobile_err = "";
-  let map_url_err = "";
   let telephone_err = "";
   let image_err = "";
   let description_err = "";
@@ -277,11 +269,6 @@ export const templeValiDate = (formData, setFormError, formError) => {
     valid = false;
   }
 
-  if (!formData.map_url || formData.map_url.trim() == "") {
-    map_url_err = "Please enter your google map link ";
-    valid = false;
-  }
-
   if (formData.telephone?.trim() == "") {
     telephone_err = "Please enter your telephone number";
     valid = false;
@@ -306,7 +293,6 @@ export const templeValiDate = (formData, setFormError, formError) => {
     town_err,
     deity_err,
     mobile_err,
-    map_url_err,
     telephone_err,
     image_err,
     description_err,

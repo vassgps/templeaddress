@@ -54,9 +54,9 @@ const Navbar = () => {
               Home
             </button>
           </li>
-          <li>
+          {token&& <li>
             <button className="hover:opacity-75" onClick={()=>{router.push("/dashboard/")}}>Dashboard</button>
-          </li>
+          </li>}
           <li>
             <button className="hover:opacity-75" onClick={()=>{router.push("/temple/add")}} >
               Add Temple
@@ -132,11 +132,11 @@ const Navbar = () => {
                   Home
                 </button>
               </li>
-              <li className="mt-2">
+              {token&& <li className="mt-2">
                 <button onClick={()=>{router.push("/dashboard/")}} >
                   Dashboard
                 </button>
-              </li>
+              </li>}
               <li className="mt-2 ">
                 <button className=" break-normal" onClick={()=>{router.push("/temple/add")}} >
                   Add Temple

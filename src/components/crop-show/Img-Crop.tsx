@@ -7,6 +7,8 @@ import Button from "../ui/button/Button";
 interface Props {
   cropImage: { image: string; key: string };
   setCropImage: any;
+  setSquare?:React.Dispatch<React.SetStateAction<any>>;
+  square?:boolean;
   cropItem: boolean;
   setSelectedImg: React.Dispatch<React.SetStateAction<any>>;
   setFileImg: React.Dispatch<React.SetStateAction<any>>;
@@ -20,11 +22,14 @@ const Cropper: React.FC<Props> = ({
   setSelectedImg,
   setCropImage,
   cropItem,
+  square,
+  setSquare
 }) => {
   const [error, setError] = useState("");
-  const [aspect, setAspect] = useState(cropImage.key == "upi_qr" ? 1 : 2);
+  const [aspect, setAspect] = useState(square?1:cropImage.key == "upi_qr" ? 1 : 2);
   useEffect(()=>{
-    setAspect(cropImage.key == "upi_qr" ? 1 : 2)
+    setAspect(square?1:cropImage.key == "upi_qr" ? 1 : 2)
+    
   },[cropImage.key])
 
   const [crop, setCrop] = useState<any>({
@@ -34,11 +39,6 @@ const Cropper: React.FC<Props> = ({
   const [image, setImage] = useState<any>(null);
 
   const cropImageNow = () => {
-    
-    if (!crop?.height||!crop?.width||crop.width < MIN_DIMENSION || crop.height < MIN_DIMENSION) {
-      setError(`Minimum dimension for crop is ${MIN_DIMENSION}px`);
-      return;
-    }
     setError("");
 
     const canvas = document.createElement("canvas");
@@ -76,6 +76,9 @@ const Cropper: React.FC<Props> = ({
         setFileImg(croppedFile);
         setSelectedImg(base64Image);
         setCropImage(null);
+        if(square){
+          setSquare(false)
+        }
       } else {
         setSelectedImg((prevSelectedGalleryImage) => {
           const updatedGalleryImageImage = { ...prevSelectedGalleryImage };
@@ -88,7 +91,11 @@ const Cropper: React.FC<Props> = ({
           return updatedGalleryImageFile;
         });
         setCropImage(null);
+        if(square){
+          setSquare(false)
+        }
       }
+      
     }, "image/jpeg");
   };
 
@@ -97,7 +104,7 @@ const Cropper: React.FC<Props> = ({
       <div className="absolute inset-0 bg-black opacity-50"></div>
       <div className="absolute md:w-1/3 border-2 border-primary rounded-xl md:h-[65vh] h-96 p-5 overflow-hidden  bg-white z-50 justify-center items-center w-full">
         <div className="flex text-primary cursor-pointer w-full justify-end">
-          <span onClick={() => setCropImage(null)}>
+          <span onClick={() =>{ setCropImage(null);square&&setSquare(false)}}>
             {React.createElement(IoMdCloseCircle, { size: "30" })}
           </span>
         </div>
@@ -107,7 +114,7 @@ const Cropper: React.FC<Props> = ({
               <ReactCrop
                 maxHeight={400}
                 aspect={aspect}
-                minWidth={MIN_DIMENSION}
+                minWidth={square?150:MIN_DIMENSION}
                 crop={crop}
                 onChange={setCrop}
                 

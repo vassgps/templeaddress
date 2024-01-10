@@ -43,6 +43,7 @@ const ServiceForm = ({
   const [editedFormData, setEditedFormData] = useState<ServiceForm | null>();
   const [service_area, setService_area] = useState("");
   const [cropImage, setCropImage] = useState<{key:string,image:string}|null>(null);
+  const [square,setSquare]=useState(false)
 
   const [formData, setFormData] = useState<ServiceForm>({
     name: "",
@@ -207,6 +208,7 @@ const ServiceForm = ({
     
     if (file && allowedTypes.includes(file.type)) {
       setCrop(true)
+      setSquare(true)
       const reader = new FileReader();
       reader.onload = (event: ProgressEvent<FileReader>) => {
         if (event.target && event.target.result) {
@@ -580,6 +582,8 @@ const ServiceForm = ({
               title={"mobile Number"}
               name={"mobile"}
             />
+            {(edit || admin) && (
+              <>
               <Input
                   err={formError?.map_url_err}
                   submit={submit}
@@ -589,8 +593,6 @@ const ServiceForm = ({
                   title={"Google Map Link"}
                   name={"map_url"}
                 />
-            {(edit || admin) && (
-              <>
                 <Input
                   err={formError.telephone_err}
                   submit={submit}
@@ -906,7 +908,7 @@ const ServiceForm = ({
                 />
               </div>
             </div>
-            {(cropImage &&  cropImage?.key!="" && cropImage?.image!="") && <CropShow setSelectedImg={crop? setSelectedImage: setSelectedGalleryImage} setFileImg={crop? setFile:  setGalleryImageFile} cropItem={crop} cropImage={cropImage} setCropImage={setCropImage}/>}
+            {(cropImage &&  cropImage?.key!="" && cropImage?.image!="") && <CropShow setSquare={setSquare} square={square} setSelectedImg={crop? setSelectedImage: setSelectedGalleryImage} setFileImg={crop? setFile:  setGalleryImageFile} cropItem={crop} cropImage={cropImage} setCropImage={setCropImage}/>}
 
           </div>
         </>
