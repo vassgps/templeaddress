@@ -44,6 +44,7 @@ const ViewTemple =({ templeId }) => {
               </div>
             </div>
             <TempleHistory
+            id={temple.uuid}
              social_media={temple?.social_media[0]}
               
               name={temple?.name}
