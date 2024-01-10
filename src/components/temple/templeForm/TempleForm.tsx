@@ -257,15 +257,7 @@ const TempleForm = () => {
             title={"mobile Number"}
             name={"mobile"}
           />
-          <Input
-            err={formError.map_url_err}
-            submit={submit}
-            handleChange={handleChange}
-            value={formData.map_url}
-            type={"text"}
-            title={"Google map link"}
-            name={"map_url"}
-          />
+         
           <Input
             err={formError.telephone_err}
             submit={submit}
@@ -293,7 +285,7 @@ const TempleForm = () => {
               setCropImage={setCropImage}
             />
           )}
-          <div className="flex-row">
+          <div className="flex-row md:col-span-2">
             <div className="w-full justify-center items-center">
               {submit && (
                 <span className="text-[red]  text-[13px]">
