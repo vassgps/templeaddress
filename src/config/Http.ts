@@ -18,18 +18,19 @@ const Http = () => {
       if (error.response) {
         const { status } = error.response;
         const originalRequest = error.config;
-
         if (status === 401) {
-          if(!originalRequest._retry){
+          if (!originalRequest._retry) {
             originalRequest._retry = true;
-           if (localStorage.getItem("access_token")) {
-              const data = await refreshToken();
-              if (data.success) {
-                instance.defaults.headers.common[
-                  "Authorization"
-                ] = `Bearer ${data.access}`;
-                return await instance(error.config);
-              } else {
+            if (localStorage.getItem("access_token")) {
+              try {
+                const data = await refreshToken();
+                if (data.success) {
+                  instance.defaults.headers.common[
+                    "Authorization"
+                  ] = `Bearer ${data.access}`;
+                  return await instance(error.config);
+                }
+              } catch (error) {
                 localStorage.clear();
                 window.location.href = "/login";
               }

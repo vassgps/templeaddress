@@ -46,7 +46,7 @@ const Navbar = () => {
       {/*  Laptop view */}
       <div className=" hidden  lg:flex justify-between  items-center   py-[25px] px-[100px]">
         <button onClick={()=>{router.push("/")}} className={`${Styles["logo"]}`}>
-          TempleAddres
+          TempleAddress
         </button>
         <ul className="relative flex gap-10  text-white font-semibold justify-between w-1/2 items-center ">
           <li>
