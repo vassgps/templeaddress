@@ -39,6 +39,10 @@ const Cropper: React.FC<Props> = ({
   const [image, setImage] = useState<any>(null);
 
   const cropImageNow = () => {
+    if (!crop?.height||!crop?.width||crop.width < 100 ) {
+      setError(`Minimum dimension for crop is ${100}px`);
+      return;
+    }
     setError("");
 
     const canvas = document.createElement("canvas");
@@ -127,7 +131,7 @@ const Cropper: React.FC<Props> = ({
                 />
               </ReactCrop>
               <br />
-              {error && <small className="text-red-500">{error}</small>}
+              {error && <small className="text-red-500 text-center">{error}</small>}
               <div className="flex justify-center">
                 <Button
                   name="Crop Image"
