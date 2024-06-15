@@ -14,20 +14,20 @@ const Footers = () => {
                   <strong>
                     Our location :<br />
                   </strong>
-                  VASS SYSTEMS, CyberPark, Kozhikode, Kerala 673017
+                  18/505E, P.O.Mayanad, Kozhikode, Kerala 673017
                   <br />
                 </p>
 
                 <p className="flex items-center text-sm font-medium text-dark ">
                   <FaPhone />
 
-                  <span className="ml-2">+91 79076 06844</span>
+                  <span className="ml-2">+91 91884 24459</span>
                 </p>
 
                 <p className="flex items-center mt-4 text-sm font-medium text-dark ">
                   <IoMailSharp />
 
-                  <span className="ml-2">info@vasssystems.com</span>
+                  <span className="ml-2">templeaddress.com@gmail.com</span>
                 </p>
               </div>
             </div>
