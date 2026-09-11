@@ -1,0 +1,23 @@
+import React from 'react'
+import { HashRouter, Routes, Route, Link } from 'react-router-dom'
+import * as P from './pages/public'
+import * as V from './pages/vendor'
+import * as X from './pages/partners'
+import { PublicShell } from './ui'
+
+const routes = [
+  ['/', P.Home], ['/temples', P.Temples], ['/t/:slug', P.TemplePage], ['/claim/:slug', P.Claim], ['/book/:slug', P.Book], ['/receipt', P.Receipt], ['/donate/:slug', P.Donate],
+  ['/special', P.Special], ['/special/:id', P.SpecialDetail], ['/festival', P.Festival], ['/services', P.Services], ['/service/:id', P.ServiceDetail], ['/sponsor', P.Sponsor], ['/login', P.Login], ['/account', P.Account], ['/whatsapp', P.WhatsApp],
+  ['/vendor', V.VToday], ['/vendor/poojas', V.VPoojas], ['/vendor/donations', V.VDonations], ['/vendor/payouts', V.VPayouts], ['/vendor/settings', V.VSettings], ['/vendor/page', V.VPage], ['/vendor/data', V.VData],
+  ['/agent', X.AWallet], ['/agent/share', X.AShare], ['/agent/submit', X.ASubmit], ['/agent/submissions', X.ASubmissions], ['/dealer', X.DDash], ['/dealer/agents', X.DAgents],
+  ['/staff', X.SQueues], ['/staff/analytics', X.SAnalytics], ['/staff/listing', X.SListing], ['/staff/kyc', X.SKyc], ['/staff/charts', X.SCharts], ['/staff/special', X.SSpecial], ['/staff/payouts', X.SPayouts], ['/staff/withdrawals', X.SWithdrawals], ['/staff/ownership', X.SOwnership], ['/staff/sponsors', X.SSponsors], ['/staff/backup', X.SBackup], ['/staff/config', X.SConfig], ['/staff/tables', X.STables],
+]
+const groups = [
+  ['Public / devotee', ['/','/temples','/t/kottur-sree-mahavishnu-temple','/t/bilathikulam-sree-shiva-temple','/claim/kottur-sree-mahavishnu-temple','/book/kottur-sree-mahavishnu-temple','/receipt','/donate/kottur-sree-mahavishnu-temple','/special','/special/sp1','/festival','/services','/service/sv1','/sponsor','/login','/account','/whatsapp']],
+  ['Temple admin', ['/vendor','/vendor/poojas','/vendor/donations','/vendor/payouts','/vendor/payouts?mode=own','/vendor/payouts?mode=manual','/vendor/settings','/vendor/settings?tab=6','/vendor/page','/vendor/data']],
+  ['Agent & dealer', ['/agent','/agent/share','/agent/submit','/agent/submissions','/dealer','/dealer/agents']],
+  ['Staff / super admin', ['/staff','/staff/analytics','/staff/payouts','/staff/ownership','/staff/listing','/staff/kyc','/staff/charts','/staff/special','/staff/withdrawals','/staff/sponsors','/staff/backup','/staff/config','/staff/tables']],
+]
+function SiteMap(){ return (<PublicShell><div className="mx-auto max-w-6xl px-4 py-10"><h1 className="text-3xl font-semibold">Prototype site map</h1><p className="text-brown-500">Every route in the MVP. Business rules: custom-gateway listings show no payouts · bank-only listings are paid by manual NEFT sheet · 80G receipt generated with the booking receipt · gateways: Razorpay, PayU, Stripe (platform) and Omniware (temple's own).</p>
+  <div className="mt-6 grid gap-4 md:grid-cols-2">{groups.map(([g,rs])=><div key={g} className="card p-5"><h3 className="font-semibold">{g}</h3><div className="mt-2 grid gap-1">{rs.map(r=><Link key={r} to={r} className="rounded-lg px-2 py-1 text-sm hover:bg-brown-50">{r}</Link>)}</div></div>)}</div></div></PublicShell>) }
+export default function App(){ return (<HashRouter><Routes>{routes.map(([p,C])=><Route key={p} path={p} element={<C/>}/>)}<Route path="/map" element={<SiteMap/>}/><Route path="*" element={<SiteMap/>}/></Routes></HashRouter>) }
