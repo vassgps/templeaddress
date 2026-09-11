@@ -80,7 +80,7 @@ export const Money = ({ v }) => <span className="tabular-nums">₹{Number(v).toL
 
 /* ---------- PUBLIC SHELL ---------- */
 const pubNav = [['/','Home'],['/temples','Temples'],['/special','Special poojas'],['/festival','Festivals'],['/services','Services']]
-export function PublicShell({ children, tenant }) {
+export function PublicShell({ children, tenant, hideChatbot=false }) {
   const [open,setOpen]=useState(false)
   return (<div className={tenant?'tenant':''}>
     <header className={`sticky top-0 z-30 ${tenant?'bg-white/90 text-brown-900':'bg-brown-900/95 text-white'} backdrop-blur border-b ${tenant?'border-gold-400':'border-saffron-500/60'}`}>
@@ -112,7 +112,7 @@ export function PublicShell({ children, tenant }) {
         <div className="flex flex-col gap-1 text-xs text-brown-300 sm:flex-row sm:items-center sm:justify-between"><span>Terms · Privacy · Refunds</span><span>© 2026 TempleAddress</span></div>
       </div></div>
     </footer>
-    <Chatbot/>
+    {!hideChatbot&&<Chatbot/>}
   </div>)
 }
 
