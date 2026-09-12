@@ -1,17 +1,18 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarCheck, CalendarDays, ListOrdered, Ticket, Music, Landmark, PenLine, Settings, Banknote, Download, MessageCircle, Check, Plus, Megaphone, Clock, Users2, Share2, Upload, ArrowRightLeft, Crown, Globe, Pencil, ShieldCheck, Handshake, Sparkles } from 'lucide-react'
-import { festival as F } from '../data'
+import { CalendarCheck, CalendarDays, ListOrdered, Ticket, Download, MessageCircle, Check, Plus, Megaphone, Clock, Users2, Share2, Upload, Globe, Pencil, ShieldCheck, Handshake, Sparkles, Zap, X, Power, Image as ImageIcon, Phone } from 'lucide-react'
+import { festival as F, poojaCategories, bookingTypeOptions } from '../data'
 import { DashShell, Pill, Field, Input, Select, Toggle, Table, Stat, Tabs, useToast } from '../ui'
 
 /* =============================================================================
    FESTIVAL COMMITTEE DASHBOARD  (/festival-admin)
+   Kept deliberately simple for this MVP — no ERP-style finance/accounting screens.
    How it differs from the temple dashboard:
-   · a festival is time-bound — a countdown and a budget replace the daily pooja chart
-   · offerings are limited per festival DAY, and sell out; sponsorships are the main income
-   · the committee hires artists/troupes (money going out) — temples never do
+   · a festival is time-bound — a countdown replaces the daily pooja chart
+   · offerings use the same "pooja item" model as a temple (basic + advanced + Live booking),
+     but limits apply per festival DAY, not per calendar day
    · a "day sheet" per festival day replaces the temple's daily chart (names read at the ritual)
-   · settlement is fast during the festival week, then the listing is archived / rolled over
+   · sponsorship also happens straight from the public festival page — no login needed there
    ========================================================================== */
 
 const items = [{ group:'Festival committee', links:[
@@ -20,31 +21,27 @@ const items = [{ group:'Festival committee', links:[
   ['/festival-admin/offerings','Offerings',ListOrdered],
   ['/festival-admin/bookings','Day sheets',Ticket],
   ['/festival-admin/sponsors','Sponsors',Handshake],
-  ['/festival-admin/artists','Artists & vendors',Music],
-  ['/festival-admin/finance','Finance',Landmark],
-  ['/festival-admin/page','Festival page',PenLine],
-  ['/festival-admin/settings','Settings',Settings],
+  ['/festival-admin/profile','Festival profile',Globe],
+  ['/festival-admin/settings','Settings',ShieldCheck],
 ]}]
-const Shell = ({ children }) => <DashShell role="Vendor · Festival committee" user={`${F.committee} · ${F.convenor} (Convenor)`} items={items} badge="5">{children}</DashShell>
+const Shell = ({ children }) => <DashShell role="Vendor · Festival committee" user={`${F.code} · ${F.committee} · ${F.convenor} (Convenor)`} items={items} badge="5">{children}</DashShell>
 const H = ({ t, s, right }) => <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">{t}</h1>{s&&<div className="text-sm text-brown-500">{s}</div>}</div>{right}</div>
 const rs = n => `₹${Number(n).toLocaleString('en-IN')}`
 const kindTone = k => ({Ritual:'warn',Cultural:'info',Procession:'gold',Seva:'ok'})[k]||'n'
 const statusTone = s => /Confirmed|signed|Paid|Done/.test(s) ? 'ok' : /Needs|Awaiting|To confirm|Pledged/.test(s) ? 'warn' : 'info'
 
-/* ---------------- OVERVIEW ---------------- */
+/* ---------------- OVERVIEW (simple) ---------------- */
 export function FOverview() {
   const [toast,el]=useToast()
-  const pct = Math.round(F.collected/F.budget*100)
+  const totalOffered = F.offerings.reduce((s,o)=>s+o.sold,0)
   const tasks = [
-    ['Assign an artist for Ottanthullal (5 Dec)','todo','/festival-admin/artists'],
-    ['Confirm Kalamezhuthu Pattu team (6 Dec)','todo','/festival-admin/artists'],
+    ['Confirm the still-unconfirmed programme items','todo','/festival-admin/programme'],
     ['Collect sponsor balance — Ulliyeri Co-op Bank ₹20,000','todo','/festival-admin/sponsors'],
-    ['Publish the full programme on the festival page','todo','/festival-admin/page'],
-    ['Panchayat & police permission letters','todo','/festival-admin/settings'],
-    ['Committee bank account verified for settlement','done','/festival-admin/finance'],
+    ['Complete the festival profile (gallery & contacts)','todo','/festival-admin/profile'],
+    ['Upload KYC agreement for staff verification','todo','/festival-admin/settings'],
     ['Offerings & prices published','done','/festival-admin/offerings'],
   ]
-  return (<Shell>{el}<H t="Festival overview" s={`${F.committee} · ${F.temple}`} right={<div className="flex gap-2"><Link to="/festival" className="btn-g"><Globe size={16}/>View public page</Link><button onClick={()=>toast('Update sent to 1,180 devotees on WhatsApp')} className="btn-p"><Megaphone size={16}/>Send update</button></div>}/>
+  return (<Shell>{el}<H t="Festival overview" s={`Listing ID ${F.code} · ${F.committee} · ${F.temple}`} right={<div className="flex gap-2"><Link to="/festival" className="btn-g"><Globe size={16}/>View public page</Link><button onClick={()=>toast('Update sent to 1,180 devotees on WhatsApp')} className="btn-p"><Megaphone size={16}/>Send update</button></div>}/>
 
     <div className="overflow-hidden rounded-2xl bg-temple-grad p-5 text-white md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -53,15 +50,13 @@ export function FOverview() {
           <div className="ml mt-0.5 text-sm text-brown-100">{F.ml} · {F.from} – {F.to} · {F.place}</div></div>
         <div className="text-right"><div className="font-display text-4xl font-bold text-gold-300 md:text-5xl">{F.daysToGo}</div><div className="text-xs text-brown-100">days to Kodiyettam</div></div>
       </div>
-      <div className="mt-5"><div className="h-2.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-gold-400" style={{width:`${pct}%`}}/></div>
-        <div className="mt-1.5 flex justify-between text-xs text-brown-100"><span><b className="text-white">{rs(F.collected)}</b> collected ({pct}%)</span><span>Budget {rs(F.budget)}</span></div></div>
     </div>
 
     <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-      <Stat v={rs(F.collected)} l="collected so far" delta="+₹42,500 this week"/>
-      <Stat v={`${rs(F.sponsorGot)} / ${rs(F.sponsorTarget)}`} l="sponsorships"/>
-      <Stat v={rs(F.committed)} l="committed to vendors"/>
-      <Stat v={rs(F.inHand)} l="balance in hand"/>
+      <Stat v={totalOffered} l="offerings booked so far"/>
+      <Stat v={`${rs(F.sponsorGot)} / ${rs(F.sponsorTarget)}`} l="sponsorship raised"/>
+      <Stat v={F.programme.length} l="programme events"/>
+      <Stat v={F.offerings.filter(o=>o.live).length} l="live-bookable offerings"/>
     </div>
 
     <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_340px]"><div className="space-y-5">
@@ -75,7 +70,7 @@ export function FOverview() {
     </div>
 
       <aside className="space-y-4">
-        <div className="card p-5"><h3 className="font-semibold">Readiness checklist</h3><p className="text-xs text-brown-500">5 items still open</p>
+        <div className="card p-5"><h3 className="font-semibold">To do</h3>
           <div className="mt-3 space-y-2">{tasks.map(([t,st,h])=><Link key={t} to={h} className="flex items-start gap-2 rounded-lg p-1.5 text-sm hover:bg-brown-50">
             <span className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full text-[10px] ${st==='done'?'bg-emerald-500 text-white':'border-2 border-saffron-400'}`}>{st==='done'&&'✓'}</span>
             <span className={st==='done'?'text-brown-400 line-through':''}>{t}</span></Link>)}</div></div>
@@ -85,7 +80,7 @@ export function FOverview() {
   </Shell>)
 }
 
-/* ---------------- PROGRAMME ---------------- */
+/* ---------------- PROGRAMME (program list) ---------------- */
 export function FProgramme() {
   const [toast,el]=useToast(); const [day,setDay]=useState(0); const [add,setAdd]=useState(false)
   const list = F.programme.filter(p=>p[0]===F.days[day])
@@ -96,45 +91,75 @@ export function FProgramme() {
         <Field label="Start time"><Input type="time" defaultValue="19:00"/></Field><Field label="Type"><Select options={['Ritual','Cultural','Procession','Seva']}/></Field>
         <Field label="Artist / troupe / in-charge" hint="Search TempleAddress service providers or type a name"><Input placeholder="Kalamandalam …"/></Field><Field label="Duration"><Select options={['30 min','1 hour','2 hours','3 hours','All day']}/></Field>
         <Field label="Description for devotees" className="md:col-span-2"><textarea className="input" rows={2} placeholder="Shown on the festival page and in the WhatsApp update"/></Field></div>
-      <div className="flex gap-2"><button onClick={()=>{setAdd(false);toast('Event added to 5 Dec')}} className="btn-p">Add to programme</button><button onClick={()=>setAdd(false)} className="btn-g">Cancel</button></div></div>}
+      <div className="flex gap-2"><button onClick={()=>{setAdd(false);toast('Event added to '+F.days[day])}} className="btn-p">Add to programme</button><button onClick={()=>setAdd(false)} className="btn-g">Cancel</button></div></div>}
 
-    <div className="card p-5"><div className="flex items-center justify-between"><h3 className="font-semibold">{F.days[day]} · {list.length} events</h3><span className="text-xs text-brown-500">Drag to reorder · times are shown to devotees</span></div>
+    <div className="card p-5"><div className="flex items-center justify-between"><h3 className="font-semibold">{F.days[day]} · {list.length} events</h3><span className="text-xs text-brown-500">Times are shown to devotees</span></div>
       <div className="mt-3 divide-y divide-brown-100">{list.map(([,name,time,kind,who,st])=>
         <div key={name} className="flex flex-wrap items-center gap-3 py-3"><div className="w-20 shrink-0 font-semibold">{time}</div>
           <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><b>{name}</b><Pill tone={kindTone(kind)}>{kind}</Pill></div><div className="text-sm text-brown-500">{who}</div></div>
           <Pill tone={statusTone(st)}>{st}</Pill><button className="btn-g !py-1.5 text-xs"><Pencil size={14}/>Edit</button></div>)}
         {!list.length && <p className="py-6 text-center text-sm text-brown-500">No events on this day yet.</p>}</div></div>
 
-    <div className="card mt-5 p-5"><h3 className="font-semibold">Programme notes</h3><div className="mt-3 grid gap-4 md:grid-cols-2">
-      <Field label="Announcement text (WhatsApp)" hint="Sent to devotees who booked or followed the festival"><textarea className="input" rows={3} defaultValue={'🙏 Kottur Utsavam 2026 · 3–8 December\nKodiyettam 3 Dec 6:00 AM · Aarattu 8 Dec 5:00 AM\nBook vazhipadu and sponsorships: kottur-utsavam-2026.templeaddress.com'}/></Field>
+    <div className="card mt-5 p-5"><h3 className="font-semibold">Send a programme update</h3><div className="mt-3 grid gap-4 md:grid-cols-2">
+      <Field label="WhatsApp announcement" hint="Sent to devotees who booked or followed the festival"><textarea className="input" rows={3} defaultValue={'🙏 Kottur Utsavam 2026 · 3–8 December\nKodiyettam 3 Dec 6:00 AM · Aarattu 8 Dec 5:00 AM\nBook offerings and sponsorships: kottur-utsavam-2026.templeaddress.com'}/></Field>
       <Field label="Printed notice (Malayalam)"><textarea className="input ml" rows={3} defaultValue={'കൊട്ടൂർ ഉത്സവം 2026 · ഡിസംബർ 3 – 8'}/></Field></div>
       <div className="mt-3 flex flex-wrap gap-2"><button onClick={()=>toast('Programme PDF downloaded')} className="btn-g"><Download size={16}/>Programme PDF</button><button onClick={()=>toast('Notice sent to 1,180 devotees')} className="btn-wa"><MessageCircle size={16}/>Send on WhatsApp</button><button className="btn-g"><Share2 size={16}/>Share link</button></div></div>
   </Shell>)
 }
 
-/* ---------------- OFFERINGS ---------------- */
+/* ---------------- OFFERINGS (bookable) — individual pooja item model ---------------- */
+const blankOffering = () => ({ code:'', name:'', ml:'', category:poojaCategories[poojaCategories.length-1], price:'', dailyLimit:0, sold:0,
+  bookingType:bookingTypeOptions[2], live:false, bookable:true, purpose:'', startTime:'', endTime:'', minBookingTime:'Same day, before booking closes', deity:'' })
+
 export function FOfferings() {
-  const [toast,el]=useToast()
-  return (<Shell>{el}<H t="Offerings & sponsorship slots" s="Festival vazhipadu and sponsorships — limits apply per festival day, not per year" right={<button onClick={()=>toast('Saved — new prices apply to new bookings')} className="btn-p">Save changes</button>}/>
-    <div className="mb-4 rounded-xl bg-saffron-50 p-3 text-sm text-saffron-800">Unlike a temple's daily poojas, each offering below has a <b>per-day limit across the 6 festival days</b>. When a day sells out, devotees are offered the next available day automatically.</div>
-    <div className="card p-4"><Table head={['Offering','Malayalam','Price ₹','Limit / day','Sold','Available on','Bookable','']} rows={F.offerings.map(([n,ml,p,lim,sold])=>[
-      <b>{n}</b>,<span className="ml">{ml}</span>,<input defaultValue={p} className="input !w-24 !py-1.5"/>,<input defaultValue={lim||''} placeholder="∞" className="input !w-20 !py-1.5"/>,
-      <span><b>{sold}</b>{lim?<span className="text-xs text-brown-500"> / {lim*6}</span>:null}</span>,
-      <Select options={['All 6 days','3 Dec only','Aarattu day only','Custom…']}/>,<Toggle defaultChecked/>,<button className="text-xs text-brown-500">Edit</button>])}/>
-      <div className="mt-3 flex gap-2"><button className="btn-s"><Plus size={16}/>Add offering</button><button className="btn-g">Copy from last year</button></div></div>
+  const [toast,el]=useToast(); const [list,setList]=useState(F.offerings)
+  const [editing,setEditing]=useState(null); const [draft,setDraft]=useState(null)
+  const setField=(k,v)=>setDraft(d=>({...d,[k]:v}))
+  const openEdit = i => { setEditing(i); setDraft(i==='new'?{...blankOffering(),code:`${F.code}-O${list.length+1}`}:{...list[i]}) }
+  const save = () => { if(!draft.name.trim()||!draft.code.trim()){toast('Name and code are required');return}
+    if(editing==='new') setList(l=>[...l,draft]); else setList(l=>l.map((o,i)=>i===editing?draft:o))
+    toast(editing==='new'?`${draft.name} added`:`${draft.name} updated`); setEditing(null) }
+  const toggleField=(i,k)=>setList(l=>l.map((o,j)=>j===i?{...o,[k]:!o[k]}:o))
+  const remove = i => { const name=list[i].name; setList(l=>l.filter((_,j)=>j!==i)); toast(`${name} removed`) }
 
-    <div className="mt-5 grid gap-5 md:grid-cols-2">
-      <div className="card p-5"><h3 className="font-semibold">Sponsorship packages</h3><p className="text-sm text-brown-500">Bigger slots sold by the committee, not booked online.</p>
-        <div className="mt-3 divide-y divide-brown-100">{[['Title sponsor','Arch + stage banner, name on all publicity','₹1,00,000','1 slot · sold'],['Day sponsor','Banner for one festival day + stage mention','₹35,000','6 slots · 2 sold'],['Programme sponsor','Named before one cultural programme','₹25,000','8 slots · 1 sold']].map(([n,d,p,s])=>
-          <div key={n} className="flex flex-wrap items-center gap-3 py-3"><div className="flex-1"><b>{n}</b><div className="text-xs text-brown-500">{d}</div></div><b>{p}</b><Pill tone={s.includes('sold')&&!s.includes('0 sold')?'ok':'n'}>{s}</Pill></div>)}</div>
-        <Link to="/festival-admin/sponsors" className="btn-g mt-3 w-full"><Handshake size={16}/>Manage sponsors</Link></div>
+  return (<Shell>{el}<H t="Offerings" s="Bookable offerings & sponsorships — the same pooja-item details as a temple, with a per-festival-day limit" right={<button onClick={()=>openEdit('new')} className="btn-s"><Plus size={16}/>Add offering</button>}/>
+    <div className="mb-4 rounded-xl bg-saffron-50 p-3 text-sm text-saffron-800">Each offering's daily limit applies <b>per festival day</b> across all {F.days.length} days, not per calendar year. Devotees on the public page book against a specific festival date.</div>
 
-      <div className="card p-5"><h3 className="font-semibold">Booking window</h3><div className="mt-3 grid gap-4">
-        <Field label="Bookings open from"><Input type="date" defaultValue="2026-09-01"/></Field>
-        <Field label="Bookings close" hint="Sponsorship names must be printed before this"><Select options={['1 day before each event','3 days before the festival','On the festival day itself']} defaultValue="1 day before each event"/></Field>
-        <Field label="Day sheet sent to committee at"><Select options={['6:00 PM','8:00 PM','10:00 PM']} defaultValue="8:00 PM"/></Field>
-        <Toggle label="Allow NRI devotees to book with international cards" defaultChecked/></div></div>
-    </div>
+    <div className="card p-4"><Table head={['Code','Offering','Category','Price ₹','Limit / day','Sold','Live','Bookable','']} rows={list.map((o,i)=>[
+      <span className="text-xs text-brown-500">{o.code}</span>,
+      <div><b>{o.name}</b><div className="ml text-xs text-brown-500">{o.ml}</div></div>,
+      <Pill tone="n">{o.category}</Pill>,
+      <b>₹{o.price}</b>,
+      o.dailyLimit?`${o.dailyLimit}/day`:'∞',
+      <b>{o.sold}</b>,
+      <Toggle defaultChecked={o.live} onChange={()=>{toggleField(i,'live');toast(o.live?`${o.name}: live booking off`:`${o.name}: bookable instantly, any time`)}}/>,
+      <Toggle defaultChecked={o.bookable} onChange={()=>toggleField(i,'bookable')}/>,
+      <div className="flex gap-2"><button onClick={()=>openEdit(i)} className="text-xs font-semibold text-saffron-600"><Pencil size={12} className="mr-0.5 inline"/>Edit</button><button onClick={()=>remove(i)} className="text-xs text-red-600">Remove</button></div>,
+    ])}/></div>
+
+    {editing!==null && draft && <div className="card mt-5 space-y-6 p-5">
+      <div className="flex items-center justify-between"><h3 className="text-lg font-semibold">{editing==='new'?'Add an offering':`Edit · ${list[editing].name}`}</h3><button onClick={()=>setEditing(null)} className="text-brown-400 hover:text-brown-700"><X size={18}/></button></div>
+      <div><h4 className="text-xs font-bold uppercase tracking-wide text-brown-500">Basic details</h4>
+        <div className="mt-3 grid gap-4 md:grid-cols-2">
+          <Field label="Name (English)"><Input value={draft.name} onChange={e=>setField('name',e.target.value)}/></Field>
+          <Field label="Name (Malayalam)"><Input className="input ml" value={draft.ml} onChange={e=>setField('ml',e.target.value)}/></Field>
+          <Field label="Code" hint="Unique per listing"><Input value={draft.code} onChange={e=>setField('code',e.target.value)}/></Field>
+          <Field label="Category"><Select options={poojaCategories} value={draft.category} onChange={e=>setField('category',e.target.value)}/></Field>
+          <Field label="Price ₹"><Input type="number" value={draft.price} onChange={e=>setField('price',+e.target.value)}/></Field>
+          <Field label="Booking type"><Select options={bookingTypeOptions} value={draft.bookingType} onChange={e=>setField('bookingType',e.target.value)}/></Field>
+        </div>
+        <div className="mt-4 flex items-start justify-between gap-3 rounded-xl bg-emerald-50 p-3"><div><div className="flex items-center gap-1.5 text-sm font-semibold"><Zap size={14} className="text-emerald-600"/>Enable Live Booking</div><p className="mt-1 text-xs text-emerald-800">Bookable instantly any time, even after that day's sheet is sent. The committee gets an email/SMS/WhatsApp notification immediately; it's picked up in the next day sheet.</p></div><Toggle defaultChecked={draft.live} onChange={v=>setField('live',v)}/></div></div>
+      <div><h4 className="text-xs font-bold uppercase tracking-wide text-brown-500">Advanced details</h4>
+        <div className="mt-3 grid gap-4 md:grid-cols-2">
+          <Field label="Purpose" className="md:col-span-2"><textarea className="input" rows={2} value={draft.purpose} onChange={e=>setField('purpose',e.target.value)}/></Field>
+          <Field label="Start time"><Input placeholder="6:00 AM" value={draft.startTime} onChange={e=>setField('startTime',e.target.value)}/></Field>
+          <Field label="End time"><Input placeholder="6:30 AM" value={draft.endTime} onChange={e=>setField('endTime',e.target.value)}/></Field>
+          <Field label="Minimum booking time"><Input value={draft.live?'Instant · live booking':draft.minBookingTime} onChange={e=>setField('minBookingTime',e.target.value)} disabled={draft.live}/></Field>
+          <Field label="Deity"><Input value={draft.deity} onChange={e=>setField('deity',e.target.value)}/></Field>
+          <Field label="Limit per festival day" hint="0 = unlimited"><Input type="number" value={draft.dailyLimit} onChange={e=>setField('dailyLimit',+e.target.value)}/></Field>
+        </div></div>
+      <div className="flex gap-2 border-t border-brown-100 pt-4"><button onClick={save} className="btn-p"><Check size={16}/>Save offering</button><button onClick={()=>setEditing(null)} className="btn-g">Cancel</button></div>
+    </div>}
   </Shell>)
 }
 
@@ -150,7 +175,7 @@ export function FBookings() {
       <div className="card mt-5 p-5"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-lg font-semibold">{F.days[tab]} · names to be read</h3>{sent?<Pill tone="ok"><Check size={12}/>Sent & locked</Pill>:<Pill tone="warn">Draft — closes 8:00 PM the day before</Pill>}</div>
         <div className="mt-3"><Table head={['#','Offering','Devotee','Nakshatra','Qty','₹']} rows={F.sheet.map(([o,d,n,q,a],i)=>[i+1,o,<b>{d}</b>,n,q,rs(a)])}/></div>
         <div className="mt-4 flex flex-wrap gap-2"><button onClick={()=>toast('PDF downloaded — print for the melshanthi')} className="btn-g"><Download size={16}/>Print sheet (PDF)</button><button className="btn-wa"><MessageCircle size={16}/>Send to melshanthi</button><button className="btn-g"><Megaphone size={16}/>Announcement list</button></div>
-        <p className="mt-2 text-xs text-brown-500">Sponsorship names (Annadanam, Ezhunnallippu) are grouped at the top of the printed sheet so they can be announced before the ritual begins.</p></div>
+        <p className="mt-2 text-xs text-brown-500">Sponsorship names (Annadanam, Ezhunnallippu) are grouped at the top of the printed sheet so they can be announced before the ritual begins. Any <b>Live</b> offering booked after this sheet was sent appears on the next day's sheet instead.</p></div>
     </> : <>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v="308" l="bookings so far"/><Stat v={rs(F.collected)} l="collected"/><Stat v="19 / 36" l="Utsava Bali sold"/><Stat v="9 / 12" l="Annadanam days sold"/></div>
       <div className="card mt-5 p-4"><Table head={['Day','Bookings','Offerings sold','₹','Day sheet']} rows={F.days.map((d,i)=>[<b>{d}</b>,[42,63,58,47,51,47][i],['Bali 4 · Annadanam 2 · Deepam 31','Bali 6 · Annadanam 2 · Deepam 44','Bali 3 · Annadanam 1 · Deepam 39','Bali 2 · Annadanam 2 · Deepam 28','Bali 2 · Annadanam 1 · Deepam 35','Bali 2 · Annadanam 1 · Deepam 35'][i],rs([98500,142000,121000,96500,118000,108500][i]),<Pill tone={i?'n':'warn'}>{i?'Not due yet':'Closes tonight'}</Pill>])}/></div>
@@ -163,16 +188,17 @@ export function FBookings() {
 export function FSponsors() {
   const [toast,el]=useToast(); const [add,setAdd]=useState(false)
   const pct = Math.round(F.sponsorGot/F.sponsorTarget*100)
-  return (<Shell>{el}<H t="Sponsors" s="Committee-sold sponsorships — the largest share of festival income" right={<button onClick={()=>setAdd(!add)} className="btn-p"><Plus size={16}/>Record a sponsor</button>}/>
+  return (<Shell>{el}<H t="Sponsors" s="Devotees and organisations can also sponsor directly from the public festival page — no login needed" right={<button onClick={()=>setAdd(!add)} className="btn-p"><Plus size={16}/>Record a sponsor</button>}/>
+    <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900 mb-5"><b>Public self-serve sponsorship</b> is live on <Link to="/festival" className="underline">the festival page</Link> — anyone can pick a package and pay online without an account. Use the form below only for sponsors who paid by bank transfer, cheque or cash to the committee.</div>
+
     <div className="card p-5"><div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-lg font-semibold">Sponsorship target</h3><p className="text-sm text-brown-500">{rs(F.sponsorGot)} raised of {rs(F.sponsorTarget)}</p></div><b className="font-display text-2xl">{pct}%</b></div>
       <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-brown-100"><div className="h-full rounded-full bg-saffron-500" style={{width:`${pct}%`}}/></div></div>
 
     {add && <div className="card mt-5 space-y-4 p-5"><h3 className="font-semibold">Record a sponsorship</h3>
       <div className="grid gap-4 md:grid-cols-2"><Field label="Sponsor name (as printed)"><Input placeholder="Malabar Gold Traders"/></Field><Field label="Package"><Select options={['Title sponsor ₹1,00,000','Day sponsor ₹35,000','Programme sponsor ₹25,000','Annadanam day ₹5,000','Custom amount']}/></Field>
         <Field label="Amount ₹"><Input type="number" placeholder="35000"/></Field><Field label="Payment"><Select options={['Paid in full','Advance received','Pledged — not yet paid']}/></Field>
-        <Field label="Method"><Select options={['Bank transfer','Cheque','Cash to treasurer','Online (TempleAddress)']}/></Field><Field label="Reference / UTR"><Input placeholder="FDRLN…"/></Field>
-        <Field label="Contact person & phone"><Input placeholder="Name · +91"/></Field><Field label="GSTIN (for invoice)"><Input placeholder="32AAACR1234A1Z5"/></Field>
-        <Field label="Where the name appears" className="md:col-span-2"><div className="flex flex-wrap gap-2">{['Festival page','Arch / banner','Stage announcement','Receipts','Printed notice'].map((x,i)=><button key={x} className={`rounded-full px-3 py-1.5 text-sm ${i<3?'bg-brown-900 text-white':'border border-brown-200 bg-white'}`}>{x}</button>)}</div></Field></div>
+        <Field label="Method"><Select options={['Bank transfer','Cheque','Cash to treasurer','Online (public page)']}/></Field><Field label="Reference / UTR"><Input placeholder="FDRLN…"/></Field>
+        <Field label="Contact person & phone"><Input placeholder="Name · +91"/></Field><Field label="GSTIN (for invoice)"><Input placeholder="32AAACR1234A1Z5"/></Field></div>
       <div className="flex gap-2"><button onClick={()=>{setAdd(false);toast('Sponsor recorded — GST invoice queued')}} className="btn-p">Save sponsor</button><button onClick={()=>setAdd(false)} className="btn-g">Cancel</button></div></div>}
 
     <div className="card mt-5 p-4"><Table head={['Sponsor','Package','₹','Status','Note','']} rows={F.sponsors.map(([n,p,a,st,note])=>[<b>{n}</b>,p,rs(a),<Pill tone={statusTone(st)}>{st}</Pill>,<span className="text-xs text-brown-500">{note}</span>,<button className="text-xs font-semibold text-saffron-600">Invoice</button>])}/></div>
@@ -187,83 +213,31 @@ export function FSponsors() {
   </Shell>)
 }
 
-/* ---------------- ARTISTS & VENDORS ---------------- */
-export function FArtists() {
-  const [toast,el]=useToast()
-  const totalFee = F.artists.reduce((s,a)=>s+a[3],0), totalAdv = F.artists.reduce((s,a)=>s+a[4],0)
-  return (<Shell>{el}<H t="Artists & vendors" s="Money going out — troupes, elephants, sound and stage that the committee hires" right={<Link to="/services" className="btn-p"><Sparkles size={16}/>Find artists on TempleAddress</Link>}/>
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v={rs(totalFee)} l="total artist fees"/><Stat v={rs(totalAdv)} l="advance paid"/><Stat v={rs(totalFee-totalAdv)} l="balance on festival days"/><Stat v="2" l="still to confirm"/></div>
-    <div className="card mt-5 p-4"><Table head={['Troupe / vendor','Programme','When','Fee ₹','Advance ₹','Balance ₹','Status','']} rows={F.artists.map(([n,p,w,fee,adv,st])=>[
-      <b>{n}</b>,p,w,rs(fee),rs(adv),<b>{rs(fee-adv)}</b>,<Pill tone={statusTone(st)}>{st}</Pill>,<button className="text-xs font-semibold text-saffron-600">Agreement</button>])}/>
-      <div className="mt-3 flex gap-2"><button className="btn-s"><Plus size={16}/>Add artist / vendor</button><button onClick={()=>toast('Payment schedule downloaded')} className="btn-g"><Download size={16}/>Payment schedule</button></div></div>
-
-    <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_340px]">
-      <div className="card p-5"><h3 className="font-semibold">Unassigned programmes</h3><p className="text-sm text-brown-500">Events on the schedule with no troupe booked yet.</p>
-        <div className="mt-3 divide-y divide-brown-100">{[['Ottanthullal','5 Dec · 7:00 PM','₹8,000 – ₹12,000 typical'],['Kalamezhuthu Pattu','6 Dec · 8:00 PM','Kurup team asked — awaiting reply']].map(([n,w,note])=>
-          <div key={n} className="flex flex-wrap items-center gap-3 py-3"><div className="flex-1"><b>{n}</b><div className="text-xs text-brown-500">{w} · {note}</div></div><Link to="/services" className="btn-g !py-1.5 text-xs">Find artist</Link><button className="btn-s !py-1.5 text-xs">Add manually</button></div>)}</div></div>
-      <div className="card p-5 text-sm"><h3 className="font-semibold">How hiring works</h3><p className="mt-2 text-brown-600">Artists listed on TempleAddress can be booked from here — their fee, advance and date lock into your schedule and the balance appears in Finance. Troupes you hire privately can be added manually; TempleAddress does not handle that money.</p>
-        <div className="mt-3 rounded-xl bg-blue-50 p-3 text-xs text-blue-900">Advances paid through TempleAddress are deducted from your festival collection before settlement — no separate transfer needed.</div></div>
-    </div>
-  </Shell>)
-}
-
-/* ---------------- FINANCE ---------------- */
-export function FFinance() {
-  const [toast,el]=useToast(); const [tab,setTab]=useState(0)
-  const income = [['Offerings & vazhipadu (online)',289500],['Sponsorships',395000],['Donations to festival fund',0]]
-  const totalExp = F.expenses.reduce((s,e)=>s+e[2],0), paidExp = F.expenses.reduce((s,e)=>s+e[3],0)
-  return (<Shell>{el}<H t="Finance" s="Budget, collections, expenses and settlement to the committee account" right={<button onClick={()=>toast('Statement downloaded')} className="btn-g"><Download size={16}/>Statement (Excel)</button>}/>
-    <Tabs tabs={['Position','Expenses','Settlement']} at={tab} set={setTab}/>
-    {tab===0 && <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v={rs(F.budget)} l="budget"/><Stat v={rs(F.collected)} l="collected" delta={`${Math.round(F.collected/F.budget*100)}% of budget`}/><Stat v={rs(totalExp)} l="expenses committed"/><Stat v={rs(F.collected-paidExp)} l="balance in hand"/></div>
-      <div className="mt-5 grid gap-5 md:grid-cols-2">
-        <div className="card p-5"><h3 className="font-semibold">Income</h3><Table head={['Source','₹']} rows={income.map(([s,a])=>[s,rs(a)])}/>
-          <div className="mt-3 flex justify-between border-t border-brown-100 pt-3 font-bold"><span>Total</span><span>{rs(F.collected)}</span></div></div>
-        <div className="card p-5"><h3 className="font-semibold">Gap to budget</h3><p className="text-sm text-brown-500">{rs(F.budget-F.collected)} still to raise in {F.daysToGo} days.</p>
-          <div className="mt-3 space-y-2 text-sm">{[['Unsold day sponsorships','₹1,40,000'],['Unsold Utsava Bali slots','₹42,500'],['Annadanam days left','₹15,000'],['Expected walk-in offerings','₹2,00,000']].map(([n,a])=>
-            <div key={n} className="flex justify-between rounded-lg bg-brown-50 px-3 py-2"><span>{n}</span><b>{a}</b></div>)}</div></div>
-      </div></>}
-    {tab===1 && <>
-      <div className="card p-4"><Table head={['Head','Category','Budgeted ₹','Paid ₹','Balance ₹','Note']} rows={F.expenses.map(([h,c,amt,paid,note])=>[<b>{h}</b>,c,rs(amt),rs(paid),<b>{rs(amt-paid)}</b>,<span className="text-xs text-brown-500">{note}</span>])}/>
-        <div className="mt-3 flex gap-2"><button className="btn-s"><Plus size={16}/>Add expense</button><button className="btn-g"><Upload size={16}/>Upload bill</button></div></div>
-      <div className="card mt-5 p-5 text-sm"><b>Who can enter expenses</b><p className="mt-1 text-brown-600">Only the Convenor and the Treasurer can add or approve expenses. Every entry keeps an audit trail with the uploaded bill, and the committee can download the full register after the festival for the general body meeting.</p></div></>}
-    {tab===2 && <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v={rs(118400)} l="payable now"/><Stat v="Mon 15 Sept" l="next settlement"/><Stat v={rs(171100)} l="settled so far"/><Stat v="T+1" l="during festival week"/></div>
-      <div className="card mt-5 p-5"><div className="flex items-center gap-2"><Landmark size={18}/><b>Committee bank account</b><Pill tone="ok">Penny-drop verified</Pill></div>
-        <div className="mt-2 text-sm">Kottur Utsava Committee · Federal Bank ····7781 · IFSC FDRL0001234</div>
-        <p className="mt-2 text-xs text-brown-500">Online bookings and sponsorships collected by TempleAddress are settled to this account. Artist advances paid through TempleAddress are deducted before settlement.</p></div>
-      <div className="card mt-5 p-5"><div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold">Express settlement during festival week</h3><p className="text-sm text-brown-500">Money collected is settled the next working day from 1–8 December, so the committee has cash for daily expenses. Outside festival week the normal weekly cycle applies.</p></div><Toggle label="On" defaultChecked/></div></div>
-      <div className="card mt-5 p-5"><h3 className="font-semibold">Settlement history</h3><Table head={['Period','Bookings','Collected ₹','Advances deducted ₹','Net ₹','Paid on','UTR','Status']} rows={[
-        ['1–7 Sept','63','89,400','47,500','41,900','8 Sept','FDRLN26251000488',<Pill tone="ok">Paid</Pill>],
-        ['25–31 Aug','58','76,200','0','76,200','1 Sept','FDRLN26244000301',<Pill tone="ok">Paid</Pill>],
-        ['18–24 Aug','41','53,000','0','53,000','25 Aug','FDRLN26237000194',<Pill tone="ok">Paid</Pill>]]}/></div></>}
-  </Shell>)
-}
-
-/* ---------------- FESTIVAL PAGE EDITOR ---------------- */
+/* ---------------- FESTIVAL PROFILE — summary, timings, contacts, gallery ---------------- */
 export function FPage() {
   const [toast,el]=useToast(); const [tab,setTab]=useState(0)
-  const done = [['Festival basics',1],['About & significance',1],['Programme',1],['Offerings',1],['Travel & parking',0],['Poster',1],['Photos',0],['Contacts',1]]
-  return (<Shell>{el}<H t="Festival page" s="kottur-utsavam-2026.templeaddress.com · a micro-site that stays up until the festival ends" right={<div className="flex gap-2"><Link to="/festival" className="btn-g"><Globe size={16}/>Preview</Link><button onClick={()=>toast('Published')} className="btn-p">Publish</button></div>}/>
+  const done = [['Summary',1],['Event timings',1],['Travel & facilities',0],['Gallery & poster',0],['Contact persons',1]]
+  return (<Shell>{el}<H t="Festival profile" s="kottur-utsavam-2026.templeaddress.com · summary, timings, contacts and gallery devotees see" right={<div className="flex gap-2"><Link to="/festival" className="btn-g"><Globe size={16}/>Preview</Link><button onClick={()=>toast('Published')} className="btn-p">Publish</button></div>}/>
     <div className="mb-4 flex flex-wrap gap-2">{done.map(([n,ok])=><Pill key={n} tone={ok?'ok':'warn'}>{ok?<Check size={12}/>:'○'}{n}</Pill>)}</div>
-    <Tabs tabs={['Basics','About','Travel & facilities','Poster & photos','Contacts']} at={tab} set={setTab}/>
+    <Tabs tabs={['Summary','Event timings','Travel & facilities','Gallery & poster','Contact persons']} at={tab} set={setTab}/>
     {tab===0 && <div className="card grid gap-4 p-5 md:grid-cols-2"><Field label="Festival name (English)"><Input defaultValue={F.name}/></Field><Field label="Festival name (Malayalam)"><Input className="input ml" defaultValue={F.ml}/></Field>
       <Field label="Temple"><Input defaultValue={F.temple}/></Field><Field label="Managed by"><Input defaultValue={F.committee}/></Field>
       <Field label="Start date"><Input type="date" defaultValue="2026-12-03"/></Field><Field label="End date"><Input type="date" defaultValue="2026-12-08"/></Field>
-      <Field label="Main ritual days" hint="Highlighted on the page" className="md:col-span-2"><Input defaultValue="Kodiyettam 3 Dec · Aarattu & Pallivetta 8 Dec"/></Field></div>}
-    {tab===1 && <div className="card space-y-4 p-5"><Field label="About this festival" hint="Why devotees come — 3 to 5 sentences"><textarea className="input" rows={4} defaultValue="The annual utsavam of Kottur Sree Mahavishnu Temple runs for six days in December, beginning with Kodiyettam and ending with Aarattu at the temple pond. Families of the eight illams return every year, and the Thayambaka on the fourth night draws crowds from across Malabar."/></Field>
-      <Field label="Significance / history"><textarea className="input" rows={3} defaultValue="Held in Vrischikam since the temple's renovation in 1932."/></Field>
-      <Field label="What's new this year"><textarea className="input" rows={2} defaultValue="Annadanam on all six days, sponsored by devotees. Online booking for Utsava Bali for the first time."/></Field>
-      <div className="flex items-center gap-2 text-xs text-brown-500"><Globe size={14}/>Malayalam versions are auto-drafted by the assistant; review before publishing.</div></div>}
+      <Field label="About this festival" hint="Why devotees come — 3 to 5 sentences" className="md:col-span-2"><textarea className="input" rows={4} defaultValue="The annual utsavam of Kottur Sree Mahavishnu Temple runs for six days in December, beginning with Kodiyettam and ending with Aarattu at the temple pond. Families of the eight illams return every year, and the Thayambaka on the fourth night draws crowds from across Malabar."/></Field>
+      <Field label="What's new this year" className="md:col-span-2"><textarea className="input" rows={2} defaultValue="Annadanam on all six days, sponsored by devotees. Live booking for Utsava Bali for the first time."/></Field>
+      <div className="md:col-span-2 flex items-center gap-2 text-xs text-brown-500"><Globe size={14}/>Malayalam versions are auto-drafted by the assistant; review before publishing.</div></div>}
+    {tab===1 && <div className="card p-5"><h3 className="font-semibold">Main ritual timings</h3><p className="text-sm text-brown-500">Highlighted at the top of the festival page — full day-by-day detail lives in Programme.</p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">{[['Kodiyettam (flag hoisting)','3 Dec · 6:00 AM'],['Thayambaka night','4 Dec · 7:30 PM'],['Kalamezhuthu Pattu','6 Dec · 8:00 PM'],['Aarattu & Pallivetta','8 Dec · 5:00 AM']].map(([n,t])=>
+        <div key={n} className="rounded-xl bg-brown-50 p-3 text-sm"><span className="text-brown-500">{n}</span><b className="block">{t}</b></div>)}</div>
+      <Link to="/festival-admin/programme" className="mt-3 inline-block text-sm font-semibold text-saffron-600">Edit the full programme →</Link></div>}
     {tab===2 && <div className="card space-y-4 p-5"><Field label="How to reach"><textarea className="input" rows={3} defaultValue="Bus to Naduvannur, auto to Ulliyeri (4 km). Nearest railway station Kozhikode (28 km)."/></Field>
       <Field label="Parking"><textarea className="input" rows={2} defaultValue="Two-wheelers at the temple ground; cars at the UP school ground, 300 m away. Free."/></Field>
-      <div className="grid gap-4 md:grid-cols-2"><Field label="Facilities"><div className="flex flex-wrap gap-2">{['Drinking water','Toilets','First aid','Prasadam counter','Wheelchair access','Cloak room'].map((x,i)=><button key={x} className={`rounded-full px-3 py-1.5 text-sm ${i<4?'bg-brown-900 text-white':'border border-brown-200 bg-white'}`}>{x}</button>)}</div></Field>
-        <Field label="Crowd advisory"><textarea className="input" rows={3} defaultValue="Heaviest crowd on 4 Dec (Thayambaka night) and 8 Dec morning."/></Field></div></div>}
-    {tab===3 && <div className="card p-5"><h3 className="font-semibold">Festival poster</h3><div className="mt-3 grid gap-4 md:grid-cols-[220px_1fr]"><div className="photo aspect-[3/4] rounded-xl"/><div><p className="text-sm text-brown-500">The poster is used on the festival page, on WhatsApp updates and on the QR board. Upload the printed design, or let the assistant generate one from your programme.</p>
+      <Field label="Facilities"><div className="flex flex-wrap gap-2">{['Drinking water','Toilets','First aid','Prasadam counter','Wheelchair access','Cloak room'].map((x,i)=><button key={x} className={`rounded-full px-3 py-1.5 text-sm ${i<4?'bg-brown-900 text-white':'border border-brown-200 bg-white'}`}>{x}</button>)}</div></Field></div>}
+    {tab===3 && <div className="card p-5"><h3 className="font-semibold">Festival poster</h3><div className="mt-3 grid gap-4 md:grid-cols-[220px_1fr]"><div className="photo aspect-[3/4] rounded-xl"/><div><p className="text-sm text-brown-500">Used on the festival page, WhatsApp updates and the QR board.</p>
       <div className="mt-3 flex flex-wrap gap-2"><button className="btn-s"><Upload size={16}/>Upload poster</button><button onClick={()=>toast('Draft poster generated from the programme')} className="btn-g"><Sparkles size={16}/>Generate from programme</button></div></div></div>
-      <h3 className="mt-6 font-semibold">Photos</h3><p className="text-sm text-brown-500">Last year's festival photos help devotees decide. Add this year's during the festival.</p>
-      <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">{[1,2,3].map(i=><div key={i} className="photo aspect-square rounded-xl"/>)}<button className="grid aspect-square place-items-center rounded-xl border-2 border-dashed border-brown-200 text-sm text-brown-500">+ Upload</button></div></div>}
-    {tab===4 && <div className="card p-5"><h3 className="font-semibold">Shown on the festival page</h3><Table head={['Name','Role','Phone','Shown publicly','']} rows={[
+      <h3 className="mt-6 font-semibold">Gallery</h3><p className="text-sm text-brown-500">Photos help devotees decide to attend or sponsor.</p>
+      <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">{[1,2,3].map(i=><div key={i} className="photo aspect-square rounded-xl"/>)}<button className="grid aspect-square place-items-center rounded-xl border-2 border-dashed border-brown-200 text-sm text-brown-500"><ImageIcon size={18}/>+ Upload</button></div></div>}
+    {tab===4 && <div className="card p-5"><h3 className="font-semibold">Contact persons shown on the festival page</h3><Table head={['Name','Role','Phone','Shown publicly','']} rows={[
       ['Rajeev M','Convenor','+91 94… 771',<Toggle defaultChecked/>,'Edit'],
       ['Suresh P','Treasurer','+91 98… 220',<Toggle/>,'Edit'],
       ['Anitha R','Programme','+91 90… 118',<Toggle defaultChecked/>,'Edit'],
@@ -275,19 +249,23 @@ export function FPage() {
 /* ---------------- SETTINGS ---------------- */
 export function FSettings() {
   const [toast,el]=useToast(); const [tab,setTab]=useState(0); const [mode,setMode]=useState('ta')
-  return (<Shell>{el}<H t="Settings"/><Tabs tabs={['Festival & status','Committee','Payments','Permissions','Next year']} at={tab} set={setTab}/>
-    {tab===0 && <div className="card space-y-4 p-5"><div className="grid gap-4 md:grid-cols-2">
-      <Field label="Listing status" hint="Controls what devotees can do on the festival page"><Select options={['Draft — not visible','Announced — no booking yet','Bookings open','Festival running','Closed — archived']} defaultValue="Bookings open"/></Field>
-      <Field label="Festival type"><Select options={['Annual utsavam','Thira / Theyyam','Pooram','Navarathri','Special one-time event']}/></Field>
-      <Field label="Expected daily footfall"><Select options={['Under 500','500 – 2,000','2,000 – 10,000','Above 10,000']} defaultValue="2,000 – 10,000"/></Field>
-      <Field label="Language of announcements"><Select options={['Malayalam + English','Malayalam only']}/></Field></div>
-      <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">A festival listing is <b>time-bound</b>. Seven days after the closing date it moves to <b>archived</b> automatically — the page stays online for reference, bookings close, and the final settlement runs.</div>
-      <button onClick={()=>toast('Saved')} className="btn-p">Save</button></div>}
+  const [listingEnabled,setListingEnabled]=useState(true)
+  return (<Shell>{el}<H t="Settings"/><Tabs tabs={['Listing & festival status','Committee','Payments','Documents (KYC)','Permissions']} at={tab} set={setTab}/>
+    {tab===0 && <div className="space-y-5">
+      <div className={`card p-5 ${!listingEnabled?'ring-2 ring-red-300':''}`}><div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold">Listing status</h3><p className="text-sm text-brown-500">Turns the public festival page on or off. Disabling hides it from search and search-engines; existing bookings are unaffected.</p></div>
+        <button onClick={()=>{setListingEnabled(v=>!v);toast(listingEnabled?'Listing disabled — the public page is hidden':'Listing enabled — the public page is live')}} className={`btn !px-3 !py-2 text-sm ${listingEnabled?'bg-red-50 text-red-700':'bg-emerald-50 text-emerald-700'}`}><Power size={15}/>{listingEnabled?'Disable listing':'Enable listing'}</button></div></div>
+      <div className="card space-y-4 p-5"><div className="grid gap-4 md:grid-cols-2">
+        <Field label="Festival status" hint="Where the festival is in its own timeline"><Select options={['Upcoming','Bookings open','Festival running','Completed']} defaultValue="Bookings open"/></Field>
+        <Field label="Festival type"><Select options={['Annual utsavam','Thira / Theyyam','Pooram','Navarathri','Special one-time event']}/></Field>
+        <Field label="Expected daily footfall"><Select options={['Under 500','500 – 2,000','2,000 – 10,000','Above 10,000']} defaultValue="2,000 – 10,000"/></Field>
+        <Field label="Language of announcements"><Select options={['Malayalam + English','Malayalam only']}/></Field></div>
+        <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">A festival listing is <b>time-bound</b>. Seven days after the closing date, its status moves to <b>Completed</b> automatically and bookings close.</div>
+        <button onClick={()=>toast('Saved')} className="btn-p">Save</button></div></div>}
     {tab===1 && <div className="card p-5"><h3 className="font-semibold">Committee members & access</h3><p className="text-sm text-brown-500">Festival committees change every year — give access by role, not by phone number.</p>
       <div className="mt-3"><Table head={['Name','WhatsApp','Role','Can do','']} rows={[
         ['Rajeev M','+91 94… 771','Convenor (owner)','Everything','—'],
-        ['Suresh P','+91 98… 220','Treasurer','Finance, expenses, settlement','Remove'],
-        ['Anitha R','+91 90… 118','Programme','Programme, artists, page','Remove'],
+        ['Suresh P','+91 98… 220','Treasurer','Sponsors, payments','Remove'],
+        ['Anitha R','+91 90… 118','Programme','Programme, offerings, profile','Remove'],
         ['Nishanth K','+91 90… 422','Temple secretary','View only + day sheets','Remove']]}/></div>
       <button className="btn-s mt-3"><Plus size={16}/>Add member</button>
       <div className="mt-4 rounded-xl bg-saffron-50 p-3 text-sm text-saffron-800">The temple's own listing and this festival listing are separate. The temple secretary sees the day sheets here but cannot change the temple's poojas from this dashboard, and vice versa.</div></div>}
@@ -302,20 +280,14 @@ export function FSettings() {
       <div className="card p-5"><h3 className="font-semibold">Convenience fee</h3><div className="mt-3 grid gap-4 md:grid-cols-2"><Field label="Fee on festival bookings"><Select options={['Inherit platform default (off)','Off','Percentage','Fixed amount']}/></Field><Field label="Who pays"><Select options={['Devotee (added on top)','Committee (deducted from settlement)']}/></Field></div>
         <p className="mt-2 text-xs text-brown-500">Sponsorships recorded manually by the committee carry no platform fee.</p></div>
       <button onClick={()=>toast('Payment settings saved')} className="btn-p">Save</button></div>}
-    {tab===3 && <div className="card space-y-4 p-5"><h3 className="font-semibold">Permissions & compliance</h3><p className="text-sm text-brown-500">Large festivals need local clearances. Upload them here — staff check before the listing goes live for high-footfall events.</p>
+    {tab===3 && <div className="card space-y-4 p-5"><div className="flex items-center gap-2"><ShieldCheck size={18} className="text-saffron-600"/><h3 className="font-semibold">Documents & KYC agreement</h3></div>
+      <p className="text-sm text-brown-500">These identify the committee and authorise it to collect payments on TempleAddress. <b>Staff verify every document before the listing can go live.</b></p>
+      <div className="grid gap-4 md:grid-cols-2">{[['Committee registration / resolution letter','ok'],['Convenor ID proof (Aadhaar / PAN)','ok'],['Bank account proof','ok'],['Signed TempleAddress platform agreement','warn']].map(([n,tone])=>
+        <div key={n} className="rounded-2xl border border-brown-100 p-4"><div className="flex items-start justify-between gap-2"><b className="text-sm">{n}</b><Pill tone={tone}>{tone==='ok'?'Verified by staff':'Pending review'}</Pill></div><Input type="file" className="mt-2"/></div>)}</div>
+      <button onClick={()=>toast('Documents submitted for staff verification')} className="btn-p">Submit for staff verification</button></div>}
+    {tab===4 && <div className="card space-y-4 p-5"><h3 className="font-semibold">Permissions & compliance</h3><p className="text-sm text-brown-500">Large festivals need local clearances. Upload them here — staff check before the listing goes live for high-footfall events.</p>
       <div className="grid gap-4 md:grid-cols-2">{[['Panchayat / municipality permission','Required above 2,000 footfall','ok'],['Police permission (crowd & traffic)','Required for processions','ok'],['Fire & safety clearance','Required for fireworks / pandal','warn'],['Fireworks licence','Only if vedikettu is planned','n'],['Elephant parade permit','Forest dept. — per elephant','warn'],['Loudspeaker permission','Time limits apply after 10 PM','ok']].map(([n,note,tone])=>
         <div key={n} className="rounded-2xl border border-brown-100 p-4"><div className="flex items-start justify-between gap-2"><div><b className="text-sm">{n}</b><div className="text-xs text-brown-500">{note}</div></div><Pill tone={tone}>{tone==='ok'?'Uploaded':tone==='warn'?'Pending':'N/A'}</Pill></div><Input type="file" className="mt-2"/></div>)}</div>
       <button onClick={()=>toast('Documents saved')} className="btn-p">Save</button></div>}
-    {tab===4 && <div className="space-y-5"><div className="card p-5"><div className="flex items-center gap-2"><ArrowRightLeft size={18}/><h3 className="font-semibold">Roll over to next year</h3></div>
-      <p className="mt-1 text-sm text-brown-500">Most committees keep the same programme shape year after year. Copy this festival into 2027 with new dates — bookings, sponsors and finance start empty.</p>
-      <div className="mt-3 grid gap-4 md:grid-cols-2"><Field label="Next year's start date"><Input type="date" defaultValue="2027-11-22"/></Field><Field label="Copy"><Select options={['Programme + offerings + page content','Offerings only','Page content only']}/></Field></div>
-      <button onClick={()=>toast('Kottur Utsavam 2027 created as a draft')} className="btn-dk mt-3">Create 2027 draft</button></div>
-      <div className="card p-5"><div className="flex items-center gap-2"><Crown size={18} className="text-gold-500"/><h3 className="font-semibold">Hand over to the next committee</h3></div>
-        <p className="mt-1 text-sm text-brown-500">When the general body elects a new convenor, transfer ownership. The new convenor accepts by OTP; the old one keeps view access to past festivals.</p>
-        <div className="mt-3 grid gap-4 md:grid-cols-2"><Field label="New convenor's WhatsApp"><Input placeholder="+91"/></Field><Field label="Reason"><Select options={['Annual committee election','Convenor stepped down','Correction']}/></Field></div>
-        <button onClick={()=>toast('Handover request sent — new convenor must accept by OTP')} className="btn-g mt-3"><ShieldCheck size={16}/>Send handover request</button></div>
-      <div className="card p-5"><h3 className="font-semibold">Past festivals</h3><Table head={['Festival','Dates','Bookings','Collected ₹','Status']} rows={[
-        ['Kottur Utsavam 2025','2–7 Dec 2025','268','5,92,000',<Pill>Archived</Pill>],
-        ['Ashtami Rohini 2026','14 Sept 2026','96','1,24,500',<Pill>Archived</Pill>]]}/></div></div>}
   </Shell>)
 }

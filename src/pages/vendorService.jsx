@@ -1,44 +1,79 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarCheck, ListOrdered, Clock, Sparkles, Inbox, Star, Wallet, UserCheck, Phone, MessageCircle, Check, Plus, Download, Upload, Globe, Pencil, ShieldCheck, CalendarOff, MapPin, Video, Share2, BadgeCheck } from 'lucide-react'
+import { CalendarCheck, ListOrdered, Clock, Sparkles, Inbox, Star, UserCheck, Phone, MessageCircle, Check, Plus, Download, Upload, Globe, Pencil, ShieldCheck, CalendarOff, MapPin, Video, Share2, BadgeCheck, Power, LayoutGrid, X } from 'lucide-react'
 import { provider as P } from '../data'
 import { DashShell, Pill, Field, Input, Select, Toggle, Table, Stat, Tabs, useToast } from '../ui'
 
 /* =============================================================================
    SERVICE PROVIDER DASHBOARD  (/service-admin)
-   How it differs from the temple dashboard:
-   · sells time slots, not daily poojas — an appointment diary replaces the daily chart
-   · availability (working days, hours, slot length, leave) is the core setting
-   · devotees choose a mode: in person / phone / at their home / at a temple
-   · enquiries and reviews drive the business, so both get first-class screens
-   · no donations and no 80G — an individual professional, not a trust; TDS/GST instead
-   · may also run Special poojas (toggle in profile) with photo/video proof to devotees
+   Kept deliberately simple for this MVP: Summary, Appointments (no payments), My
+   services, Enquiries, Reviews, Profile page — six screens, nothing more.
+   How it differs from the temple/festival dashboards:
+   · sells time slots, not daily poojas — an appointment diary replaces the daily chart,
+     and Availability lives as a tab inside it rather than its own nav item
+   · at this MVP stage TempleAddress does NOT process payment for appointments — the
+     devotee pays the professional directly, so there is no Earnings/payout screen
+   · the professional instead pays TempleAddress for the LISTING itself, via a simple
+     yearly subscription (a "LinkedIn Premium for the spiritual domain") — see
+     Profile page → Settings, which also holds the Enable/Disable listing button
+   · Special poojas live as a tab inside My services rather than a separate nav item
    ========================================================================== */
 
 const items = [{ group:'Service provider', links:[
-  ['/service-admin','Appointments',CalendarCheck],
+  ['/service-admin','Summary',LayoutGrid],
+  ['/service-admin/appointments','Appointments',CalendarCheck],
   ['/service-admin/services','My services',ListOrdered],
-  ['/service-admin/availability','Availability',Clock],
   ['/service-admin/enquiries','Enquiries',Inbox],
-  ['/service-admin/special','Special poojas',Sparkles],
   ['/service-admin/reviews','Reviews',Star],
-  ['/service-admin/earnings','Earnings',Wallet],
-  ['/service-admin/profile','Profile & page',UserCheck],
+  ['/service-admin/profile','Profile page',UserCheck],
 ]}]
 const Shell = ({ children }) => <DashShell role="Vendor · Service provider" user={`${P.name} · ${P.kind} · ${P.code}`} items={items} badge="2">{children}</DashShell>
 const H = ({ t, s, right }) => <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">{t}</h1>{s&&<div className="text-sm text-brown-500">{s}</div>}</div>{right}</div>
-const rs = n => `₹${Number(n).toLocaleString('en-IN')}`
 const modeIcon = m => m==='Phone' ? <Phone size={12}/> : m==='At temple' ? <MapPin size={12}/> : m==='Online' ? <Video size={12}/> : <UserCheck size={12}/>
 
-/* ---------------- APPOINTMENTS (today / upcoming / past) ---------------- */
-export function SToday() {
+/* ---------------- SUMMARY ---------------- */
+export function SSummary() {
+  const openEnquiries = P.enquiries.filter(e=>e[4]==='New').length
+  const todayCount = P.today.filter(([,who])=>who!=='—').length
+  const openSlots = P.today.filter(([,who])=>who==='—').length
+  return (<Shell><H t="Summary" s="Your listing at a glance" right={<Link to="/service/sv1" className="btn-g"><Globe size={16}/>View public page</Link>}/>
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <Stat v={todayCount} l="appointments today"/>
+      <Stat v={openSlots} l="open slots left today"/>
+      <Stat v={openEnquiries} l="enquiries waiting" delta={openEnquiries?'reply within 4 h':undefined}/>
+      <Stat v={P.rating} l={`rating · ${P.reviews} reviews`}/>
+    </div>
+
+    <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_320px]"><div className="space-y-5">
+      <div className="card p-5"><div className="flex items-center justify-between"><h3 className="text-lg font-semibold">Today · {P.hours}</h3><Link to="/service-admin/appointments" className="text-sm font-semibold text-saffron-600">Open appointments</Link></div>
+        <div className="mt-3 divide-y divide-brown-100">{P.today.filter(([,who])=>who!=='—').map(([time,who,svc,mode])=>
+          <div key={time} className="flex flex-wrap items-center gap-3 py-2.5 text-sm"><span className="w-20 shrink-0 font-bold">{time}</span><b className="flex-1">{who}</b><Pill tone="n">{modeIcon(mode)}{mode}</Pill><span className="text-brown-500">{svc}</span></div>)}
+          {!todayCount && <p className="py-4 text-center text-sm text-brown-500">No appointments booked yet today.</p>}</div></div>
+
+      <div className="card p-5"><div className="flex items-center justify-between"><h3 className="text-lg font-semibold">Latest enquiries</h3><Link to="/service-admin/enquiries" className="text-sm font-semibold text-saffron-600">Open enquiries</Link></div>
+        <div className="mt-3 divide-y divide-brown-100">{P.enquiries.slice(0,3).map(([d,n,ph,msg,st])=>
+          <div key={n} className="flex flex-wrap items-center gap-3 py-2.5"><Pill tone={st==='New'?'warn':'ok'}>{st}</Pill><div className="min-w-0 flex-1"><b>{n}</b> <span className="text-xs text-brown-400">{d}</span><div className="truncate text-sm text-brown-500">{msg}</div></div></div>)}</div></div>
+    </div>
+      <aside className="space-y-4">
+        <div className="card p-5 text-center"><div className="font-display text-4xl font-bold text-gold-500">{P.rating}</div><div className="flex justify-center gap-0.5 text-gold-500">{[...Array(5)].map((_,i)=><Star key={i} size={14} fill={i<Math.round(P.rating)?'currentColor':'none'}/>)}</div>
+          <div className="mt-1 text-xs text-brown-500">{P.reviews} devotee reviews</div><Link to="/service-admin/reviews" className="btn-g mt-3 w-full !py-1.5 text-xs">See reviews</Link></div>
+        <div className="card p-5 text-sm"><div className="flex items-center justify-between"><b>Subscription</b><Pill tone={P.subscription.status==='Active'?'ok':'err'}>{P.subscription.status}</Pill></div><div className="mt-1 text-brown-600">{P.subscription.plan} · renews {P.subscription.renews}</div><Link to="/service-admin/profile" className="btn-g mt-2 w-full !py-1.5 text-xs">Manage subscription</Link></div>
+        <div className="card p-5 text-sm"><h3 className="font-semibold">This week</h3><div className="mt-2 space-y-1">{[['Mon 8','4 booked'],['Tue 9','5 booked'],['Wed 10','3 booked'],['Thu 11','5 booked · today'],['Fri 12','3 booked']].map(([d,n])=>
+          <div key={d} className="flex justify-between"><span className="text-brown-500">{d}</span><b>{n}</b></div>)}</div></div>
+      </aside></div>
+  </Shell>)
+}
+
+/* ---------------- APPOINTMENTS (no payments) — Today/Upcoming/Past/Cancelled + Availability ---------------- */
+export function SAppointments() {
   const [toast,el]=useToast(); const [tab,setTab]=useState(0); const [done,setDone]=useState([]); const [open,setOpen]=useState(true)
+  const [week,setWeek]=useState(P.week.map(w=>w[1]))
   const complete = who => { setDone(d=>[...d,who]); toast(`${who}'s appointment marked complete`) }
-  return (<Shell>{el}<H t="Appointments" s="Fri 11 Sept 2026 · your diary for the day" right={<div className="flex items-center gap-3"><Toggle label={open?'Accepting bookings':'Paused'} defaultChecked={open} onChange={v=>{setOpen(v);toast(v?'Bookings resumed':'New bookings paused — existing ones stay')}}/><Link to={`/service/sv1`} className="btn-g"><Globe size={16}/>Public page</Link></div>}/>
+  const slots = ['1:00','1:30','2:00','2:30','3:00','3:30','4:00','4:30']
+  const booked = { 'Thu 11':[0,1,3,4,5], 'Fri 12':[0,2,6], 'Sat 13':[1,4] }
+  return (<Shell>{el}<H t="Appointments" s="Fri 11 Sept 2026 · your diary for the day · no payment is collected here" right={<Toggle label={open?'Accepting new appointments':'Paused'} defaultChecked={open} onChange={v=>{setOpen(v);toast(v?'Accepting new appointments again':'New appointments paused — existing ones stay')}}/>}/>
 
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v="5" l="appointments today"/><Stat v={rs(2800)} l="today's collection"/><Stat v="2" l="open slots left"/><Stat v="2" l="new enquiries" delta="reply within 4 h"/></div>
-
-    <Tabs tabs={['Today','Upcoming','Past','Cancelled']} at={tab} set={setTab}/>
+    <Tabs tabs={['Today','Upcoming','Past','Cancelled','Availability']} at={tab} set={setTab}/>
 
     {tab===0 && <div className="grid gap-5 lg:grid-cols-[1fr_320px]"><div className="space-y-5">
       <div className="card p-5"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-lg font-semibold">Today · {P.hours}</h3><Pill tone="info">{P.slotMins}-minute slots</Pill></div>
@@ -51,100 +86,97 @@ export function SToday() {
                 <div className="flex flex-wrap gap-1.5"><button className="btn-g !px-2.5 !py-1.5 text-xs"><Phone size={14}/></button><button className="btn-wa !px-2.5 !py-1.5 text-xs"><MessageCircle size={14}/></button>
                 {!ok && <button onClick={()=>complete(who)} className="btn-p !py-1.5 text-xs"><Check size={14}/>Complete</button>}</div></>}
           </div>) })}</div>
-        <p className="mt-3 text-xs text-brown-500">Marking an appointment complete releases the payment into your next payout and invites the devotee to leave a review.</p></div>
-
+        <p className="mt-3 text-xs text-brown-500">Marking an appointment complete invites the devotee to leave a review. The devotee pays you directly — TempleAddress does not collect or hold any money for appointments.</p></div>
       <div className="card p-5"><h3 className="text-lg font-semibold">Tomorrow · Sat 12 Sept</h3><div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm"><span>3 booked · 5 slots free</span><span className="text-brown-500">Bookings close 1 hour before each slot</span></div>
-        <div className="mt-3 rounded-xl bg-saffron-50 p-3 text-sm text-saffron-700">Devaprasnam at Kunnathumadom on 17 Sept blocks the full day — your other slots are hidden automatically. <Link to="/service-admin/availability" className="font-semibold underline">Availability</Link></div></div>
+        <div className="mt-3 rounded-xl bg-saffron-50 p-3 text-sm text-saffron-700">Devaprasnam at Kunnathumadom on 17 Sept blocks the full day — your other slots are hidden automatically. <button onClick={()=>setTab(4)} className="font-semibold underline">Availability</button></div></div>
     </div>
       <aside className="space-y-4">
         <div className="card p-5"><h3 className="font-semibold">This week</h3><div className="mt-3 space-y-2 text-sm">{[['Mon 8','4 booked'],['Tue 9','5 booked'],['Wed 10','3 booked'],['Thu 11','5 booked · today'],['Fri 12','3 booked'],['Sat 13','2 booked'],['Sun 14','Weekly off']].map(([d,n])=>
           <div key={d} className="flex justify-between rounded-lg bg-brown-50 px-3 py-1.5"><span>{d}</span><b className={n.includes('off')?'text-brown-400':''}>{n}</b></div>)}</div></div>
-        <div className="card p-5 text-center"><div className="font-display text-4xl font-bold text-gold-500">{P.rating}</div><div className="flex justify-center gap-0.5 text-gold-500">{[...Array(5)].map((_,i)=><Star key={i} size={14} fill={i<Math.round(P.rating)?'currentColor':'none'}/>)}</div>
-          <div className="mt-1 text-xs text-brown-500">{P.reviews} devotee reviews</div><Link to="/service-admin/reviews" className="btn-g mt-3 w-full !py-1.5 text-xs">Reply to reviews</Link></div>
-        <div className="card p-5 text-sm"><h3 className="font-semibold">Payout</h3><div className="mt-1 text-brown-600"><b className="text-lg text-brown-900">{rs(4300)}</b> payable now</div><div className="text-xs text-brown-500">Next payout Monday 15 Sept</div><Link to="/service-admin/earnings" className="btn-g mt-2 w-full !py-1.5 text-xs">Earnings</Link></div>
       </aside></div>}
 
-    {tab===1 && <div className="card p-4"><Table head={['When','Devotee','Service','Mode','₹','Status','']} rows={P.upcoming.map(([w,d,s,m,a,st])=>[
-      <b>{w}</b>,d,s,<Pill tone="n">{modeIcon(m)}{m}</Pill>,rs(a),<Pill tone={st==='Confirmed'?'ok':'info'}>{st}</Pill>,
+    {tab===1 && <div className="card p-4"><Table head={['When','Devotee','Service','Mode','Status','']} rows={P.upcoming.map(([w,d,s,m,,st])=>[
+      <b>{w}</b>,d,s,<Pill tone="n">{modeIcon(m)}{m}</Pill>,<Pill tone={st==='Confirmed'?'ok':'info'}>{st}</Pill>,
       <span className="flex gap-1"><button className="text-xs font-semibold text-saffron-600">Reschedule</button><span className="text-brown-300">·</span><button className="text-xs text-brown-500">Cancel</button></span>])}/>
-      <p className="mt-3 text-xs text-brown-500">Rescheduling sends the devotee a WhatsApp with the new slot; they confirm with one tap. Cancelling refunds them in full and frees the slot.</p></div>}
+      <p className="mt-3 text-xs text-brown-500">Rescheduling sends the devotee a WhatsApp with the new slot; they confirm with one tap.</p></div>}
 
-    {tab===2 && <><div className="card p-4"><Table head={['Date','Devotee','Service','₹','Status','Review']} rows={P.past.map(([d,who,s,a,st,rev])=>[
-      d,who,s,rs(a),<Pill tone={st==='Completed'?'ok':'err'}>{st}</Pill>,rev])}/></div>
-      <div className="card mt-5 p-5 text-sm"><b>No-shows</b><p className="mt-1 text-brown-600">If a devotee does not turn up, mark it a no-show within 24 hours. The fee is retained as per your cancellation policy, and repeated no-shows are flagged to staff.</p></div></>}
+    {tab===2 && <><div className="card p-4"><Table head={['Date','Devotee','Service','Status','Review']} rows={P.past.map(([d,who,s,,st,rev])=>[
+      d,who,s,<Pill tone={st==='Completed'?'ok':'err'}>{st}</Pill>,rev])}/></div>
+      <div className="card mt-5 p-5 text-sm"><b>No-shows</b><p className="mt-1 text-brown-600">If a devotee does not turn up, mark it a no-show within 24 hours. Repeated no-shows are flagged to staff.</p></div></>}
 
-    {tab===3 && <div className="card p-4"><Table head={['Date','Devotee','Service','₹','Cancelled by','Refund']} rows={[
-      ['9 Sept','Rahul V','Prasnam (1 hr)','1,500','Devotee · 3 h before',<Pill tone="ok">Full refund</Pill>],
-      ['5 Sept','Sunitha M','Jathakam consultation','500','You · unwell',<Pill tone="ok">Full refund</Pill>],
-      ['2 Sept','Anonymous','Muhoortham','300','Devotee · after slot',<Pill tone="warn">No refund</Pill>]]}/>
+    {tab===3 && <div className="card p-4"><Table head={['Date','Devotee','Service','Cancelled by']} rows={[
+      ['9 Sept','Rahul V','Prasnam (1 hr)','Devotee · 3 h before'],
+      ['5 Sept','Sunitha M','Jathakam consultation','You · unwell'],
+      ['2 Sept','Anonymous','Muhoortham','Devotee · after slot']]}/>
       <p className="mt-3 text-xs text-brown-500">Cancelling your own appointments too often affects your listing rank. Use Availability → leave instead when you know in advance.</p></div>}
-  </Shell>)
-}
 
-/* ---------------- SERVICES ---------------- */
-export function SServices() {
-  const [toast,el]=useToast(); const [add,setAdd]=useState(false)
-  return (<Shell>{el}<H t="My services" s="What devotees can book, how long each takes and where you offer it" right={<div className="flex gap-2"><button onClick={()=>setAdd(!add)} className="btn-s"><Plus size={16}/>Add service</button><button onClick={()=>toast('Saved')} className="btn-p">Save changes</button></div>}/>
-    {add && <div className="card mb-5 space-y-4 p-5"><h3 className="font-semibold">New service</h3>
-      <div className="grid gap-4 md:grid-cols-2"><Field label="Service name (English)"><Input placeholder="e.g. Naamakaranam muhoortham"/></Field><Field label="Service name (Malayalam)"><Input className="input ml" placeholder="നാമകരണം"/></Field>
-        <Field label="Price ₹"><Input type="number" placeholder="500"/></Field><Field label="Duration"><Select options={['15 minutes','30 minutes','45 minutes','1 hour','2 hours','Half day','Full day']}/></Field>
-        <Field label="Where"><Select options={['In person at my place','Phone call','Online video call','At the devotee\'s home','At a temple']}/></Field><Field label="Advance to book"><Select options={['Full amount','50%','₹100 token','No advance — pay after']}/></Field>
-        <Field label="What the devotee should bring / send" className="md:col-span-2"><textarea className="input" rows={2} placeholder="Birth date, time and place; or the horoscope PDF"/></Field></div>
-      <div className="flex gap-2"><button onClick={()=>{setAdd(false);toast('Service added — live on your page')}} className="btn-p">Add service</button><button onClick={()=>setAdd(false)} className="btn-g">Cancel</button></div></div>}
-
-    <div className="card p-4"><Table head={['Service','Malayalam','Price ₹','Minutes','Where','Bookable','']} rows={P.services.map(([n,ml,p,mins,mode])=>[
-      <b>{n}</b>,<span className="ml">{ml}</span>,<input defaultValue={p} className="input !w-24 !py-1.5"/>,<input defaultValue={mins} className="input !w-20 !py-1.5"/>,
-      <Pill tone="n">{modeIcon(mode)}{mode}</Pill>,<Toggle defaultChecked/>,<button className="text-xs text-brown-500">Edit</button>])}/>
-      <p className="mt-3 text-xs text-brown-500">Duration decides how many slots a booking takes. A 3-hour Swarna Prasnam blocks six 30-minute slots automatically.</p></div>
-
-    <div className="mt-5 grid gap-5 md:grid-cols-2">
-      <div className="card grid gap-4 p-5"><h3 className="font-semibold">Travel & visits</h3>
-        <Field label="I travel up to" hint="Devotees outside this radius won't see home-visit services"><Select options={['10 km','25 km','50 km','Anywhere in Kerala','Anywhere in India']} defaultValue="25 km"/></Field>
-        <Field label="Travel charge"><Select options={['Included in the price','₹10 per km','Flat ₹500 per visit','Quoted per booking']} defaultValue="₹10 per km"/></Field>
-        <Toggle label="Accept bookings from outside Kerala (NRI devotees, phone/online)" defaultChecked/></div>
-      <div className="card grid gap-4 p-5"><h3 className="font-semibold">Booking rules</h3>
-        <Field label="Devotees can book"><Select options={['Same day','From tomorrow','2 days ahead','1 week ahead']} defaultValue="Same day"/></Field>
-        <Field label="Up to"><Select options={['15 days ahead','30 days ahead','60 days ahead','90 days ahead']} defaultValue="30 days ahead"/></Field>
-        <Field label="Free cancellation until"><Select options={['2 hours before','6 hours before','24 hours before','No free cancellation']} defaultValue="6 hours before"/></Field>
-        <Field label="Maximum appointments a day"><Input type="number" defaultValue="8"/></Field></div>
-    </div>
-  </Shell>)
-}
-
-/* ---------------- AVAILABILITY ---------------- */
-export function SAvailability() {
-  const [toast,el]=useToast(); const [week,setWeek]=useState(P.week.map(w=>w[1]))
-  const slots = ['1:00','1:30','2:00','2:30','3:00','3:30','4:00','4:30']
-  const booked = { 'Thu 11':[0,1,3,4,5], 'Fri 12':[0,2,6], 'Sat 13':[1,4] }
-  return (<Shell>{el}<H t="Availability" s="When devotees can book you — the single most important setting for a service listing" right={<button onClick={()=>toast('Availability saved — your page updates immediately')} className="btn-p">Save</button>}/>
-    <div className="grid gap-5 lg:grid-cols-[1fr_340px]"><div className="space-y-5">
+    {tab===4 && <div className="grid gap-5 lg:grid-cols-[1fr_320px]"><div className="space-y-5">
       <div className="card p-5"><h3 className="font-semibold">Working days</h3>
         <div className="mt-3 flex flex-wrap gap-2">{P.week.map(([d],i)=><button key={d} onClick={()=>setWeek(w=>w.map((v,j)=>j===i?!v:v))} className={`rounded-xl px-4 py-2 text-sm font-semibold ${week[i]?'bg-brown-900 text-white':'border border-brown-200 bg-white text-brown-500'}`}>{d}</button>)}</div>
         <div className="mt-4 grid gap-4 md:grid-cols-3"><Field label="From"><Input type="time" defaultValue="13:00"/></Field><Field label="To"><Input type="time" defaultValue="17:00"/></Field>
-          <Field label="Slot length"><Select options={['15 minutes','30 minutes','45 minutes','1 hour']} defaultValue="30 minutes"/></Field></div>
-        <div className="mt-2 grid gap-4 md:grid-cols-3"><Field label="Break between appointments"><Select options={['None','5 minutes','10 minutes','15 minutes']} defaultValue="None"/></Field>
-          <Field label="Lunch / rest break"><Input defaultValue="None"/></Field><Field label="Different hours on Saturday"><Select options={['Same as weekdays','Morning only','Custom']}/></Field></div></div>
-
+          <Field label="Slot length"><Select options={['15 minutes','30 minutes','45 minutes','1 hour']} defaultValue="30 minutes"/></Field></div></div>
       <div className="card p-5"><h3 className="font-semibold">Next 3 days</h3><p className="text-sm text-brown-500">Green is booked, white is open. Tap a slot to block it.</p>
         <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[420px] border-separate border-spacing-1">
           <thead><tr><th className="w-20"/>{Object.keys(booked).map(d=><th key={d} className="th">{d}</th>)}</tr></thead>
           <tbody>{slots.map((s,i)=><tr key={s}><td className="pr-2 text-right text-xs font-semibold text-brown-500">{s}</td>
             {Object.keys(booked).map(d=><td key={d}><button className={`w-full rounded-lg py-2 text-xs font-semibold ${booked[d].includes(i)?'bg-emerald-100 text-emerald-800':'border border-brown-200 bg-white text-brown-400 hover:bg-brown-50'}`}>{booked[d].includes(i)?'Booked':'Free'}</button></td>)}</tr>)}</tbody>
         </table></div></div>
-
       <div className="card p-5"><h3 className="font-semibold">Leave & blocked dates</h3><p className="text-sm text-brown-500">Nobody can book you on these days; existing bookings are not touched.</p>
         <div className="mt-3"><Table head={['Dates','Reason','Shown to devotees','']} rows={[
           ['17 Sept (full day)','Devaprasnam at Kunnathumadom','Busy — not available','Remove'],
           ['2–5 Oct','Family function','On leave','Remove'],
           ['Every Sunday','Weekly off','Weekly off','Edit']]}/></div>
         <div className="mt-3 flex flex-wrap items-end gap-3"><Field label="From"><Input type="date"/></Field><Field label="To"><Input type="date"/></Field><Field label="Reason"><Select options={['On leave','Temple engagement','Travel','Personal']}/></Field><button onClick={()=>toast('Dates blocked')} className="btn-s"><CalendarOff size={16}/>Block dates</button></div></div>
+      <button onClick={()=>toast('Availability saved — your page updates immediately')} className="btn-p">Save availability</button>
     </div>
-      <aside className="space-y-4">
-        <div className="card p-5"><h3 className="font-semibold">Slot summary</h3><div className="mt-3 space-y-2 text-sm">{[['Slots offered per week','48'],['Booked next 7 days','23'],['Utilisation','48%'],['Most booked slot','2:30 PM'],['Least booked','4:30 PM']].map(([k,v])=>
-          <div key={k} className="flex justify-between"><span className="text-brown-500">{k}</span><b>{v}</b></div>)}</div></div>
-        <div className="card p-5 text-sm"><h3 className="font-semibold">Tip</h3><p className="mt-1 text-brown-600">Listings that keep at least 40% of slots open get more bookings — devotees pick whoever is free soonest. If you are full for a week, raise your price instead of adding hours.</p></div>
-        <div className="card p-5"><h3 className="font-semibold">Emergency pause</h3><p className="mt-1 text-sm text-brown-500">Hides your listing from search immediately. Existing bookings stay and you can resume any time.</p><Toggle label="Pause new bookings"/></div>
-      </aside></div>
+      <aside className="space-y-4"><div className="card p-5"><h3 className="font-semibold">Slot summary</h3><div className="mt-3 space-y-2 text-sm">{[['Slots offered per week','48'],['Booked next 7 days','23'],['Utilisation','48%']].map(([k,v])=>
+        <div key={k} className="flex justify-between"><span className="text-brown-500">{k}</span><b>{v}</b></div>)}</div></div>
+        <div className="card p-5"><h3 className="font-semibold">Emergency pause</h3><p className="mt-1 text-sm text-brown-500">Hides your listing from search immediately. Existing bookings stay and you can resume any time.</p><Toggle label="Pause new bookings"/></div></aside></div>}
+  </Shell>)
+}
+
+/* ---------------- MY SERVICES — services + special poojas ---------------- */
+export function SServices() {
+  const [toast,el]=useToast(); const [tab,setTab]=useState(0); const [add,setAdd]=useState(false); const [specialsOn,setSpecialsOn]=useState(true)
+  return (<Shell>{el}<H t="My services" s="What devotees can book, and — optionally — the special poojas you offer" right={tab===0?<div className="flex gap-2"><button onClick={()=>setAdd(!add)} className="btn-s"><Plus size={16}/>Add service</button><button onClick={()=>toast('Saved')} className="btn-p">Save changes</button></div>:<button className="btn-s"><Plus size={16}/>Propose a special pooja</button>}/>
+    <Tabs tabs={['Services','Special poojas']} at={tab} set={setTab}/>
+
+    {tab===0 && <>
+      {add && <div className="card mb-5 space-y-4 p-5"><h3 className="font-semibold">New service</h3>
+        <div className="grid gap-4 md:grid-cols-2"><Field label="Service name (English)"><Input placeholder="e.g. Naamakaranam muhoortham"/></Field><Field label="Service name (Malayalam)"><Input className="input ml" placeholder="നാമകരണം"/></Field>
+          <Field label="Price ₹" hint="Paid to you directly, not via TempleAddress"><Input type="number" placeholder="500"/></Field><Field label="Duration"><Select options={['15 minutes','30 minutes','45 minutes','1 hour','2 hours','Half day','Full day']}/></Field>
+          <Field label="Where"><Select options={['In person at my place','Phone call','Online video call','At the devotee\'s home','At a temple']}/></Field>
+          <Field label="What the devotee should bring / send" className="md:col-span-2"><textarea className="input" rows={2} placeholder="Birth date, time and place; or the horoscope PDF"/></Field></div>
+        <div className="flex gap-2"><button onClick={()=>{setAdd(false);toast('Service added — live on your page')}} className="btn-p">Add service</button><button onClick={()=>setAdd(false)} className="btn-g">Cancel</button></div></div>}
+
+      <div className="card p-4"><Table head={['Service','Malayalam','Price ₹','Minutes','Where','Bookable','']} rows={P.services.map(([n,ml,p,mins,mode])=>[
+        <b>{n}</b>,<span className="ml">{ml}</span>,<input defaultValue={p} className="input !w-24 !py-1.5"/>,<input defaultValue={mins} className="input !w-20 !py-1.5"/>,
+        <Pill tone="n">{modeIcon(mode)}{mode}</Pill>,<Toggle defaultChecked/>,<button className="text-xs text-brown-500">Edit</button>])}/>
+        <p className="mt-3 text-xs text-brown-500">Price is shown to devotees as your fee — they pay you directly. Duration decides how many slots a booking takes.</p></div>
+
+      <div className="mt-5 grid gap-5 md:grid-cols-2">
+        <div className="card grid gap-4 p-5"><h3 className="font-semibold">Travel & visits</h3>
+          <Field label="I travel up to" hint="Devotees outside this radius won't see home-visit services"><Select options={['10 km','25 km','50 km','Anywhere in Kerala','Anywhere in India']} defaultValue="25 km"/></Field>
+          <Toggle label="Accept bookings from outside Kerala (NRI devotees, phone/online)" defaultChecked/></div>
+        <div className="card grid gap-4 p-5"><h3 className="font-semibold">Booking rules</h3>
+          <Field label="Devotees can book"><Select options={['Same day','From tomorrow','2 days ahead','1 week ahead']} defaultValue="Same day"/></Field>
+          <Field label="Free cancellation until"><Select options={['2 hours before','6 hours before','24 hours before','No free cancellation']} defaultValue="6 hours before"/></Field></div>
+      </div>
+    </>}
+
+    {tab===1 && <>
+      <div className="card p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-semibold">Offer Special poojas</h3><p className="text-sm text-brown-500">When on, your special poojas appear on the TempleAddress Special poojas page. Each one is approved by staff before it goes live.</p></div><Toggle label={specialsOn?'Enabled':'Off'} defaultChecked={specialsOn} onChange={v=>{setSpecialsOn(v);toast(v?'Special poojas enabled':'Special poojas hidden from the public page')}}/></div></div>
+      {specialsOn && <>
+        <div className="card mt-5 p-4"><Table head={['Special pooja','Date','Price ₹','Seats','Booked','Fulfilment','']} rows={P.specials.map(([t,d,p,seats,bk,ff])=>[
+          <b>{t}</b>,d,p.toLocaleString('en-IN'),seats,<b>{bk}</b>,<Pill tone={ff.includes('pending')?'warn':'info'}>{ff}</Pill>,<button className="text-xs font-semibold text-saffron-600">Manage</button>])}/></div>
+        <div className="card mt-5 p-5"><h3 className="font-semibold">Ganapathi Homam at devotee's home · 20 Sept · upload proof</h3>
+          <p className="text-sm text-brown-500">Devotees who booked a seat expect a photo or short video the same day, plus the sankalpam names read aloud.</p>
+          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">{['+ photo','+ photo','+ video','prasadam dispatch'].map(x=>
+            <button key={x} className="grid aspect-square place-items-center rounded-xl border-2 border-dashed border-brown-200 text-sm text-brown-500">{x}</button>)}</div>
+          <div className="mt-4 rounded-xl bg-brown-50 p-3 text-sm"><b>Sankalpam list (3 devotees)</b><div className="mt-1 text-brown-600">Anand · Rohini · Kozhikode<br/>Sreeja S · Uthram · Dubai<br/>Vinod K · Anizham · Thrissur</div></div>
+          <div className="mt-4 flex flex-wrap gap-2"><button onClick={()=>toast('Proof sent to 3 devotees on WhatsApp')} className="btn-p"><Upload size={16}/>Send proof & mark done</button><button className="btn-g"><Download size={16}/>Sankalpam list (PDF)</button></div></div>
+      </>}
+    </>}
   </Shell>)
 }
 
@@ -152,7 +184,7 @@ export function SAvailability() {
 export function SEnquiries() {
   const [toast,el]=useToast(); const [sel,setSel]=useState(0); const [reply,setReply]=useState('')
   const e = P.enquiries[sel]
-  return (<Shell>{el}<H t="Enquiries" s="Messages from the Quick Enquiry form on your public page" right={<Pill tone="warn">2 waiting for a reply</Pill>}/>
+  return (<Shell>{el}<H t="Enquiries" s="Messages from the Quick Enquiry form on your public page" right={<Pill tone="warn">{P.enquiries.filter(x=>x[4]==='New').length} waiting for a reply</Pill>}/>
     <div className="grid gap-5 lg:grid-cols-[340px_1fr]">
       <div className="card divide-y divide-brown-100 p-2">{P.enquiries.map(([d,n,ph,msg,st],i)=>
         <button key={n} onClick={()=>setSel(i)} className={`w-full rounded-xl p-3 text-left ${sel===i?'bg-saffron-50':'hover:bg-brown-50'}`}>
@@ -171,29 +203,6 @@ export function SEnquiries() {
 
         <div className="card p-5 text-sm"><b>Why replying fast matters</b><p className="mt-1 text-brown-600">Enquiries answered within 4 hours convert to a booking about three times more often. Your average reply time is shown on your public page — right now it reads <b>“usually replies within 2 hours”</b>.</p></div>
       </div></div>
-  </Shell>)
-}
-
-/* ---------------- SPECIAL POOJAS ---------------- */
-export function SSpecials() {
-  const [toast,el]=useToast(); const [on,setOn]=useState(true)
-  return (<Shell>{el}<H t="Special poojas" s="Poojas performed in the devotee's name, sold as seats — with photo or video proof" right={<button className="btn-s"><Plus size={16}/>Propose a special pooja</button>}/>
-    <div className="card p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-semibold">Offer Special poojas</h3><p className="text-sm text-brown-500">When on, your special poojas appear on the TempleAddress Special poojas page alongside temple listings. Each one is approved by staff before it goes live.</p></div><Toggle label={on?'Enabled':'Off'} defaultChecked={on} onChange={v=>{setOn(v);toast(v?'Special poojas enabled':'Special poojas hidden from the public page')}}/></div></div>
-
-    {on && <>
-      <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v="2" l="listed"/><Stat v="5" l="seats booked"/><Stat v={rs(13000)} l="collected"/><Stat v="2" l="proofs pending" delta="send within 24 h"/></div>
-      <div className="card mt-5 p-4"><Table head={['Special pooja','Date','Price ₹','Seats','Booked','Fulfilment','']} rows={P.specials.map(([t,d,p,seats,bk,ff])=>[
-        <b>{t}</b>,d,rs(p),seats,<b>{bk}</b>,<Pill tone={ff.includes('pending')?'warn':'info'}>{ff}</Pill>,<button className="text-xs font-semibold text-saffron-600">Manage</button>])}/></div>
-
-      <div className="card mt-5 p-5"><h3 className="font-semibold">Ganapathi Homam at devotee's home · 20 Sept · upload proof</h3>
-        <p className="text-sm text-brown-500">Devotees who booked a seat expect a photo or short video the same day, plus the sankalpam names read aloud.</p>
-        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">{['+ photo','+ photo','+ video','prasadam dispatch'].map(x=>
-          <button key={x} className="grid aspect-square place-items-center rounded-xl border-2 border-dashed border-brown-200 text-sm text-brown-500">{x}</button>)}</div>
-        <div className="mt-4 rounded-xl bg-brown-50 p-3 text-sm"><b>Sankalpam list (3 devotees)</b><div className="mt-1 text-brown-600">Anand · Rohini · Kozhikode<br/>Sreeja S · Uthram · Dubai<br/>Vinod K · Anizham · Thrissur</div></div>
-        <div className="mt-4 flex flex-wrap gap-2"><button onClick={()=>toast('Proof sent to 3 devotees on WhatsApp')} className="btn-p"><Upload size={16}/>Send proof & mark done</button><button className="btn-g"><Download size={16}/>Sankalpam list (PDF)</button></div></div>
-
-      <div className="card mt-5 p-5 text-sm"><b>How this differs from your appointments</b><p className="mt-1 text-brown-600">An appointment is one devotee booking your time. A special pooja is one ritual you perform with <b>many devotees' names</b> in the sankalpam — seats are limited, the money is collected upfront, and the proof is what the devotee pays for. Staff approve each listing and settle it after the proof is sent.</p></div>
-    </>}
   </Shell>)
 }
 
@@ -226,43 +235,14 @@ export function SReviews() {
   </Shell>)
 }
 
-/* ---------------- EARNINGS ---------------- */
-export function SEarnings() {
-  const [toast,el]=useToast(); const [tab,setTab]=useState(0)
-  return (<Shell>{el}<H t="Earnings" s="Appointments and special poojas collected by TempleAddress, paid to your account weekly" right={<button onClick={()=>toast('Statement downloaded')} className="btn-g"><Download size={16}/>Statement (Excel)</button>}/>
-    <Tabs tabs={['Payouts','Ledger','Bank & tax']} at={tab} set={setTab}/>
-    {tab===0 && <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v={rs(4300)} l="payable now"/><Stat v="Mon 15 Sept" l="next payout"/><Stat v={rs(28350)} l="collected this quarter"/><Stat v={rs(96400)} l="paid this year"/></div>
-      <div className="card mt-5 p-5"><h3 className="font-semibold">Payout history</h3><Table head={['Period','Appointments','Collected ₹','Paid on','UTR','Status']} rows={P.earnings.map(([p,n,a,d,u,st])=>[
-        p,n,rs(a),d,u,<Pill tone="ok">{st}</Pill>])}/></div>
-      <div className="card mt-5 p-5 text-sm"><b>What is deducted</b><div className="mt-2 grid gap-2 md:grid-cols-3">
-        {[['Platform fee','0% on appointments','Your Service Pro plan covers the listing'],['Gateway charge','Paid by the devotee','Shown at checkout before they pay'],['TDS','As per rules','A statement is issued each quarter']].map(([k,v,n])=>
-          <div key={k} className="rounded-xl bg-brown-50 p-3"><div className="text-xs text-brown-500">{k}</div><b>{v}</b><div className="text-xs text-brown-500">{n}</div></div>)}</div></div></>}
-    {tab===1 && <div className="card p-4"><Table head={['Date','Devotee','Service','Mode','Collected ₹','Status']} rows={[
-      ['11 Sept','Sreeja S','Jathakam consultation','In person','500',<Pill tone="ok">Completed</Pill>],
-      ['11 Sept','Anand K','Muhoortham','Phone','300',<Pill tone="ok">Completed</Pill>],
-      ['11 Sept','Rajesh Iyer','Prasnam','In person','1,500',<Pill tone="info">Today</Pill>],
-      ['10 Sept','Achuth P','Jathakam consultation','In person','500',<Pill tone="ok">Paid out</Pill>],
-      ['8 Sept','Vengamala Committee','Devaprasnam','At temple','15,000',<Pill tone="ok">Paid out</Pill>],
-      ['7 Sept','Rahul V','Prasnam','In person','1,500',<Pill tone="err">No-show · retained</Pill>]]}/></div>}
-    {tab===2 && <div className="space-y-5">
-      <div className="card grid gap-4 p-5 md:grid-cols-2"><h3 className="font-semibold md:col-span-2">Payout account</h3>
-        <Field label="Account holder" hint="Must match your PAN"><Input defaultValue="Prasad Nambeesan"/></Field><Field label="Account number"><Input defaultValue="XXXXXXXX3310"/></Field>
-        <Field label="IFSC"><Input defaultValue="SBIN0070231"/></Field><Field label="UPI"><Input defaultValue="prasad@okaxis"/></Field>
-        <div className="md:col-span-2"><Pill tone="ok"><ShieldCheck size={12}/>Penny-drop verified 14 Jul 2026</Pill></div></div>
-      <div className="card grid gap-4 p-5 md:grid-cols-2"><h3 className="font-semibold md:col-span-2">Tax details</h3>
-        <Field label="PAN"><Input defaultValue="ABCDE1234F"/></Field><Field label="GSTIN" hint="Optional — needed only above the turnover limit"><Input placeholder="Not registered"/></Field>
-        <Field label="Payout cycle"><Select options={['Weekly (Monday)','Fortnightly','Monthly']} defaultValue="Weekly (Monday)"/></Field><Field label="Minimum payout ₹"><Input defaultValue="500"/></Field></div>
-      <div className="card p-5"><h3 className="font-semibold">Plan</h3><div className="mt-2 flex flex-wrap items-center justify-between gap-3"><div><b>{P.plan}</b><div className="text-sm text-brown-500">Listing, appointment booking, enquiries, reviews and WhatsApp reminders</div></div><Pill tone="warn">Expires in 23 days</Pill></div>
-        <button onClick={()=>toast('Renewal link sent on WhatsApp')} className="btn-p mt-3">Renew ₹3,000 / year</button></div>
-      <button onClick={()=>toast('Saved')} className="btn-p">Save</button></div>}
-  </Shell>)
-}
-
-/* ---------------- PROFILE & PUBLIC PAGE ---------------- */
+/* ---------------- PROFILE PAGE — details, expertise, gallery, verification, settings ---------------- */
 export function SProfile() {
-  const [toast,el]=useToast(); const [tab,setTab]=useState(0)
-  return (<Shell>{el}<H t="Profile & page" s="What devotees see before they book you" right={<div className="flex gap-2"><Link to="/service/sv1" className="btn-g"><Globe size={16}/>Preview</Link><button onClick={()=>toast('Published')} className="btn-p">Publish</button></div>}/>
+  const [toast,el]=useToast(); const [tab,setTab]=useState(0); const [defaultPhoto,setDefaultPhoto]=useState(1); const [pending,setPending]=useState(false)
+  const [listingEnabled,setListingEnabled]=useState(P.listingEnabled)
+  const submit=()=>{setPending(true);toast('Profile update submitted for staff approval')}
+  return (<Shell>{el}<H t="Profile page" s="Edit your public service listing · changes become public after staff approval" right={<div className="flex gap-2"><Link to="/service/sv1" className="btn-g"><Globe size={16}/>Preview live page</Link><button onClick={submit} className="btn-p">Submit for approval</button></div>}/>
+    {pending&&<div className="mb-5 rounded-2xl border border-saffron-200 bg-saffron-50 p-4 text-sm text-saffron-800"><div className="flex items-center gap-2"><ShieldCheck size={18}/><b>Update pending staff approval</b></div><p className="mt-1">Your current approved profile remains live. Staff will review text, timings, category, gallery and default photo before publishing this revision.</p></div>}
+    {!listingEnabled&&<div className="mb-5 rounded-2xl bg-red-50 p-4 text-sm text-red-800"><b>Your listing is disabled.</b> It does not appear in search or on the public site until you re-enable it in Settings.</div>}
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
       <aside className="space-y-5"><div className="overflow-hidden rounded-2xl bg-brown-900 p-5 text-white">
         <div className="flex items-start justify-between"><span className="grid h-16 w-16 place-items-center rounded-2xl bg-saffron-500 text-2xl font-bold">P</span><Pill tone="ok"><BadgeCheck size={12}/>Verified</Pill></div>
@@ -270,25 +250,29 @@ export function SProfile() {
         <p className="mt-1 text-sm text-brown-100">{P.kind} · {P.exp} years</p>
         <div className="mt-4 rounded-xl bg-white/10 p-3"><div className="text-[11px] uppercase text-brown-200">Listing ID</div><div className="text-xl font-bold tracking-wider text-gold-300">{P.code}</div></div>
         <p className="mt-3 text-xs text-brown-100">{P.place}<br/>KYC verified 14 Jul 2026</p></div>
-        <div className="card p-5 text-sm"><b>Listing health</b><div className="mt-2 space-y-1.5">{[['Profile completeness','92%','ok'],['Reply time','~2 hours','ok'],['Cancellation rate','2%','ok'],['Photos','1 — add more','warn']].map(([k,v,t])=>
+        <div className="card p-5 text-sm"><b>Listing health</b><div className="mt-2 space-y-1.5">{[['Profile completeness','100%','ok'],['Reply time','~2 hours','ok'],['Cancellation rate','2%','ok'],['Gallery','4 photos','ok']].map(([k,v,t])=>
           <div key={k} className="flex items-center justify-between"><span className="text-brown-500">{k}</span><Pill tone={t}>{v}</Pill></div>)}</div></div></aside>
 
-      <div><Tabs tabs={['About you','Expertise','Photos','Verification']} at={tab} set={setTab}/>
+      <div><Tabs tabs={['Profile details','Expertise','Gallery','Verification','Settings']} at={tab} set={setTab}/>
         {tab===0 && <div className="card grid gap-4 p-5 md:grid-cols-2">
           <Field label="Name (English)"><Input defaultValue={P.name}/></Field><Field label="Name (Malayalam)"><Input className="input ml" defaultValue={P.ml}/></Field>
-          <Field label="I am a"><Select options={['Astrologer','Poojari / priest','Thantri','Thayambaka artist','Sopana sangeetham','Kathakali troupe','Kalamezhuthu','Nadaswaram','Other']} defaultValue="Astrologer"/></Field>
+          <Field label="Service category"><Select options={['Astrologer','Poojari / Pandit','Artist','Kazhakam','Thantri','Other service']} defaultValue="Astrologer"/></Field>
           <Field label="Years of experience"><Input type="number" defaultValue={P.exp}/></Field>
           <Field label="Languages"><Input defaultValue={P.languages}/></Field><Field label="Base town / place"><Input defaultValue={P.place}/></Field>
-          <Field label="About you" hint="Devotees read this first — mention your parampara, training and what you are known for" className="md:col-span-2"><textarea className="input" rows={4} defaultValue="Astrologer Prasad Nambeesan, practising at Koottur near Naduvannur, Kozhikode for 22 years. Trained in the Kerala parampara of prasna marga; known for Swarna Prasnam and Devaprasnam at temples across Malabar."/></Field></div>}
+          <Field label="Public timings"><Input defaultValue="Monday–Saturday · 1:00 PM–5:00 PM"/></Field><Field label="Contact / enquiry response time"><Select options={['Usually replies within 2 hours','Usually replies within 4 hours','Usually replies within a day']}/></Field>
+          <Field label="About you" hint="Devotees read this first — mention your parampara, training and what you are known for" className="md:col-span-2"><textarea className="input" rows={4} defaultValue="Traditional Kerala astrologer practising Prasna Marga, horoscope consultation and muhoortham for families and temples across Malabar."/></Field>
+          <Field label="History & experience" className="md:col-span-2"><textarea className="input" rows={4} defaultValue="Practising since 2004 after training in the Kanippayyur parampara. Has assisted temple committees with Devaprasnam and renovation muhoortham for more than two decades."/></Field>
+          <Field label="Remarks / booking instructions" className="md:col-span-2"><textarea className="input" rows={3} defaultValue="Birth date, exact birth time and place are recommended for horoscope consultations. Phone appointments are available for muhoortham and follow-up questions."/></Field>
+          <div className="md:col-span-2 rounded-xl bg-blue-50 p-3 text-xs text-blue-800">Availability and individual slots are maintained under <Link to="/service-admin/appointments" className="font-semibold underline">Appointments</Link>. Services and special poojas are maintained under <Link to="/service-admin/services" className="font-semibold underline">My services</Link>.</div></div>}
         {tab===1 && <div className="card space-y-4 p-5"><Field label="Expertise & specialisations" hint="These become the filter tags devotees search with">
           <div className="flex flex-wrap gap-2">{P.expertise.map(x=><Pill key={x} tone="warn">{x} ✕</Pill>)}<input placeholder="+ add" className="input !w-36 !py-1"/></div></Field>
           <Field label="Temples you serve regularly"><textarea className="input" rows={3} defaultValue={'Kottur Sree Mahavishnu Temple\nVengamala Bhagavathi Temple\nKunnathumadom Sree Krishna Temple'}/></Field>
           <Field label="Training & lineage"><textarea className="input" rows={2} defaultValue="Learnt under Kanippayyur parampara; certified by Jyothisha Parishath, Kozhikode."/></Field>
           <Field label="Awards & recognition"><textarea className="input" rows={2} placeholder="Optional"/></Field></div>}
-        {tab===2 && <div className="card p-5"><h3 className="font-semibold">Photos</h3><p className="text-sm text-brown-500">A clear portrait plus photos at work. Listings with 3 or more photos get noticeably more bookings.</p>
-          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4"><div className="photo aspect-square rounded-xl"/>{[1,2,3].map(i=>
-            <button key={i} className="grid aspect-square place-items-center rounded-xl border-2 border-dashed border-brown-200 text-sm text-brown-500">+ Upload</button>)}</div>
-          <p className="mt-2 text-xs text-brown-500">First photo is used as your listing cover and on the appointment reminder sent to devotees.</p></div>}
+        {tab===2 && <div className="card p-5"><h3 className="font-semibold">Gallery & default photo</h3><p className="text-sm text-brown-500">Choose the default photo used on search cards, your profile header, share previews and appointment reminders.</p>
+          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">{[1,2,3,4].map(i=>
+            <div key={i} className={`relative overflow-hidden rounded-xl ring-2 ${defaultPhoto===i?'ring-saffron-500':'ring-transparent'}`}><div className="photo aspect-square"/><button onClick={()=>{setDefaultPhoto(i);toast(`Photo ${i} selected as default`)}} className={`absolute inset-x-2 bottom-2 rounded-lg px-2 py-1.5 text-xs font-semibold ${defaultPhoto===i?'bg-saffron-500 text-white':'bg-white/90 text-brown-800'}`}>{defaultPhoto===i?<><Check size={12} className="inline"/> Default photo</>:'Set as default'}</button></div>)}</div>
+          <div className="mt-3 flex gap-2"><button className="btn-s"><Upload size={16}/>Upload photos</button><button className="btn-g">Reorder gallery</button></div><p className="mt-2 text-xs text-brown-500">Gallery and default-photo changes are included in the revision sent for staff approval.</p></div>}
         {tab===3 && <div className="space-y-5"><div className="card p-5"><h3 className="font-semibold">Identity & KYC</h3>
           <div className="mt-3"><Table head={['Document','Status','Verified on']} rows={[
             ['Photo ID (Aadhaar)',<Pill tone="ok"><Check size={12}/>Verified</Pill>,'14 Jul 2026'],
@@ -297,8 +281,16 @@ export function SProfile() {
             ['Reference from a temple',<Pill tone="ok"><Check size={12}/>Kottur Devaswom</Pill>,'20 Jul 2026']]}/></div>
           <p className="mt-3 text-xs text-brown-500">The <b>Verified</b> badge on your page comes from these checks. If a document expires the badge is paused until you re-upload.</p></div>
           <div className="card p-5"><div className="flex items-center gap-2"><Pencil size={18}/><h3 className="font-semibold">Change name or bank details</h3></div>
-            <p className="mt-1 text-sm text-brown-500">Name and bank changes need staff approval and a fresh document, because payouts and receipts depend on them.</p>
+            <p className="mt-1 text-sm text-brown-500">All public profile changes require staff approval. Name and bank changes additionally require a fresh supporting document.</p>
             <button onClick={()=>toast('Change request sent to staff')} className="btn-g mt-3">Request a change</button></div></div>}
+        {tab===4 && <div className="space-y-5">
+          <div className="card p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold">{P.subscription.plan}</h3><p className="mt-0.5 text-sm text-brown-500">₹{P.subscription.price.toLocaleString('en-IN')} {P.subscription.cycle} · renews {P.subscription.renews}</p></div><Pill tone={P.subscription.status==='Active'?'ok':'err'}>{P.subscription.status}</Pill></div>
+            <p className="mt-3 text-xs text-brown-500">No payments are collected for appointments at this stage — this subscription is what keeps your listing live, the same way a professional network premium plan works.</p>
+            <ul className="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">{P.subscription.features.map(f=><li key={f} className="flex items-start gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-emerald-600"/>{f}</li>)}</ul>
+            <button onClick={()=>toast('Subscription renewal link sent on WhatsApp')} className="btn-p mt-4">Renew subscription</button></div>
+          <div className={`card p-5 ${!listingEnabled?'ring-2 ring-red-300':''}`}><div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold">Listing status</h3><p className="text-sm text-brown-500">Turn your public page off temporarily — for travel, a break, or if you're fully booked. Nothing is deleted; re-enable any time.</p></div>
+            <button onClick={()=>{setListingEnabled(v=>!v);toast(listingEnabled?'Listing disabled — hidden from search':'Listing enabled — visible again')}} className={`btn !px-3 !py-2 text-sm ${listingEnabled?'bg-red-50 text-red-700':'bg-emerald-50 text-emerald-700'}`}><Power size={15}/>{listingEnabled?'Disable listing':'Enable listing'}</button></div></div>
+        </div>}
       </div></div>
   </Shell>)
 }
