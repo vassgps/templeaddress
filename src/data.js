@@ -40,6 +40,135 @@ export const services = [
   { id:'sv3', name:'P.V. Sasidharan', ml:'പി.വി. ശശിധരൻ', type:'Astrologer', district:'Perinthalmanna', from:300, exp:30, hue:'#3F4E5C', offerings:[['Horoscope reading',300,'Phone']] },
   { id:'sv4', name:'Kalamandalam Anil', ml:'കലാമണ്ഡലം അനിൽ', type:'Thayambaka', district:'Thrissur', from:15000, exp:18, hue:'#8A3A1F', offerings:[['Thayambaka (festival)',15000,'Team of 5']] },
 ]
+/* ---------- VENDOR TYPE 2 · FESTIVAL COMMITTEE ----------
+   A festival listing is time-bound (a few days a year), sells sponsorships and day-limited
+   offerings, hires artists, and settles once the utsavam is over — no daily pooja chart. */
+export const festival = {
+  code:'F1016', name:'Kottur Temple Annual Festival 2026', ml:'കൊട്ടൂർ ഉത്സവം 2026',
+  temple:'Kottur Sree Mahavishnu Temple', place:'Ulliyeri, Kozhikode', committee:'Kottur Utsava Committee',
+  convenor:'Rajeev M', from:'3 Dec 2026', to:'8 Dec 2026', daysToGo:83, status:'Bookings open',
+  budget:1250000, collected:684500, committed:412000, inHand:272500, sponsorTarget:600000, sponsorGot:395000,
+  days:['3 Dec','4 Dec','5 Dec','6 Dec','7 Dec','8 Dec'],
+  /* day, event, time, kind, performer / in-charge, status */
+  programme:[
+    ['3 Dec','Kodiyettam (flag hoisting)','6:00 AM','Ritual','Melshanthi Krishnan Namboothiri','Confirmed'],
+    ['3 Dec','Ezhunnallippu · 3 elephants','7:00 PM','Procession','Kottur Gajamela','Confirmed'],
+    ['4 Dec','Thayambaka','7:30 PM','Cultural','Kalamandalam Anil & team','Confirmed'],
+    ['4 Dec','Kathakali — Duryodhana Vadham','9:30 PM','Cultural','Sadanam troupe','Advance paid'],
+    ['5 Dec','Annadanam','12:30 PM','Seva','Committee kitchen','Confirmed'],
+    ['5 Dec','Ottanthullal','7:00 PM','Cultural','Not assigned','Needs artist'],
+    ['6 Dec','Kalamezhuthu Pattu','8:00 PM','Ritual','Kurup team, Perambra','Awaiting confirmation'],
+    ['7 Dec','Sopana Sangeetham','6:30 PM','Cultural','Sreejith Marar','Confirmed'],
+    ['8 Dec','Aarattu & Pallivetta','5:00 AM','Ritual','Melshanthi','Confirmed'],
+  ],
+  /* name, ml, price, per-day limit (0 = unlimited), sold */
+  offerings:[
+    ['Utsava Bali sponsorship','ഉത്സവബലി',2500,6,19],
+    ['Annadanam (100 devotees)','അന്നദാനം',5000,2,9],
+    ['Ezhunnallippu sponsorship','എഴുന്നള്ളിപ്പ്',7500,1,4],
+    ['Deepam (festival week)','ദീപം',100,0,212],
+    ['Kalasam','കലശം',300,0,64],
+  ],
+  /* sponsor, package, amount, status, note */
+  sponsors:[
+    ['Malabar Gold Traders','Title sponsor · arch + stage banner',100000,'Paid','GST invoice INV-0431'],
+    ['Resurge India Foundation','Annadanam — all 6 days',60000,'Paid','INV-0428'],
+    ['Ulliyeri Service Co-op Bank','Ezhunnallippu · day 1',35000,'Advance ₹15,000','Balance ₹20,000 due 1 Dec'],
+    ['NRI Forum · Dubai chapter','Kathakali night',25000,'Pledged','Awaiting transfer'],
+  ],
+  /* troupe, programme, when, fee, advance, status */
+  artists:[
+    ['Kottur Gajamela','3 elephants + nadaswaram','3 Dec · 7:00 PM',85000,25000,'Agreement signed'],
+    ['Kalamandalam Anil & team','Thayambaka','4 Dec · 7:30 PM',15000,7500,'Advance paid'],
+    ['Sadanam Kathakali troupe','Kathakali','4 Dec · 9:30 PM',45000,15000,'Advance paid'],
+    ['Sreejith Marar','Sopana sangeetham','7 Dec · 6:30 PM',8000,0,'To confirm'],
+    ['Kurup team, Perambra','Kalamezhuthu Pattu','6 Dec · 8:00 PM',12000,0,'Awaiting confirmation'],
+  ],
+  /* head, category, amount, paid, note */
+  expenses:[
+    ['Pandal, stage & decoration','Infrastructure',210000,210000,'Paid in full'],
+    ['Artists & troupes','Programme',165000,47500,'Balance on festival day'],
+    ['Annadanam provisions','Seva',98000,40000,'Partly sponsored'],
+    ['Sound & lighting','Infrastructure',64000,20000,'Advance paid'],
+    ['Printing & publicity','Publicity',28000,28000,'Paid in full'],
+  ],
+  /* day sheet rows: offering, devotee, nakshatra, qty, amount */
+  sheet:[
+    ['Utsava Bali sponsorship','Anand K','Rohini',1,2500],
+    ['Annadanam (100 devotees)','Sreeja S · Dubai','Uthram',1,5000],
+    ['Deepam','Rajesh Iyer','Chothi',5,500],
+    ['Kalasam','Devi M','Makayiram',1,300],
+    ['Deepam','Vinod K','Anizham',2,200],
+  ],
+}
+
+/* ---------- VENDOR TYPE 3 · SERVICE PROVIDER ----------
+   A person or team (priest, astrologer, performer) selling time-slot appointments,
+   optionally also listing Special poojas. No daily chart, no 80G — reviews and slots matter. */
+export const provider = {
+  code:'SV-1042', name:'Prasad Nambeesan', ml:'പ്രസാദ് നമ്പീശൻ', kind:'Astrologer',
+  place:'Koottur, Naduvannur, Kozhikode', exp:22, rating:4.8, reviews:63, languages:'Malayalam · English',
+  plan:'Service Pro · valid to 4 Oct 2026', travelKm:25, slotMins:30, hours:'1:00 PM – 5:00 PM',
+  expertise:['Horoscope','Rashi','Swarna Prasnam','Devaprasnam','Thamboolaprashnam','Muhoortham'],
+  week:[['Mon',true],['Tue',true],['Wed',true],['Thu',true],['Fri',true],['Sat',true],['Sun',false]],
+  /* time, devotee, service, mode, phone, status */
+  today:[
+    ['1:00 PM','Sreeja S','Jathakam consultation','In person','+91 94••• ••812','Confirmed'],
+    ['1:30 PM','Anand K','Muhoortham','Phone','+91 94••• ••256','Confirmed'],
+    ['2:00 PM','—','Open slot','—','—','Open'],
+    ['2:30 PM','Rajesh Iyer','Prasnam (1 hr)','In person','+91 98••• ••441','Confirmed'],
+    ['3:30 PM','Devi M','Horoscope reading','Phone','+91 97••• ••118','Rescheduled'],
+    ['4:00 PM','Hari Menon','Muhoortham','Phone','+91 90••• ••402','Confirmed'],
+    ['4:30 PM','—','Open slot','—','—','Open'],
+  ],
+  /* date, devotee, service, mode, amount, status */
+  upcoming:[
+    ['Sun 14 Sept · 1:00 PM','Lakshmi R','Jathakam consultation','In person',500,'Confirmed'],
+    ['Mon 15 Sept · 2:30 PM','Vinod K','Prasnam (1 hr)','In person',1500,'Confirmed'],
+    ['Wed 17 Sept · 10:00 AM','Kunnathumadom Devaswom','Devaprasnam','At temple',15000,'Advance paid'],
+    ['Fri 19 Sept · 3:00 PM','Achuth P','Muhoortham','Phone',300,'Confirmed'],
+  ],
+  past:[
+    ['10 Sept','Achuth P','Jathakam consultation',500,'Completed','4 ★'],
+    ['9 Sept','Meera S','Muhoortham',300,'Completed','5 ★'],
+    ['8 Sept','Vengamala Committee','Devaprasnam',15000,'Completed','—'],
+    ['7 Sept','Rahul V','Prasnam (1 hr)',1500,'No-show','—'],
+  ],
+  /* name, ml, price, minutes, mode */
+  services:[
+    ['Jathakam consultation','ജാതക പരിശോധന',500,30,'In person / phone'],
+    ['Prasnam','പ്രശ്നം',1500,60,'In person'],
+    ['Swarna Prasnam','സ്വർണ പ്രശ്നം',5000,180,'At temple'],
+    ['Muhoortham','മുഹൂർത്തം',300,15,'Phone'],
+    ['Devaprasnam','ദേവപ്രശ്നം',15000,480,'At temple'],
+  ],
+  /* title, date, price, seats, booked, fulfilment */
+  specials:[
+    ['Ganapathi Homam at devotee\'s home','Sat 20 Sept',3500,4,3,'Proof pending for 2'],
+    ['Navagraha Pooja','Sun 28 Sept',2500,6,2,'Upcoming'],
+  ],
+  /* date, name, phone, message, status */
+  enquiries:[
+    ['11 Sept','Vinod K','+91 96••• ••330','Swarna Prasnam for our family temple — are you free in October?','New'],
+    ['11 Sept','Anjali T','+91 94••• ••905','Do you do online jathakam consultation for NRIs?','New'],
+    ['10 Sept','Lakshmi R','+91 94••• ••771','Muhoortham for griha pravesham on 2 Nov','Replied'],
+    ['9 Sept','Hari Menon','+91 90••• ••402','Devaprasnam cost for a small kavu near Perambra','Replied'],
+  ],
+  /* devotee, stars, tag, text, reply */
+  feedback:[
+    ['Achuth P',4,'Calm demeanor','Explained the jathakam patiently and did not rush the session.','Replied'],
+    ['Sreeja S',5,'Accurate','The muhoortham he gave worked out perfectly for our family.','—'],
+    ['Rajesh Iyer',5,'Knowledgeable','Deep knowledge of prasnam. Worth the wait for an appointment.','—'],
+    ['Meera S',3,'—','Session started 20 minutes late, but the reading was good.','Needs reply'],
+  ],
+  /* period, appointments, collected, paid on, UTR, status */
+  earnings:[
+    ['1–7 Sept',18,9400,'8 Sept','FDRLN26251000512','Paid'],
+    ['25–31 Aug',21,11150,'1 Sept','FDRLN26244000318','Paid'],
+    ['18–24 Aug',16,7800,'25 Aug','FDRLN26237000201','Paid'],
+  ],
+}
+
 export const gateways = {
   razorpay:{ name:'Razorpay', note:'TempleAddress collects · weekly payout to your bank', kind:'ta' },
   payu:{ name:'PayU', note:'TempleAddress collects · weekly payout', kind:'ta' },

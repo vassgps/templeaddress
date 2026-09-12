@@ -390,7 +390,8 @@ export function Login() {
   const [otp,setOtp] = useState(false)
   const needsPassword = role==='dealer' || role==='staff'
   const pickRole = k => { setRole(k); setOtp(false) }
-  const dest = () => role==='user' ? '/account' : role==='agent' ? '/agent' : role==='vendor' ? `/vendor?type=${vendorType==='Temple'?'temple':vendorType==='Festival committee'?'festival':'service'}` : role==='dealer' ? '/dealer' : `/staff?role=${staffRole}`
+  const vendorHome = { 'Temple':'/vendor', 'Festival committee':'/festival-admin', 'Service provider':'/service-admin' }
+  const dest = () => role==='user' ? '/account' : role==='agent' ? '/agent' : role==='vendor' ? vendorHome[vendorType] : role==='dealer' ? '/dealer' : `/staff?role=${staffRole}`
   return (<PublicShell><Wrap className="max-w-lg py-12">
     <div className="text-center"><TempleMark size={44} className="mx-auto"/><h1 className="mt-3 text-3xl font-semibold">Login</h1><p className="mx-auto mt-1 max-w-sm text-sm text-brown-500">Just browsing or submitting a temple's basic details? You don't need an account — <Link to="/temples" className="font-semibold text-saffron-600 underline">continue as guest</Link>.</p></div>
 
@@ -401,7 +402,7 @@ export function Login() {
 
       {role==='vendor' && <div className="mt-4"><span className="label">Vendor type</span>
         <div className="flex flex-wrap gap-2">{vendorTypes.map(v=><button key={v} onClick={()=>setVendorType(v)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${vendorType===v?'bg-saffron-500 text-white':'border border-brown-200 bg-white text-brown-700'}`}>{v}</button>)}</div>
-        {vendorType==='Service provider' && <p className="mt-1.5 text-xs text-brown-500">Service providers (priests, astrologers, artists) can also list Special poojas for booking.</p>}</div>}
+        <p className="mt-1.5 text-xs text-brown-500">{{'Temple':'Daily pooja chart, vazhipadu prices, donations and 80G receipts.','Festival committee':'A time-bound utsavam — programme, sponsorships, artists and day sheets.','Service provider':'Priests, astrologers and artists — appointment slots, enquiries and reviews. Special poojas can be listed too.'}[vendorType]}</p></div>}
 
       {role==='staff' && <div className="mt-4"><span className="label">Staff role</span>
         <div className="space-y-1.5">{staffRoles.map(([k,l,d])=><button key={k} onClick={()=>setStaffRole(k)} className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-sm ${staffRole===k?'border-saffron-500 bg-saffron-50':'border-brown-200 bg-white'}`}><span><b>{l}</b><span className="block text-xs font-normal text-brown-500">{d}</span></span>{staffRole===k&&<Check size={16} className="shrink-0 text-saffron-600"/>}</button>)}</div></div>}

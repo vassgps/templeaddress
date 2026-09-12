@@ -1,18 +1,20 @@
 import React, { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { CalendarCheck, ListOrdered, Gift, Landmark, Settings, Database, PenLine, Download, MessageCircle, Check, Plus, CreditCard, ArrowRightLeft, Percent, FileBadge, Globe, Users2, Crown } from 'lucide-react'
 import { temples, gateways } from '../data'
 import { DashShell, Pill, Field, Input, Select, Toggle, Table, Stat, Tabs, useToast, Money } from '../ui'
 
-// Vendor covers three listing types, chosen at login (?type= on every /vendor* URL): temple · festival committee · service provider.
-// The prototype shares one dashboard template across all three; the role pill and a banner make the active type clear.
+// Vendor covers three listing types, chosen at login. Each type now has its OWN dashboard:
+//   temple             → /vendor          (this file — daily pooja chart, donations, 80G)
+//   festival committee → /festival-admin  (pages/vendorFestival.jsx — programme, sponsors, artists)
+//   service provider   → /service-admin   (pages/vendorService.jsx — appointment slots, enquiries, reviews)
+// Old ?type= links land here, so redirect them to the right dashboard.
 const items = [{ group:'Temple', links:[['/vendor','Today',CalendarCheck],['/vendor/poojas','Poojas',ListOrdered],['/vendor/payouts','Payouts',Landmark],['/vendor/settings','Settings',Settings],['/vendor/page','Page editor',PenLine],['/vendor/donations','Donations',Gift],['/vendor/data','My data',Database]] }]
-const vendorLabel = { temple:'Vendor · Temple', festival:'Vendor · Festival committee', service:'Vendor · Service provider' }
-const useVendorType = () => { const [sp]=useSearchParams(); const t=sp.get('type'); return vendorLabel[t]?t:'temple' }
+const useVendorType = () => { const [sp]=useSearchParams(); const t=sp.get('type'); return t==='festival'||t==='service' ? t : 'temple' }
 const Shell = ({ children, temple }) => { const vt=useVendorType()
-  return <DashShell role={vendorLabel[vt]} user={temple||'Kottur Sree Mahavishnu Temple · Nishanth (Secretary)'} items={items} badge="2">
-    {vt!=='temple' && <div className="mb-4 rounded-xl bg-blue-50 px-4 py-2.5 text-sm text-blue-900">Previewing the shared vendor dashboard as a <b>{vt==='festival'?'Festival committee':'Service provider'}</b>. Screens below use temple examples in this prototype, but the same booking, chart and payout flow applies to your listing type.</div>}
-    {children}</DashShell> }
+  if (vt==='festival') return <Navigate to="/festival-admin" replace/>
+  if (vt==='service') return <Navigate to="/service-admin" replace/>
+  return <DashShell role="Vendor · Temple" user={temple||'Kottur Sree Mahavishnu Temple · Nishanth (Secretary)'} items={items} badge="2">{children}</DashShell> }
 const H = ({ t, s, right }) => <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">{t}</h1>{s&&<div className="text-sm text-brown-500">{s}</div>}</div>{right}</div>
 
 export function VToday() {
@@ -64,12 +66,11 @@ export function VPayouts() {
 
 /* -------- SETTINGS: multi-gateway, fee, 80G, domain, team, plan, ownership -------- */
 export function VSettings() {
-  const [q]=useSearchParams(); const [tab,setTab]=useState(+(q.get('tab')||0)); const [toast,el]=useToast(); const vt=useVendorType()
+  const [q]=useSearchParams(); const [tab,setTab]=useState(+(q.get('tab')||0)); const [toast,el]=useToast()
   const [enabled,setEnabled]=useState({razorpay:true,payu:false,stripe:true,omniware:false}); const [primary,setPrimary]=useState('razorpay'); const [mode,setMode]=useState('ta')
-  const [fee,setFee]=useState('INHERIT'); const [g80,setG80]=useState(true); const [special,setSpecial]=useState(true)
+  const [fee,setFee]=useState('INHERIT'); const [g80,setG80]=useState(true)
   return (<Shell>{el}<H t="Settings"/><Tabs tabs={['Payments','Convenience fee','80G','Website & domain','Team','Plan & sponsor','Ownership']} at={tab} set={setTab}/>
     {tab===0 && <div className="space-y-5">
-      {vt==='service' && <div className="card p-5"><div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold">Offer Special poojas</h3><p className="text-sm text-brown-500">List Special poojas (homams, sevas performed in the devotee's name) alongside your regular appointment bookings — they'll appear on the Special poojas page and earn the same way.</p></div><Toggle label={special?'Enabled':'Off'} defaultChecked={special} onChange={setSpecial}/></div></div>}
       <div className="card p-5"><h3 className="font-semibold">How do you receive payments?</h3>
         <div className="mt-3 grid gap-3 md:grid-cols-3">{[['ta','Through TempleAddress','Razorpay, PayU or Stripe collect; weekly payout to your bank'],['own','Temple\'s own gateway','Omniware (Federal Bank) settles to your account; no TA payout'],['manual','No gateway — bank only','Devotees pay TA; accountant pays you by NEFT each week']].map(([k,h,p])=><button key={k} onClick={()=>setMode(k)} className={`rounded-2xl border p-4 text-left ${mode===k?'border-saffron-500 bg-saffron-50':'border-brown-200 bg-white'}`}><b className="text-sm">{h}</b><div className="mt-1 text-xs text-brown-500">{p}</div></button>)}</div></div>
       {mode==='ta' && <div className="card p-5"><div className="flex items-center justify-between"><h3 className="font-semibold">Gateways</h3><span className="text-xs text-brown-500">Enable one or more · the devotee picks at checkout</span></div>
