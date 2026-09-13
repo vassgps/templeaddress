@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2 } from 'lucide-react'
+import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2 } from 'lucide-react'
 
 /* ---------- BRAND MARK ---------- */
 export const TempleMark = ({ size=36, className='' }) => (
@@ -116,20 +116,38 @@ export function PublicShell({ children, tenant, hideChatbot=false }) {
   </div>)
 }
 
-/* ---------- DASHBOARD SHELL ---------- */
+/* ---------- DASHBOARD SHELL ----------
+   Sidebar groups are expandable/collapsible by default (click the group label to toggle).
+   Pass `collapsible:false` on a group to pin it always-open, and `defaultOpen:false` to have
+   it start collapsed (useful when a dashboard has several groups and only one should be
+   prominent on first load — see the Portal admin's Staff panel / Accountant view / Administrator
+   split in partners.jsx). */
 export function DashShell({ role, user, items, children, badge }) {
   const loc = useLocation()
+  const [openGroups,setOpenGroups] = useState(()=>Object.fromEntries(items.map(g=>[g.group, g.defaultOpen!==false])))
+  useEffect(()=>{ setOpenGroups(prev=>{ const next={...prev}; let changed=false; items.forEach(g=>{ if(!(g.group in next)){ next[g.group]=g.defaultOpen!==false; changed=true } }); return changed?next:prev }) },[items])
+  const toggleGroup = name => setOpenGroups(o=>({...o,[name]:!o[name]}))
+  const primaryLinks = (items.find(g=>g.primary)||items[0]).links
   return (<div className="min-h-screen bg-brown-50">
     <header className="sticky top-0 z-30 border-b border-saffron-500/60 bg-brown-900 text-white"><div className="mx-auto flex h-14 max-w-[1400px] items-center gap-3 px-4">
       <Logo light/><Pill tone="gold">{role}</Pill><div className="flex-1"/><span className="hidden text-sm text-brown-100 md:block">{user}</span>
       <button className="relative rounded-lg bg-white/10 p-2"><Bell size={16}/>{badge&&<span className="absolute -right-1 -top-1 rounded-full bg-saffron-500 px-1.5 text-[10px] font-bold">{badge}</span>}</button>
       <Link to="/login" className="btn bg-white/15 !py-1.5 text-white">Logout</Link></div></header>
-    <div className="mx-auto grid max-w-[1400px] md:grid-cols-[230px_1fr]">
-      <aside className="hidden border-r border-brown-100 bg-white p-3 md:block"><nav className="space-y-0.5">{items.map(g=><div key={g.group}><div className="px-3 pb-1 pt-4 text-[11px] font-bold text-brown-500">{g.group}</div>
-        {g.links.map(([h,t,I])=><NavLink key={h} to={h} end className={({isActive})=>`sideitem ${isActive?'active':''}`}>{I&&<I size={16}/>}{t}</NavLink>)}</div>)}</nav></aside>
+    <div className="mx-auto grid max-w-[1400px] md:grid-cols-[250px_1fr]">
+      <aside className="hidden border-r border-brown-100 bg-white p-3 md:block"><nav className="space-y-0.5">{items.map(g=>{
+        const isOpen = g.collapsible===false ? true : (openGroups[g.group] ?? true)
+        return <div key={g.group}>
+          {g.collapsible===false
+            ? <div className="px-3 pb-1 pt-4 text-[11px] font-bold uppercase tracking-wide text-brown-500">{g.group}</div>
+            : <button type="button" onClick={()=>toggleGroup(g.group)} className="flex w-full items-center justify-between gap-2 rounded-lg px-3 pb-1 pt-4 text-left text-[11px] font-bold uppercase tracking-wide text-brown-500 hover:text-brown-800">
+                <span className="flex items-center gap-1.5">{g.icon&&<g.icon size={13}/>}{g.group}{g.badge&&<span className="rounded-full bg-saffron-100 px-1.5 py-0.5 text-[10px] font-bold text-saffron-700">{g.badge}</span>}</span>
+                <ChevronDown size={14} className={`shrink-0 transition-transform ${isOpen?'':'-rotate-90'}`}/>
+              </button>}
+          {isOpen && <div className="space-y-0.5 pb-1">{g.links.map(([h,t,I])=><NavLink key={h} to={h} end className={({isActive})=>`sideitem ${isActive?'active':''}`}>{I&&<I size={16}/>}{t}</NavLink>)}</div>}
+        </div>})}</nav></aside>
       <main className="min-w-0 p-4 pb-24 md:p-7">{children}</main>
     </div>
-    <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-brown-100 bg-white md:hidden">{items[0].links.slice(0,4).map(([h,t,I])=><NavLink key={h} to={h} end className={({isActive})=>`flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${isActive?'text-saffron-600':'text-brown-600'}`}>{I&&<I size={18}/>}{t}</NavLink>)}</nav>
+    <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-brown-100 bg-white md:hidden">{primaryLinks.slice(0,4).map(([h,t,I])=><NavLink key={h} to={h} end className={({isActive})=>`flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${isActive?'text-saffron-600':'text-brown-600'}`}>{I&&<I size={18}/>}{t}</NavLink>)}</nav>
   </div>)
 }
 
