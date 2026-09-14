@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star, Gift, BadgeCheck, ArrowRight, Download, CalendarDays, Users, QrCode, Lock, Check, Sparkles, Landmark, Flame, PartyPopper, Music, HeartHandshake, Receipt as ReceiptIcon, RefreshCcw, SlidersHorizontal, Globe2, Smartphone } from 'lucide-react'
-import { temples, bySlug, specials, services } from '../data'
+import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star, Gift, BadgeCheck, ArrowRight, Download, CalendarDays, Users, QrCode, Lock, Check, Sparkles, Landmark, Flame, PartyPopper, Music, HeartHandshake, Receipt as ReceiptIcon, RefreshCcw, SlidersHorizontal, Globe2, Smartphone, Zap, Handshake, Plus, X, PenLine } from 'lucide-react'
+import { temples, bySlug, specials, services, festival as festivalData, onlineGateways, manualMethods } from '../data'
 import { PublicShell, Photo, Pill, Field, Input, Select, Toggle, Table, Section, Steps, Money, useToast, GoogleIcon, TempleMark } from '../ui'
+import { FileField } from './checkout'
 
 const Wrap = ({ children, className='' }) => <div className={`mx-auto max-w-6xl px-4 ${className}`}>{children}</div>
 
@@ -158,9 +159,9 @@ const TempleCard = ({ t }) => (
     <Photo hue={t.hue} className="aspect-[4/3]" label={t.plan==='Pro'?'Featured':''}>
       <span className="absolute right-3 top-3 pill bg-emerald-500/90 text-white"><BadgeCheck size={12}/>Verified</span>
       <span className="absolute bottom-3 right-3 pill bg-white/90 text-brown-900"><Star size={12} className="text-gold-500" fill="currentColor"/>{t.rating}</span></Photo>
-    <div className="p-4"><h3 className="font-semibold leading-tight">{t.name}</h3><div className="ml mt-0.5 text-sm text-brown-500">{t.ml}</div>
+    <div className="p-4"><div className="flex items-start justify-between gap-2"><h3 className="font-semibold leading-tight">{t.name}</h3><Pill tone="n">{t.code}</Pill></div><div className="ml mt-0.5 text-sm text-brown-500">{t.ml}</div>
       <div className="mt-2 flex items-center gap-1 text-xs text-brown-500"><MapPin size={12}/>{t.place}, {t.district} · {t.deity}</div>
-      <div className="mt-3 flex items-center justify-between border-t border-brown-100 pt-3 text-sm"><span className="text-brown-500">From <b className="text-brown-900">₹{t.poojas[0][2]}</b></span><span className="inline-flex items-center gap-1 font-semibold text-saffron-600 transition group-hover:gap-2">Book pooja <ArrowRight size={14}/></span></div></div></Link>
+      <div className="mt-3 flex items-center justify-between border-t border-brown-100 pt-3 text-sm"><span className="text-brown-500">From <b className="text-brown-900">₹{t.poojas[0].price}</b></span><span className="inline-flex items-center gap-1 font-semibold text-saffron-600 transition group-hover:gap-2">Book pooja <ArrowRight size={14}/></span></div></div></Link>
 )
 const SpecialCard = ({ s }) => (
   <Link to={`/special/${s.id}`} className="card-premium group overflow-hidden">
@@ -224,8 +225,9 @@ export function TemplePage() {
     <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="space-y-6">
         <div className="card p-5"><div className="flex items-center justify-between"><h2 className="text-xl font-semibold">Book a vazhipadu</h2><span className="text-xs text-brown-500">Chart closes {t.cutoff} the day before</span></div>
-          <div className="mt-2 divide-y divide-brown-100">{(more?t.poojas:t.poojas.slice(0,6)).map(([n,ml,p,lim])=><div key={n} className="flex items-center gap-3 py-3"><div className="flex-1"><div className="font-semibold">{n}</div><div className="ml text-sm text-brown-500">{ml}{lim?` · ${lim}/day`:''}</div></div><div className="w-20 text-right text-lg font-bold">₹{p}</div><Link to={`/book/${t.slug}`} className="btn-p !py-2">Book</Link></div>)}</div>
-          {t.poojas.length>6 && <button onClick={()=>setMore(!more)} className="mt-2 text-sm font-semibold text-saffron-600">{more?'Show fewer':`Show all ${t.poojas.length} poojas`}</button>}</div>
+          <div className="mt-2 divide-y divide-brown-100">{(more?t.poojas:t.poojas.slice(0,6)).map(pj=><div key={pj.code} className="flex items-center gap-3 py-3"><div className="flex-1"><div className="flex items-center gap-2"><span className="font-semibold">{pj.name}</span>{pj.live&&<span className="pill bg-emerald-50 text-emerald-700"><Zap size={11}/>Live</span>}</div><div className="ml text-sm text-brown-500">{pj.ml}{pj.dailyLimit?` · ${pj.dailyLimit}/day`:''}</div></div><div className="w-20 text-right text-lg font-bold">₹{pj.price}</div><Link to={`/book/${t.slug}?pooja=${pj.code}`} className="btn-p !py-2">Book</Link></div>)}</div>
+          {t.poojas.length>6 && <button onClick={()=>setMore(!more)} className="mt-2 text-sm font-semibold text-saffron-600">{more?'Show fewer':`Show all ${t.poojas.length} poojas`}</button>}
+          {t.poojas.some(pj=>pj.live) && <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-800"><Zap size={13} className="mt-0.5 shrink-0"/><span><b>Live</b> poojas can be booked instantly, any time — even after tonight's chart is prepared. They're added to the temple's next chart automatically.</span></p>}</div>
         {own && <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">Payments for this temple go directly to the temple's own account through Omniware (Federal Bank). TempleAddress does not hold this money.</div>}
         <div className="card p-5"><h2 className="text-xl font-semibold">About</h2><p className="mt-2 text-brown-700">{t.about}</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">{t.story&&<Info h="Story" p={t.story}/>}{t.history&&<Info h="History" p={t.history}/>}{t.speciality&&<Info h="Speciality" p={t.speciality}/>}{t.remarks&&<Info h="Remarks" p={t.remarks}/>}</div>
@@ -267,15 +269,20 @@ export function Claim() {
 
 /* ---------------- BOOKING ---------------- */
 export function Book() {
-  const { slug } = useParams(); const t = bySlug(slug); const [s,setS]=useState(0); const [pooja,setPooja]=useState(0); const [qty,setQty]=useState(1)
-  const price = t.poojas[pooja][2]*qty; const fee = 0
+  const { slug } = useParams(); const t = bySlug(slug); const [sp]=useSearchParams()
+  const initial = Math.max(0, t.poojas.findIndex(pj=>pj.code===sp.get('pooja')))
+  const [s,setS]=useState(0); const [pooja,setPooja]=useState(initial===-1?0:initial); const [qty,setQty]=useState(1)
+  const pj = t.poojas[pooja]; const price = pj.price*qty; const fee = 0
   return (<PublicShell><Wrap className="max-w-2xl py-8">
     <Link to={`/t/${t.slug}`} className="text-sm text-brown-500">← {t.name}</Link><h1 className="mt-1 text-3xl font-semibold">Book a vazhipadu</h1>
     <Steps items={['Pooja & date','Devotee','Pay']} at={s}/>
     {s===0 && <div className="card space-y-4 p-6">
-      <Field label="Pooja"><select className="input" value={pooja} onChange={e=>setPooja(+e.target.value)}>{t.poojas.map(([n,,p],i)=><option key={n} value={i}>{n} — ₹{p}</option>)}</select></Field>
-      <div className="grid gap-4 sm:grid-cols-2"><Field label="Date" hint={`Chart for this date closes the day before at ${t.cutoff}`}><Input type="date" defaultValue="2026-09-13"/></Field><Field label="Quantity"><select className="input" value={qty} onChange={e=>setQty(+e.target.value)}>{[1,2,3,5].map(n=><option key={n}>{n}</option>)}</select></Field></div>
-      {t.poojas[pooja][3]>0 && <div className="rounded-xl bg-saffron-50 p-3 text-sm text-saffron-700">{t.poojas[pooja][0]}: {t.poojas[pooja][3]} per day · <b>{t.poojas[pooja][3]-6} left</b> for 13 Sept.</div>}
+      <Field label="Pooja"><select className="input" value={pooja} onChange={e=>setPooja(+e.target.value)}>{t.poojas.map((p,i)=><option key={p.code} value={i}>{p.name}{p.live?' · Live':''} — ₹{p.price}</option>)}</select></Field>
+      {pj.live ? <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"><Zap size={16} className="mt-0.5 shrink-0"/><span><b>Live booking.</b> This pooja can be booked instantly, any day, any time — {pj.startTime&&`performed around ${pj.startTime}`}. The temple gets an email, SMS and WhatsApp notification right away; it's settled with the next chart.</span></div>
+        : <div className="grid gap-4 sm:grid-cols-2"><Field label="Date" hint={`Chart for this date closes the day before at ${t.cutoff}`}><Input type="date" defaultValue="2026-09-13"/></Field><Field label="Quantity"><select className="input" value={qty} onChange={e=>setQty(+e.target.value)}>{[1,2,3,5].map(n=><option key={n}>{n}</option>)}</select></Field></div>}
+      {pj.live && <Field label="Quantity"><select className="input" value={qty} onChange={e=>setQty(+e.target.value)}>{[1,2,3,5].map(n=><option key={n}>{n}</option>)}</select></Field>}
+      {!pj.live && pj.dailyLimit>0 && <div className="rounded-xl bg-saffron-50 p-3 text-sm text-saffron-700">{pj.name}: {pj.dailyLimit} per day · <b>{Math.max(pj.dailyLimit-6,0)} left</b> for 13 Sept.</div>}
+      {pj.minBookingTime && !pj.live && <p className="text-xs text-brown-500">Book at least: {pj.minBookingTime}</p>}
       <button onClick={()=>setS(1)} className="btn-p w-full">Continue</button></div>}
     {s===1 && <div className="card space-y-4 p-6">
       <div><span className="label">Saved family members</span><div className="flex flex-wrap gap-2">{['Anand · Rohini','Devi · Makayiram','Aarav · Thiruvathira','+ New'].map((f,i)=><button key={f} className={`rounded-full px-3 py-1.5 text-sm ${i===0?'bg-brown-900 text-white':'border border-brown-200 bg-white'}`}>{f}</button>)}</div></div>
@@ -284,7 +291,7 @@ export function Book() {
       <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">An OTP will be sent to <b>+91 94966 86256</b> on WhatsApp to confirm.</div>
       <div className="flex gap-2"><button onClick={()=>setS(0)} className="btn-g">Back</button><button onClick={()=>setS(2)} className="btn-p flex-1">Continue to payment</button></div></div>}
     {s===2 && <div className="card space-y-4 p-6"><h3 className="text-lg font-semibold">Review</h3>
-      <dl className="grid grid-cols-[130px_1fr] gap-y-1 text-sm"><dt className="text-brown-500">Temple</dt><dd className="font-semibold">{t.name}</dd><dt className="text-brown-500">Pooja</dt><dd className="font-semibold">{t.poojas[pooja][0]} × {qty}</dd><dt className="text-brown-500">Date</dt><dd className="font-semibold">Sat, 13 Sept 2026</dd><dt className="text-brown-500">For</dt><dd className="font-semibold">Anand · Rohini</dd></dl>
+      <dl className="grid grid-cols-[130px_1fr] gap-y-1 text-sm"><dt className="text-brown-500">Temple</dt><dd className="font-semibold">{t.name}</dd><dt className="text-brown-500">Pooja</dt><dd className="font-semibold">{pj.name} × {qty}{pj.live&&' · Live booking'}</dd><dt className="text-brown-500">Date</dt><dd className="font-semibold">{pj.live?'Today · instant':'Sat, 13 Sept 2026'}</dd><dt className="text-brown-500">For</dt><dd className="font-semibold">Anand · Rohini</dd></dl>
       <div className="divide-y divide-brown-100 rounded-xl bg-brown-50 px-4"><Row l="Pooja amount (to temple)" v={price}/><Row l={<>Convenience fee <span className="text-xs text-brown-500">(this listing: off)</span></>} v={fee}/><Row l="Total" v={price+fee} big/></div>
       <div><span className="label">Pay with</span><div className="grid grid-cols-3 gap-2">{['Razorpay','PayU','Stripe (intl.)'].map((g,i)=><button key={g} className={`rounded-xl border px-3 py-2 text-sm font-semibold ${i===0?'border-saffron-500 bg-saffron-50 text-saffron-700':'border-brown-200 bg-white'}`}>{g}</button>)}</div><p className="mt-1 text-xs text-brown-500">The gateway adds its processing fee at checkout and shows it before you pay. Free cancellation until the chart closes.</p></div>
       <Toggle label="Also send the receipt on WhatsApp" defaultChecked/>
@@ -347,46 +354,119 @@ export function SpecialDetail() {
 
 /* ---------------- FESTIVAL ---------------- */
 export function Festival() {
-  return (<PublicShell><Wrap className="py-6"><Photo hue="#8A3A1F" className="rounded-3xl p-6 text-white md:p-10"><Pill tone="gold">Festival · F1016</Pill><h1 className="relative mt-20 text-3xl font-semibold md:text-5xl">Kottur Temple Annual Festival 2026</h1><div className="ml relative mt-1 text-lg text-brown-100">കൊട്ടൂർ ഉത്സവം · 3–8 December · Kottur Sree Mahavishnu Temple</div></Photo>
+  const [toast,el]=useToast(); const [pack,setPack]=useState('Day sponsor ₹35,000')
+  return (<PublicShell><Wrap className="py-6">{el}<Photo hue="#8A3A1F" className="rounded-3xl p-6 text-white md:p-10"><Pill tone="gold">Festival · {festivalData.code}</Pill><h1 className="relative mt-20 text-3xl font-semibold md:text-5xl">{festivalData.name}</h1><div className="ml relative mt-1 text-lg text-brown-100">{festivalData.ml} · {festivalData.from} – {festivalData.to} · {festivalData.temple}</div></Photo>
     <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]"><div className="space-y-6">
-      <div className="card p-5"><h2 className="text-xl font-semibold">Programme</h2><Table head={['Day','Event','Time']} rows={[['3 Dec','Kodiyettam (flag hoisting)','6:00 AM'],['4 Dec','Thayambaka · Kathakali','7:30 PM'],['6 Dec','Kalamezhuthu Pattu','8:00 PM'],['8 Dec','Aarattu · Pallivetta','5:00 AM']]}/></div>
-      <div className="card p-5"><h2 className="text-xl font-semibold">Festival poojas & sponsorships</h2><div className="divide-y divide-brown-100">{[['Utsava Bali sponsorship','ഉത്സവബലി',2500,'limited to 6'],['Annadanam (100 devotees)','അന്നദാനം',5000,'per day'],['Deepam (festival week)','ദീപം',100,'']].map(([n,ml,p,x])=><div key={n} className="flex items-center gap-3 py-3"><div className="flex-1"><b>{n}</b><div className="ml text-sm text-brown-500">{ml}{x&&` · ${x}`}</div></div><b className="text-lg">₹{p.toLocaleString('en-IN')}</b><Link to="/book/kottur-sree-mahavishnu-temple" className="btn-p !py-2">Book</Link></div>)}</div></div>
+      <div className="card p-5"><h2 className="text-xl font-semibold">About the festival</h2><p className="mt-2 text-sm text-brown-700">The festival page keeps the committee, venue, history, travel information and festival description as static listing content. Programme events below carry their own exact date and time and may change independently.</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-brown-50 p-3 text-sm"><span className="text-brown-500">Venue</span><b className="block">{festivalData.temple}</b><span>{festivalData.place}</span></div><div className="rounded-xl bg-brown-50 p-3 text-sm"><span className="text-brown-500">Festival dates</span><b className="block">{festivalData.from} – {festivalData.to}</b><span>{festivalData.committee}</span></div></div></div>
+      <div className="card p-5"><div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">Programme</h2><Pill tone="info">Times shown in IST</Pill></div><Table head={['Date','Time','Event','Type','Status']} rows={festivalData.programme.map(([day,event,time,kind,,status])=>[<b>{day} 2026</b>,time,event,<Pill tone="n">{kind}</Pill>,<Pill tone={status==='Confirmed'?'ok':'warn'}>{status}</Pill>])}/></div>
+      <div className="card p-5"><h2 className="text-xl font-semibold">Bookable offerings</h2><p className="text-sm text-brown-500">Choose a festival date during booking. Availability and per-day limits are checked for that event date.</p><div className="divide-y divide-brown-100">{festivalData.offerings.map(o=><div key={o.code} className="flex flex-wrap items-center gap-3 py-3"><div className="min-w-[220px] flex-1"><div className="flex items-center gap-2"><b>{o.name}</b>{o.live&&<span className="pill bg-emerald-50 text-emerald-700"><Zap size={11}/>Live</span>}</div><div className="ml text-sm text-brown-500">{o.ml} · {festivalData.from} – {festivalData.to}</div><div className="text-xs text-brown-500">{o.dailyLimit?`${o.dailyLimit} per festival day`:'No daily limit'} · {o.sold} booked</div></div><b className="text-lg">₹{o.price.toLocaleString('en-IN')}</b><Link to={`/book/kottur-sree-mahavishnu-temple?pooja=${o.code}`} className="btn-p !py-2">{o.live?'Book instantly':'Choose date & book'}</Link></div>)}</div></div>
+      <div className="card border-2 border-dashed border-gold-400 bg-gold-300/10 p-5"><div className="flex flex-wrap items-center gap-2"><Handshake size={18} className="text-saffron-600"/><h2 className="text-xl font-semibold">Become a sponsor</h2><Pill tone="gold">No login needed</Pill></div><p className="mt-1 text-sm text-brown-600">Anyone can sponsor part of this festival directly from this page — an organisation, a family, or a devotee living abroad. Your name goes on the festival page, the banner/arch for your slot, and every receipt.</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">{[['Day sponsor','₹35,000','Banner for one festival day + stage mention'],['Programme sponsor','₹25,000','Named before one cultural programme'],['Annadanam day','₹5,000','Sponsor one day\'s meal seva'],['Custom amount','Any ₹','Choose your own contribution']].map(([n,p,d])=><button key={n} onClick={()=>setPack(`${n} ${p}`)} className={`rounded-xl border p-3 text-left text-sm ${pack.startsWith(n)?'border-saffron-500 bg-white':'border-brown-200 bg-white/60'}`}><b>{n}</b><div className="text-saffron-600">{p}</div><div className="text-xs text-brown-500">{d}</div></button>)}</div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2"><Field label="Your / organisation name (as printed)"><Input placeholder="e.g. Resurge India Foundation"/></Field><Field label="Mobile or WhatsApp"><Input placeholder="+91"/></Field></div>
+        <button onClick={()=>toast('Thank you! The committee will confirm your sponsorship and send a receipt on WhatsApp.')} className="btn-p mt-4"><Handshake size={16}/>Sponsor this festival · {pack}</button>
+        <p className="mt-2 text-xs text-brown-500">Prefer bank transfer, cheque or cash to the committee directly? <Link to="/festival-admin/sponsors" className="text-saffron-600 underline">The committee records it here</Link> too.</p></div>
       <div className="card p-5"><h2 className="text-xl font-semibold">Reach the temple</h2><p className="text-sm text-brown-700">Bus to Naduvannur, auto to Ulliyeri. Parking at the school ground. Thayambaka by Kalamandalam Anil — <Link to="/service/sv4" className="text-saffron-600">see artist</Link>.</p></div></div>
       <aside className="space-y-4"><div className="card p-5"><Link to="/book/kottur-sree-mahavishnu-temple" className="btn-p w-full !py-3">Book festival pooja</Link><Link to="/donate/kottur-sree-mahavishnu-temple" className="btn-s mt-2 w-full">Donate to festival</Link></div><div className="card p-5 text-sm"><b>Festival micro-site</b><div className="text-brown-500">kottur-utsavam-2026.templeaddress.com · included with Temple Pro</div></div><div className="flex items-center gap-3 rounded-2xl bg-gold-300/25 p-4 text-sm"><div className="grid h-10 w-10 place-items-center rounded-lg bg-white text-xs font-bold text-emerald-700">RIF</div><div>Festival partner<br/><b>Resurge India Foundation</b></div></div></aside></div></Wrap></PublicShell>)
 }
 
 /* ---------------- SERVICES ---------------- */
 export function Services() {
+  const [category,setCategory]=useState('All')
+  const categories=['All','Astrologer','Poojari / Pandit','Artist','Kazhakam']
+  const shown=category==='All'?services:services.filter(s=>s.type===category)
   return (<PublicShell><Wrap className="py-8"><h1 className="text-3xl font-semibold">Priests, astrologers & performers</h1><p className="text-brown-500">Verified professionals with appointment booking</p>
-    <div className="my-5 flex flex-wrap gap-2">{['All','Poojari','Astrologer','Thayambaka','Sopana sangeetham'].map((x,i)=><button key={x} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${i===0?'bg-brown-900 text-white':'bg-white shadow-ring'}`}>{x}</button>)}</div>
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{services.map(s=><Link key={s.id} to={`/service/${s.id}`} className="card overflow-hidden transition hover:-translate-y-0.5 hover:shadow-soft"><Photo hue={s.hue} className="aspect-square"/><div className="p-4"><div className="flex items-center justify-between"><b>{s.name}</b><BadgeCheck size={16} className="text-emerald-600"/></div><div className="ml text-sm text-brown-500">{s.ml}</div><div className="mt-1 text-xs text-brown-500">{s.type} · {s.district} · {s.exp} yrs</div><div className="mt-2 text-sm">From <b>₹{s.from.toLocaleString('en-IN')}</b></div></div></Link>)}</div></Wrap></PublicShell>)
+    <div className="my-5 flex flex-wrap gap-2">{categories.map(x=><button key={x} onClick={()=>setCategory(x)} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${category===x?'bg-brown-900 text-white':'bg-white shadow-ring'}`}>{x}</button>)}</div>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{shown.map(s=><Link key={s.id} to={`/service/${s.id}`} className="card overflow-hidden transition hover:-translate-y-0.5 hover:shadow-soft"><Photo hue={s.hue} className="aspect-square"><span className="absolute left-3 top-3 pill bg-white/90 text-brown-900">Default photo</span></Photo><div className="p-4"><div className="flex items-center justify-between"><b>{s.name}</b><Pill tone="ok"><BadgeCheck size={12}/>{s.code}</Pill></div><div className="ml text-sm text-brown-500">{s.ml}</div><div className="mt-1 text-xs text-brown-500">{s.type} · {s.district} · {s.exp} yrs</div><div className="mt-2 flex items-center justify-between text-sm"><span>From <b>₹{s.from.toLocaleString('en-IN')}</b></span><span className="text-gold-500">★ {s.rating}</span></div></div></Link>)}</div></Wrap></PublicShell>)
 }
 export function ServiceDetail() {
-  const { id } = useParams(); const s = services.find(x=>x.id===id)||services[0]
+  const { id } = useParams(); const s = services.find(x=>x.id===id)||services[0]; const [toast,el]=useToast(); const [slot,setSlot]=useState(s.slots[0])
+  const shareLink=`templeaddress.com/service/${s.code}?ref=${s.code}`
   return (<PublicShell><Wrap className="py-8"><Link to="/services" className="text-sm text-brown-500">← Services</Link>
-    <div className="mt-2 grid gap-8 lg:grid-cols-[1fr_360px]"><div className="space-y-5"><div className="flex gap-4"><Photo hue={s.hue} className="h-28 w-28 rounded-2xl"/><div><h1 className="text-3xl font-semibold">{s.name}</h1><div className="ml text-brown-500">{s.ml}</div><div className="mt-1 flex gap-2"><Pill tone="ok"><BadgeCheck size={12}/>Verified</Pill><Pill>{s.type} · {s.district} · {s.exp} years</Pill></div></div></div>
-      <div className="card p-5"><h2 className="text-xl font-semibold">Services</h2><div className="divide-y divide-brown-100">{s.offerings.map(([n,p,x])=><div key={n} className="flex items-center gap-3 py-3"><div className="flex-1"><b>{n}</b><div className="text-sm text-brown-500">{x}</div></div><b className="text-lg">₹{p.toLocaleString('en-IN')}</b></div>)}</div></div>
-      <div className="card p-5"><h2 className="text-xl font-semibold">About</h2><p className="text-sm text-brown-700">Traditional Kerala practice; available at the {s.district} office on weekdays and by phone on Sundays. Reviews: 4.7 ★ from 63 bookings.</p></div></div>
-      <aside className="card space-y-4 p-6"><h3 className="text-lg font-semibold">Book an appointment</h3><Field label="Service"><Select options={s.offerings.map(o=>o[0])}/></Field><div className="grid grid-cols-2 gap-3"><Field label="Date"><Input type="date" defaultValue="2026-09-15"/></Field><Field label="Slot"><Select options={['10:00 AM','11:00 AM','4:00 PM','5:00 PM']}/></Field></div><Field label="Mode"><Select options={['In person','Phone call']}/></Field><div className="flex justify-between text-lg font-bold"><span>Total</span><span>₹{s.offerings[0][1].toLocaleString('en-IN')}</span></div><Link to="/receipt" className="btn-p w-full !py-3">Confirm & pay</Link><p className="text-xs text-brown-500">The provider confirms within 4 hours on WhatsApp.</p></aside></div></Wrap></PublicShell>)
+    {el}<div className="mt-2 flex flex-wrap items-start justify-between gap-4"><div className="flex gap-4"><Photo hue={s.hue} className="h-28 w-28 rounded-2xl"><span className="absolute bottom-2 left-2 pill bg-white/90 text-brown-900">Default</span></Photo><div><h1 className="text-3xl font-semibold">{s.name}</h1><div className="ml text-brown-500">{s.ml}</div><div className="mt-1 flex flex-wrap gap-2"><Pill tone="ok"><BadgeCheck size={12}/>Verified</Pill><Pill tone="info">{s.code}</Pill><Pill>{s.type} · {s.district} · {s.exp} years</Pill><Pill tone="gold"><Star size={12} fill="currentColor"/>{s.rating} · {s.reviewCount} reviews</Pill></div></div></div>
+      <div className="flex flex-wrap gap-2"><button onClick={()=>toast(`WhatsApp share link copied · ${s.code}`)} className="btn-wa"><MessageCircle size={16}/>WhatsApp</button><button onClick={()=>toast(`Facebook share link copied · ${s.code}`)} className="btn-g"><Share2 size={16}/>Facebook</button><button onClick={()=>toast(`Link copied: ${shareLink}`)} className="btn-g">Copy link · {s.code}</button></div></div>
+    <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_360px]"><div className="space-y-5">
+      <div className="card p-5"><h2 className="text-xl font-semibold">Gallery</h2><div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">{[1,2,3,4].map(i=><Photo key={i} hue={s.hue} className="aspect-square rounded-xl">{i===s.defaultPhoto&&<span className="absolute bottom-2 left-2 pill bg-white/90 text-brown-900">Default photo</span>}</Photo>)}</div></div>
+      <div className="card p-5"><h2 className="text-xl font-semibold">About</h2><p className="mt-2 text-sm text-brown-700">{s.about}</p><h3 className="mt-5 font-semibold">History & experience</h3><p className="mt-1 text-sm text-brown-700">{s.history}</p><h3 className="mt-5 font-semibold">Remarks</h3><p className="mt-1 text-sm text-brown-700">{s.remarks}</p></div>
+      <div className="card p-5"><h2 className="text-xl font-semibold">Timings & availability</h2><div className="mt-3 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-brown-50 p-3 text-sm"><Clock size={16}/><b className="mt-1 block">{s.timings}</b><span className="text-brown-500">{s.availabilityDays}</span></div><div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"><CalendarDays size={16}/><b className="mt-1 block">{s.slots.length} slots shown</b><span>Live availability is confirmed at booking</span></div></div><div className="mt-3 flex flex-wrap gap-2">{s.slots.map(x=><button key={x} onClick={()=>setSlot(x)} className={`rounded-lg px-3 py-2 text-sm font-semibold ${slot===x?'bg-brown-900 text-white':'border border-brown-200 bg-white'}`}>{x}</button>)}</div></div>
+      <div className="card p-5"><h2 className="text-xl font-semibold">Services</h2><div className="divide-y divide-brown-100">{s.offerings.map(([n,p,x])=><div key={n} className="flex items-center gap-3 py-3"><div className="flex-1"><b>{n}</b><div className="text-sm text-brown-500">{x}</div></div><b className="text-lg">₹{p.toLocaleString('en-IN')}</b><Link to="/receipt" className="btn-p !py-2">Book</Link></div>)}</div></div>
+      <div className="card p-5"><h2 className="text-xl font-semibold">Special services & poojas</h2>{s.specials.length?<div className="divide-y divide-brown-100">{s.specials.map(([n,date,p])=><div key={n} className="flex flex-wrap items-center gap-3 py-3"><div className="flex-1"><b>{n}</b><div className="text-sm text-brown-500">{date} · Limited booking</div></div><b>₹{p.toLocaleString('en-IN')}</b><Link to="/receipt" className="btn-s !py-2">Book pooja</Link></div>)}</div>:<p className="mt-2 text-sm text-brown-500">No special poojas are currently listed.</p>}</div>
+      <div className="card p-5"><h2 className="text-xl font-semibold">Reviews & ratings</h2><div className="mt-1 text-sm text-brown-500">{s.rating} out of 5 · {s.reviewCount} verified bookings</div><div className="mt-3 space-y-3">{s.feedback.map(([who,stars,tag,text])=><div key={who} className="rounded-xl bg-brown-50 p-3"><div className="flex items-center justify-between"><b>{who}</b><span className="text-gold-500">{'★'.repeat(stars)}</span></div><div className="text-xs text-saffron-600">{tag}</div><p className="mt-1 text-sm text-brown-700">{text}</p></div>)}</div></div></div>
+      <aside className="space-y-5 lg:sticky lg:top-20 lg:self-start"><div className="card space-y-4 p-6"><h3 className="text-lg font-semibold">Book an appointment</h3><Field label="Service"><Select options={s.offerings.map(o=>o[0])}/></Field><div className="grid grid-cols-2 gap-3"><Field label="Date"><Input type="date" defaultValue="2026-09-15"/></Field><Field label="Slot"><Select options={s.slots} value={slot} onChange={e=>setSlot(e.target.value)}/></Field></div><Field label="Mode"><Select options={['In person','Phone call','Online video','At home / temple']}/></Field><div className="flex justify-between text-lg font-bold"><span>Total</span><span>₹{s.offerings[0][1].toLocaleString('en-IN')}</span></div><Link to="/receipt" className="btn-p w-full !py-3">Confirm & pay</Link><p className="text-xs text-brown-500">The provider confirms within 4 hours on WhatsApp.</p></div>
+        <div className="card space-y-3 p-5"><h3 className="font-semibold">Contact / quick enquiry</h3><Field label="Your name"><Input placeholder="Name"/></Field><Field label="Mobile / WhatsApp"><Input placeholder="+91"/></Field><Field label="Message"><textarea className="input" rows={3} placeholder="What would you like to ask?"/></Field><button onClick={()=>toast('Enquiry sent · the provider will reply on WhatsApp')} className="btn-wa w-full"><MessageCircle size={16}/>Send enquiry</button><button className="btn-g w-full"><Phone size={16}/>Request a call</button><p className="text-xs text-brown-500">Usually replies within 2 hours.</p></div></aside></div></Wrap></PublicShell>)
 }
 
 /* ---------------- SPONSOR ---------------- */
+const sponsorPacks = [['Supporter',15000,'Temple Pro plan · logo on page & receipts · GST invoice',false],['Patron',30000,'+ QR board & standee printed with your logo · festival micro-site',true],['Benefactor',50000,'+ up to 3 temples · sponsor page on templeaddress.com',false]]
+const sponsorPayIcon = { omniware:ShieldCheck, razorpay:Zap, upi:QrCode, bank:Landmark, cheque:PenLine }
 export function Sponsor() {
-  return (<PublicShell><Wrap className="py-10"><div className="grid gap-10 lg:grid-cols-[1fr_400px]"><div><h1 className="text-4xl font-semibold">Sponsor a temple's online presence</h1><p className="mt-3 max-w-xl text-brown-600">Your name on the temple's page, on every receipt sent to devotees, and on the QR board at the temple. The temple gets its website, WhatsApp bookings and paperless receipts at no cost.</p>
-      <div className="mt-8 grid gap-4 md:grid-cols-3">{[['Supporter','15,000','Temple Pro plan · logo on page & receipts · GST invoice',false],['Patron','30,000','+ QR board & standee printed with your logo · festival micro-site',true],['Benefactor','50,000','+ up to 3 temples · sponsor page on templeaddress.com',false]].map(([n,p,d,hi])=><div key={n} className={`card p-5 ${hi?'ring-2 ring-saffron-500':''}`}>{hi&&<Pill tone="warn">Most chosen</Pill>}<h3 className="mt-2 text-lg font-semibold">{n}</h3><div className="text-2xl font-bold">₹{p}<span className="text-sm font-normal text-brown-500">/yr</span></div><p className="mt-2 text-sm text-brown-600">{d}</p></div>)}</div></div>
-      <aside className="card space-y-4 p-6"><h3 className="text-lg font-semibold">Sponsor now</h3><Field label="Temple" hint="Search by name or code"><Input defaultValue="Kottur Sree Mahavishnu Temple"/></Field><Field label="Pack"><Select options={['Supporter ₹15,000','Patron ₹30,000','Benefactor ₹50,000']} defaultValue="Patron ₹30,000"/></Field><Field label="Sponsor name (as shown)"><Input defaultValue="Resurge India Foundation"/></Field><Field label="GSTIN"><Input defaultValue="32AAACR1234A1Z5"/></Field><Field label="Logo"><Input type="file"/></Field>
-        <div className="divide-y divide-brown-100 rounded-xl bg-brown-50 px-4"><Row l="Patron pack" v={30000}/><Row l="GST 18%" v={5400}/><Row l="Total" v={35400} big/></div><Link to="/receipt" className="btn-p w-full">Pay online</Link><p className="text-xs text-brown-500">Prefer bank transfer or cheque? <a className="text-saffron-600">Request an invoice</a> — staff activate on receipt.</p></aside></div></Wrap></PublicShell>)
+  const [toast,el] = useToast()
+  const [agentCode,setAgentCode] = useState('')
+  const [query,setQuery] = useState('')
+  const [selected,setSelected] = useState([{ temple: bySlug('kottur-sree-mahavishnu-temple'), pack:'Patron' }])
+  const [payMethod,setPayMethod] = useState('razorpay')
+  const results = query.trim() ? temples.filter(t=>!selected.some(s=>s.temple.slug===t.slug) && (t.name.toLowerCase().includes(query.toLowerCase())||t.code.toLowerCase().includes(query.toLowerCase())||t.place.toLowerCase().includes(query.toLowerCase()))).slice(0,6) : []
+  const addTemple = t => { setSelected(s=>[...s,{ temple:t, pack:'Patron' }]); setQuery('') }
+  const removeTemple = slug => setSelected(s=>s.filter(x=>x.temple.slug!==slug))
+  const setPack = (slug,pack) => setSelected(s=>s.map(x=>x.temple.slug===slug?{...x,pack}:x))
+  const packPrice = Object.fromEntries(sponsorPacks.map(([n,p])=>[n,p]))
+  const subtotal = selected.reduce((s,x)=>s+packPrice[x.pack],0)
+  const gst = Math.round(subtotal*0.18)
+  const total = subtotal+gst
+  const isOnline = payMethod==='razorpay' || payMethod==='omniware'
+  const submitManual = () => toast(`Submitted via ${manualMethods.find(m=>m.key===payMethod)?.name} — our accounts team will verify and activate within 24 hours`)
+
+  return (<PublicShell><Wrap className="py-10">{el}<div className="grid gap-10 lg:grid-cols-[1fr_440px]"><div><h1 className="text-4xl font-semibold">Sponsor a temple's online presence</h1><p className="mt-3 max-w-xl text-brown-600">Your name on the temple's page, on every receipt sent to devotees, and on the QR board at the temple. The temple gets its website, WhatsApp bookings and paperless receipts at no cost.</p>
+      <div className="mt-8 grid gap-4 md:grid-cols-3">{sponsorPacks.map(([n,p,d,hi])=><div key={n} className={`card p-5 ${hi?'ring-2 ring-saffron-500':''}`}>{hi&&<Pill tone="warn">Most chosen</Pill>}<h3 className="mt-2 text-lg font-semibold">{n}</h3><div className="text-2xl font-bold">₹{p.toLocaleString('en-IN')}<span className="text-sm font-normal text-brown-500">/yr</span></div><p className="mt-2 text-sm text-brown-600">{d}</p></div>)}</div></div>
+
+      <aside className="card space-y-4 p-6">
+        <h3 className="text-lg font-semibold">Sponsor now</h3>
+
+        <Field label="Agent code (optional)" hint="Referred by a TempleAddress agent? Enter their code to credit the sale."><Input placeholder="e.g. TA-AG-00124" value={agentCode} onChange={e=>setAgentCode(e.target.value)}/></Field>
+
+        <div>
+          <span className="label">Temples to sponsor</span>
+          <div className="relative"><Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-brown-400"/>
+            <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search by name, place or code…" className="input !pl-9"/>
+            {results.length>0 && <div className="absolute z-10 mt-1 w-full space-y-1 rounded-xl border border-brown-100 bg-white p-1.5 shadow-soft">{results.map(t=>
+              <button key={t.slug} onClick={()=>addTemple(t)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-brown-50"><Photo hue={t.hue} className="h-8 w-11 shrink-0 rounded-md"/><span className="min-w-0 flex-1"><b className="block truncate">{t.name}</b><span className="block text-xs text-brown-500">{t.place}, {t.district} · {t.code}</span></span><Plus size={14} className="shrink-0 text-saffron-600"/></button>)}</div>}
+          </div>
+          <div className="mt-2 space-y-2">{selected.map(s=><div key={s.temple.slug} className="flex items-center gap-2 rounded-xl border border-brown-100 p-2.5">
+            <Photo hue={s.temple.hue} className="h-10 w-14 shrink-0 rounded-lg"/>
+            <div className="min-w-0 flex-1"><b className="block truncate text-sm">{s.temple.name}</b><div className="text-xs text-brown-500">{s.temple.place}, {s.temple.district}</div></div>
+            <div className="w-28 shrink-0"><Select options={sponsorPacks.map(([n])=>n)} value={s.pack} onChange={e=>setPack(s.temple.slug,e.target.value)}/></div>
+            {selected.length>1 && <button onClick={()=>removeTemple(s.temple.slug)} className="shrink-0 rounded-lg bg-red-50 p-1.5 text-red-600 hover:bg-red-100"><X size={14}/></button>}
+          </div>)}</div>
+        </div>
+
+        <Field label="Sponsor name (as shown)"><Input defaultValue="Resurge India Foundation"/></Field>
+        <Field label="GSTIN"><Input defaultValue="32AAACR1234A1Z5"/></Field>
+        <div className="grid grid-cols-2 gap-3"><FileField label="Logo"/><FileField label="Banner" hint="Horizontal, for QR board"/></div>
+
+        <div>
+          <span className="label">Payment method</span>
+          <div className="grid grid-cols-3 gap-2">{[...onlineGateways,...manualMethods].map(m=>{ const Icon=sponsorPayIcon[m.key]; return (
+            <button key={m.key} onClick={()=>setPayMethod(m.key)} className={`flex flex-col items-center gap-1 rounded-xl border-2 p-2.5 text-center text-xs font-semibold transition ${payMethod===m.key?'border-saffron-500 bg-saffron-50':'border-brown-100 bg-white hover:border-brown-200'}`}><Icon size={17} className={payMethod===m.key?'text-saffron-600':'text-brown-400'}/>{m.name}</button>
+          )})}</div>
+        </div>
+
+        <div className="divide-y divide-brown-100 rounded-xl bg-brown-50 px-4"><Row l={`Subtotal (${selected.length} temple${selected.length!==1?'s':''})`} v={subtotal}/><Row l="GST 18%" v={gst}/><Row l="Total" v={total} big/></div>
+
+        {isOnline
+          ? <Link to="/receipt" className="btn-p w-full">Pay Securely via {onlineGateways.find(g=>g.key===payMethod)?.name}</Link>
+          : <button onClick={submitManual} className="btn-p w-full">Submit for Verification</button>}
+        <p className="text-xs text-brown-500">{isOnline ? 'Secure payment · sponsorship activates instantly on success.' : `Pay via ${manualMethods.find(m=>m.key===payMethod)?.name} and our accounts team will verify & activate within 24 hours.`}</p>
+      </aside></div></Wrap></PublicShell>)
 }
 
 /* ---------------- LOGIN / ACCOUNT ---------------- */
-const roleTabs = [['user','Devotee',Users],['agent','Agent',BadgeCheck],['vendor','Vendor',Landmark],['dealer','Dealer',ShieldCheck],['staff','Staff',Lock]]
+const roleTabs = [['user','Devotee',Users],['agent','Agent',BadgeCheck],['dealer','Dealer',ShieldCheck],['vendor','Vendor',Landmark],['staff','Staff',Lock]]
 const vendorTypes = ['Temple','Festival committee','Service provider']
-const staffRoles = [['moderator','Moderator','Reviews listings, KYC, charts & special poojas'],['accountant','Accountant','Financial reports, payouts, manual NEFT'],['admin','Portal admin','Configuration, approvals, high-level settings']]
+const staffRoles = [['moderator','Moderator','Reviews listings, KYC, charts & special poojas'],['accountant','Accountant','Payout and wallet NEFT batches · view received payments'],['admin','Portal admin','Configuration, approvals, high-level settings']]
 export function Login() {
   const nav = useNavigate()
   const [role,setRole] = useState('user')
   const [vendorType,setVendorType] = useState('Temple')
-  const [staffRole,setStaffRole] = useState('admin')
+  const [staffRole,setStaffRole] = useState('moderator')
   const [otp,setOtp] = useState(false)
   const needsPassword = role==='dealer' || role==='staff'
   const pickRole = k => { setRole(k); setOtp(false) }
@@ -407,7 +487,7 @@ export function Login() {
       {role==='staff' && <div className="mt-4"><span className="label">Staff role</span>
         <div className="space-y-1.5">{staffRoles.map(([k,l,d])=><button key={k} onClick={()=>setStaffRole(k)} className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-sm ${staffRole===k?'border-saffron-500 bg-saffron-50':'border-brown-200 bg-white'}`}><span><b>{l}</b><span className="block text-xs font-normal text-brown-500">{d}</span></span>{staffRole===k&&<Check size={16} className="shrink-0 text-saffron-600"/>}</button>)}</div></div>}
 
-      {needsPassword && <div className="mt-4 flex items-start gap-2 rounded-xl bg-blue-50 p-3 text-xs text-blue-900"><Lock size={14} className="mt-0.5 shrink-0"/>{role==='dealer'?'Dealer':'Staff'} accounts require a <b>password + OTP</b>, or signing in with <b>Google Authenticator</b> — for extra security since this role handles payouts and platform settings.</div>}
+      {needsPassword && <div className="mt-4 flex items-start gap-2 rounded-xl bg-blue-50 p-3 text-xs text-blue-900"><Lock size={14} className="mt-0.5 shrink-0"/>{role==='dealer'?'Dealer':'Staff'} accounts require a <b>password + OTP</b>, or signing in with <b>Google Authenticator</b> — for extra security around {role==='staff'&&staffRole==='moderator'?'listing, KYC and ownership approvals':'account and platform operations'}.</div>}
 
       <div className="mt-4 space-y-3">
         <Field label="Mobile number"><Input defaultValue="+91 "/></Field>

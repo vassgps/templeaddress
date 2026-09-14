@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Link, Navigate, useSearchParams } from 'react-router-dom'
-import { CalendarCheck, ListOrdered, Gift, Landmark, Settings, Database, PenLine, Download, MessageCircle, Check, Plus, CreditCard, ArrowRightLeft, Percent, FileBadge, Globe, Users2, Crown } from 'lucide-react'
-import { temples, gateways } from '../data'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
+import { CalendarCheck, ListOrdered, Gift, Landmark, Settings, Database, PenLine, Download, MessageCircle, Check, Plus, CreditCard, ArrowRightLeft, Percent, FileBadge, Globe, Users2, Crown, Power, Zap, Pencil, X } from 'lucide-react'
+import { temples, gateways, templeCharts, chartById, poojaCategories, bookingTypeOptions } from '../data'
 import { DashShell, Pill, Field, Input, Select, Toggle, Table, Stat, Tabs, useToast, Money } from '../ui'
 
 // Vendor covers three listing types, chosen at login. Each type now has its OWN dashboard:
@@ -9,34 +9,128 @@ import { DashShell, Pill, Field, Input, Select, Toggle, Table, Stat, Tabs, useTo
 //   festival committee → /festival-admin  (pages/vendorFestival.jsx — programme, sponsors, artists)
 //   service provider   → /service-admin   (pages/vendorService.jsx — appointment slots, enquiries, reviews)
 // Old ?type= links land here, so redirect them to the right dashboard.
-const items = [{ group:'Temple', links:[['/vendor','Today',CalendarCheck],['/vendor/poojas','Poojas',ListOrdered],['/vendor/payouts','Payouts',Landmark],['/vendor/settings','Settings',Settings],['/vendor/page','Page editor',PenLine],['/vendor/donations','Donations',Gift],['/vendor/data','My data',Database]] }]
+const items = [{ group:'Temple · T1028', links:[['/vendor','Today',CalendarCheck],['/vendor/charts','Previous charts',FileBadge],['/vendor/poojas','Poojas',ListOrdered],['/vendor/payouts','Payouts',Landmark],['/vendor/settings','Settings',Settings],['/vendor/page','Page editor',PenLine],['/vendor/donations','Donations',Gift],['/vendor/data','My data',Database]] }]
 const useVendorType = () => { const [sp]=useSearchParams(); const t=sp.get('type'); return t==='festival'||t==='service' ? t : 'temple' }
 const Shell = ({ children, temple }) => { const vt=useVendorType()
   if (vt==='festival') return <Navigate to="/festival-admin" replace/>
   if (vt==='service') return <Navigate to="/service-admin" replace/>
-  return <DashShell role="Vendor · Temple" user={temple||'Kottur Sree Mahavishnu Temple · Nishanth (Secretary)'} items={items} badge="2">{children}</DashShell> }
+  return <DashShell role="Vendor · Temple" user={temple||'T1028 · Kottur Sree Mahavishnu Temple · Nishanth (Secretary)'} items={items} badge="2">{children}</DashShell> }
 const H = ({ t, s, right }) => <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">{t}</h1>{s&&<div className="text-sm text-brown-500">{s}</div>}</div>{right}</div>
 
 export function VToday() {
-  const [toast,el]=useToast(); const [ok,setOk]=useState(false)
-  return (<Shell>{el}<H t="Kottur Sree Mahavishnu Temple" s="Sat 13 Sept 2026 · Pro plan · sponsored by Resurge India Foundation" right={<Pill tone="ok">Bookings open</Pill>}/>
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v="14" l="bookings today"/><Stat v="₹3,420" l="today's total"/><Stat v="6" l="tomorrow so far" delta="chart closes in 2 h 14 m"/><Stat v="₹12,650" l="payable balance"/></div>
+  const [toast,el]=useToast()
+  const [enabled,setEnabled]=useState(true); const [bookingsOpen,setBookingsOpen]=useState(true)
+  const today=templeCharts[0]
+  const toggleEnabled = () => { const next=!enabled; setEnabled(next); toast(next?'Listing enabled — the public page is live again':'Listing disabled — the public page now shows "temporarily unavailable"') }
+  const toggleBookings = v => { setBookingsOpen(v); toast(v?'Bookings open — devotees can book vazhipadu again':'Bookings closed — devotees can browse the page but cannot book') }
+  return (<Shell>{el}<H t="Kottur Sree Mahavishnu Temple" s="Listing ID T1028 · Sat 13 Sept 2026 · Pro plan · sponsored by Resurge India Foundation" right={<div className="flex flex-wrap items-center gap-2">
+      <label className="flex items-center gap-2 rounded-xl border border-brown-200 bg-white px-3 py-2 text-sm"><Toggle label={bookingsOpen?'Bookings open':'Bookings closed'} defaultChecked={bookingsOpen} onChange={toggleBookings}/></label>
+      <button onClick={toggleEnabled} className={`btn !px-3 !py-2 text-sm ${enabled?'bg-red-50 text-red-700':'bg-emerald-50 text-emerald-700'}`}><Power size={15}/>{enabled?'Disable listing':'Enable listing'}</button>
+    </div>}/>
+    {!enabled && <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-800"><b>This listing is disabled.</b> The public page shows "temporarily unavailable" and no new bookings are accepted. Re-enable any time — nothing is deleted.</div>}
+    {enabled && !bookingsOpen && <div className="mb-4 rounded-xl bg-saffron-50 p-3 text-sm text-saffron-800"><b>Bookings are closed.</b> The page is live and devotees can browse poojas, but the "Book" button is disabled until you reopen bookings. Live poojas are unaffected only when explicitly enabled per pooja.</div>}
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Link to={`/vendor/bookings?date=${today.dateKey}`} className="block rounded-2xl transition hover:-translate-y-0.5 hover:shadow-soft"><Stat v="14" l="bookings today · view details"/></Link><Stat v="₹4,420" l="chart total · bookings + donations"/><Stat v="6" l="tomorrow so far" delta="chart closes in 2 h 14 m"/><Stat v="₹12,650" l="payable balance"/></div>
     <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_320px]"><div className="space-y-5">
-      <div className="card p-5"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">Today's chart · 13 Sept</h2>{ok?<Pill tone="ok"><Check size={12}/>Confirmed & locked</Pill>:<Pill tone="warn">Prepared — awaiting your confirmation</Pill>}</div>
+      <div className="card p-5"><div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-lg font-semibold">Today's chart · 13 Sept</h2><Link to={`/vendor/charts/${today.id}`} className="text-xs font-semibold text-saffron-600">{today.id} · View full chart</Link></div><Pill tone="ok"><Check size={12}/>Prepared & sent automatically</Pill></div>
         <div className="mt-3"><Table head={['#','Pooja','Devotee','Nakshatra','Qty','₹']} rows={[['1','Ganapathi Homam','Anand','Rohini','1','250'],['2','Ganapathi Homam','Sreeja S','Uthram','1','250'],['3','Ilaneer Abhishekam','Rajesh','Chothi','2','100'],['4','Pushpanjali','Devi','Makayiram','1','20'],['5','Palpayasam','Vinod','Anizham','1','120'],['…','9 more','','','','2,680'],['',<b>Donation — Annadanam</b>,'Anand K (80G)','','','1,000']]}/></div>
-        <div className="mt-4 flex flex-wrap gap-2">{!ok&&<button onClick={()=>{setOk(true);toast('Chart confirmed and locked for 13 Sept')}} className="btn-p !py-3"><Check size={16}/>Confirm chart</button>}<button className="btn-g"><Download size={16}/>PDF</button><button className="btn-wa"><MessageCircle size={16}/>Resend on WhatsApp</button></div>
-        <p className="mt-2 text-xs text-brown-500">Confirming locks bookings for this date. Sent to +91 90…422 and office@kottur.org at 8:00 PM yesterday.</p></div>
+        <div className="mt-4 flex flex-wrap gap-2"><button className="btn-g"><Download size={16}/>PDF</button><button className="btn-wa"><MessageCircle size={16}/>Resend on WhatsApp</button></div>
+        <p className="mt-2 text-xs text-brown-500">The background task prepared and locked this chart at the temple-configured cutoff, then sent it to +91 90…422 and office@kottur.org automatically.</p></div>
+
+      <div className="card p-5"><div className="flex items-center gap-2"><Zap size={18} className="text-emerald-600"/><h2 className="text-lg font-semibold">Live bookings</h2><Pill tone="ok">{today.liveBookings.length} today</Pill></div>
+        <p className="mt-1 text-sm text-brown-500">Booked instantly through a <b>Live</b> pooja after today's chart was already prepared. You were notified the moment each one came in — they're settled with <b>tomorrow's chart</b>, not today's.</p>
+        <div className="mt-3 divide-y divide-brown-100">{today.liveBookings.map(([id,pj,who,nak,qty,amt,at,notif])=>
+          <div key={id} className="flex flex-wrap items-center gap-3 py-2.5 text-sm"><Pill tone="ok"><Zap size={11}/>{at}</Pill><div className="min-w-0 flex-1"><b>{pj}</b> <span className="text-brown-500">· {who} ({nak}) × {qty}</span><div className="text-xs text-brown-400">{notif}</div></div><b>₹{amt}</b></div>)}</div>
+        <p className="mt-3 text-xs text-brown-500">Manage which poojas allow live booking in <Link to="/vendor/poojas" className="font-semibold text-saffron-600 underline">Poojas & prices</Link>.</p></div>
+
       <div className="card p-5"><h2 className="text-lg font-semibold">Tomorrow · 14 Sept</h2><div className="mt-1 flex items-center justify-between text-sm"><span>6 bookings · ₹1,850</span><span className="text-brown-500">Chart closes today 8:00 PM</span></div><div className="mt-3 rounded-xl bg-saffron-50 p-3 text-sm text-saffron-700">Ganapathi Homam: 14 of 20 slots left. <Link to="/vendor/poojas" className="font-semibold underline">Change limit</Link></div></div></div>
-      <aside className="space-y-4"><div className="card p-5"><h3 className="font-semibold">Recent charts</h3><Table head={['Date','#','₹','Status']} rows={[['12 Sept','11','2,760',<Pill tone="ok">Completed</Pill>],['11 Sept','9','1,940',<Pill tone="ok">Completed</Pill>],['10 Sept','17','4,120',<Pill tone="ok">Completed</Pill>]]}/></div>
+      <aside className="space-y-4"><div className="card p-5"><div className="flex items-center justify-between"><h3 className="font-semibold">Recent charts</h3><Link to="/vendor/charts" className="text-xs font-semibold text-saffron-600">View all</Link></div><Table head={['Chart ID','Date','Total','Status']} rows={templeCharts.slice(1,4).map(c=>[<Link to={`/vendor/charts/${c.id}`} className="font-semibold text-saffron-600">{c.id}</Link>,c.date.replace(' 2026',''),<Money v={c.bookingTotal+c.donationTotal}/>,<Pill tone="ok">{c.status}</Pill>])}/></div>
         <div className="card p-5"><h3 className="font-semibold">Your QR board</h3><div className="photo mt-2 aspect-[3/4] rounded-xl"/><button className="btn-g mt-2 w-full">Download print file</button></div></aside></div></Shell>)
 }
 
+export function VBookings() {
+  const [q]=useSearchParams(); const chart=templeCharts.find(c=>c.dateKey===(q.get('date')||templeCharts[0].dateKey))||templeCharts[0]
+  return (<Shell><H t={`Booking details · ${chart.date}`} s={`Listing ID ${chart.listingId} · ${chart.id}`} right={<Link to={`/vendor/charts/${chart.id}`} className="btn-p">View full chart</Link>}/>
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v={chart.bookingCount} l="bookings"/><Stat v={<Money v={chart.bookingTotal}/>} l="booking total"/><Stat v={chart.donations.length} l="donations"/><Stat v={<Money v={chart.bookingTotal+chart.donationTotal}/>} l="chart total"/></div>
+    <div className="card mt-5 p-4"><Table head={['Booking ID','Pooja','Devotee','Nakshatra','Qty','Amount','Payment']} rows={chart.bookings.map(([id,p,d,n,q,a,s])=>[<b>{id}</b>,p,d,n,q,<Money v={a}/>,<Pill tone={s==='Paid'?'ok':'warn'}>{s}</Pill>])}/></div>
+    <Link to="/vendor" className="btn-g mt-4">← Back to Today</Link></Shell>)
+}
+
+export function VCharts() {
+  return (<Shell><H t="Previous charts" s="Listing ID T1028 · Open any chart to see bookings, donations, totals and payout status"/>
+    <div className="card p-4"><Table head={['Chart ID','Date','Bookings','Booking total','Donations','Chart total','Payout']} rows={templeCharts.map(c=>[
+      <Link to={`/vendor/charts/${c.id}`} className="font-semibold text-saffron-600">{c.id}</Link>,c.date,c.bookingCount,<Money v={c.bookingTotal}/>,<Money v={c.donationTotal}/>,<b><Money v={c.bookingTotal+c.donationTotal}/></b>,<Pill tone={c.payoutStatus==='Paid'?'ok':'warn'}>{c.payoutStatus}</Pill>])}/></div></Shell>)
+}
+
+export function VChartDetail() {
+  const { chartId }=useParams(); const chart=chartById(chartId)
+  return (<Shell><H t={`Chart · ${chart.date}`} s={`Chart ID ${chart.id} · Listing ID ${chart.listingId}`} right={<div className="flex gap-2"><Link to={`/vendor/bookings?date=${chart.dateKey}`} className="btn-g">Booking details</Link><button className="btn-p"><Download size={16}/>PDF</button></div>}/>
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v={chart.bookingCount} l="bookings"/><Stat v={<Money v={chart.bookingTotal}/>} l="booking total"/><Stat v={<Money v={chart.donationTotal}/>} l="donations"/><Stat v={<Money v={chart.bookingTotal+chart.donationTotal}/>} l="chart total"/></div>
+    <div className={`mt-5 rounded-2xl border p-5 ${chart.payoutStatus==='Paid'?'border-emerald-200 bg-emerald-50':'border-saffron-200 bg-saffron-50'}`}><div className="flex flex-wrap items-center justify-between gap-3"><div><div className="text-xs font-semibold uppercase tracking-wide text-brown-500">Payment against this chart</div><div className="mt-1 text-lg font-semibold">{chart.payoutStatus==='Paid'?'Paid to temple bank':'Pending payout to temple bank'}</div><div className="text-sm text-brown-600">{chart.payoutRef}</div></div><Pill tone={chart.payoutStatus==='Paid'?'ok':'warn'}>{chart.payoutStatus}</Pill></div></div>
+    <div className="card mt-5 p-5"><h3 className="font-semibold">Bookings</h3><Table head={['Booking ID','Pooja','Devotee','Nakshatra','Qty','Amount','Payment']} rows={chart.bookings.map(([id,p,d,n,q,a,s])=>[id,p,d,n,q,<Money v={a}/>,<Pill tone={s==='Paid'?'ok':'warn'}>{s}</Pill>])}/></div>
+    <div className="card mt-5 p-5"><h3 className="font-semibold">Donations</h3>{chart.donations.length?<Table head={['Receipt ID','Donor','Purpose','Amount','Receipt']} rows={chart.donations.map(([id,d,p,a,s])=>[id,d,p,<Money v={a}/>,s])}/>:<p className="mt-2 text-sm text-brown-500">No donations in this chart.</p>}</div>
+    <Link to="/vendor/charts" className="btn-g mt-4">← All previous charts</Link></Shell>)
+}
+
+/* -------- POOJAS: individual pooja items — Basic details, Advanced details, Live Booking -------- */
+const blankPooja = t => ({ code:'', name:'', ml:'', category:poojaCategories[0], price:'', dailyLimit:0,
+  bookingType:bookingTypeOptions[2], live:false, bookable:true, purpose:'', startTime:'', endTime:'', minBookingTime:'Same day, before chart closes', deity:t.deity })
+
 export function VPoojas() {
   const [toast,el]=useToast(); const t=temples[0]
-  return (<Shell>{el}<H t="Poojas & prices" s="Changes apply to new bookings only" right={<button onClick={()=>toast('Saved')} className="btn-p">Save changes</button>}/>
-    <div className="card p-4"><Table head={['Pooja','Malayalam','Price ₹','Daily limit','Bookable','']} rows={t.poojas.map(([n,ml,p,l])=>[<b>{n}</b>,<span className="ml">{ml}</span>,<input defaultValue={p} className="input !w-24 !py-1.5"/>,<input defaultValue={l||''} placeholder="—" className="input !w-20 !py-1.5"/>,<Toggle defaultChecked/>,<button className="text-xs text-brown-500">Edit</button>])}/>
-      <div className="mt-3 flex gap-2"><button className="btn-s"><Plus size={16}/>Add pooja</button><button className="btn-g">Reorder</button></div></div>
-    <div className="card mt-5 grid gap-4 p-5 md:grid-cols-2"><Field label="Chart closes at" hint="Bookings after this move to the next day"><Select options={['6:00 PM','7:00 PM','8:00 PM','9:00 PM']} defaultValue="8:00 PM"/></Field><Field label="Bookings open up to"><Select options={['7 days ahead','15 days ahead','30 days ahead']} defaultValue="30 days ahead"/></Field></div></Shell>)
+  const [list,setList]=useState(t.poojas)
+  const [editing,setEditing]=useState(null) // null | index | 'new'
+  const [draft,setDraft]=useState(null)
+  const setField = (k,v) => setDraft(d=>({...d,[k]:v}))
+  const openEdit = i => { setEditing(i); setDraft(i==='new'?{...blankPooja(t),code:`${t.code}-P${list.length+1}`}:{...list[i]}) }
+  const save = () => {
+    if(!draft.name.trim()||!draft.code.trim()){ toast('Name and code are required'); return }
+    if(editing==='new') setList(l=>[...l,draft]); else setList(l=>l.map((p,i)=>i===editing?draft:p))
+    toast(editing==='new'?`${draft.name} added`:`${draft.name} updated`); setEditing(null)
+  }
+  const remove = i => { const name=list[i].name; setList(l=>l.filter((_,j)=>j!==i)); toast(`${name} removed`) }
+  const toggleField = (i,k) => setList(l=>l.map((p,j)=>j===i?{...p,[k]:!p[k]}:p))
+
+  return (<Shell>{el}<H t="Poojas & prices" s="Every booking item on this temple's page — basic details, advanced timing and the Live booking switch" right={<div className="flex gap-2"><button onClick={()=>openEdit('new')} className="btn-s"><Plus size={16}/>Add pooja</button><button onClick={()=>toast('Changes saved — apply to new bookings only')} className="btn-p">Save changes</button></div>}/>
+
+    <div className="card p-4"><Table head={['Code','Pooja','Category','Price ₹','Booking type','Live','Bookable','']} rows={list.map((p,i)=>[
+      <span className="text-xs text-brown-500">{p.code}</span>,
+      <div><b>{p.name}</b><div className="ml text-xs text-brown-500">{p.ml}</div></div>,
+      <Pill tone="n">{p.category}</Pill>,
+      <b>₹{p.price}</b>,
+      <span className="text-xs text-brown-600">{p.bookingType}</span>,
+      <Toggle defaultChecked={p.live} onChange={()=>{toggleField(i,'live');toast(p.live?`${p.name}: live booking turned off`:`${p.name}: live booking enabled — bookable instantly, any time`)}}/>,
+      <Toggle defaultChecked={p.bookable} onChange={()=>toggleField(i,'bookable')}/>,
+      <div className="flex gap-2"><button onClick={()=>openEdit(i)} className="text-xs font-semibold text-saffron-600"><Pencil size={12} className="mr-0.5 inline"/>Edit</button><button onClick={()=>remove(i)} className="text-xs text-red-600">Remove</button></div>,
+    ])}/></div>
+
+    {editing!==null && draft && <div className="card mt-5 space-y-6 p-5">
+      <div className="flex items-center justify-between"><h3 className="text-lg font-semibold">{editing==='new'?'Add a pooja':`Edit · ${list[editing].name}`}</h3><button onClick={()=>setEditing(null)} aria-label="Close" className="text-brown-400 hover:text-brown-700"><X size={18}/></button></div>
+
+      <div><h4 className="text-xs font-bold uppercase tracking-wide text-brown-500">Basic details</h4>
+        <div className="mt-3 grid gap-4 md:grid-cols-2">
+          <Field label="Name (English)"><Input value={draft.name} onChange={e=>setField('name',e.target.value)}/></Field>
+          <Field label="Name (Malayalam)"><Input className="input ml" value={draft.ml} onChange={e=>setField('ml',e.target.value)}/></Field>
+          <Field label="Code" hint="Unique per listing"><Input value={draft.code} onChange={e=>setField('code',e.target.value)}/></Field>
+          <Field label="Category"><Select options={poojaCategories} value={draft.category} onChange={e=>setField('category',e.target.value)}/></Field>
+          <Field label="Price ₹"><Input type="number" value={draft.price} onChange={e=>setField('price',+e.target.value)}/></Field>
+          <Field label="Booking type"><Select options={bookingTypeOptions} value={draft.bookingType} onChange={e=>setField('bookingType',e.target.value)}/></Field>
+        </div>
+        <div className="mt-4 flex items-start justify-between gap-3 rounded-xl bg-emerald-50 p-3"><div><div className="flex items-center gap-1.5 font-semibold text-sm"><Zap size={14} className="text-emerald-600"/>Enable Live Booking</div><p className="mt-1 text-xs text-emerald-800">A devotee can book this pooja instantly, any time — without waiting for a chart to be prepared, and even after booking has otherwise closed for the day. You get an email, SMS and WhatsApp notification the moment it's booked; the booking itself is picked up in the <b>next</b> chart for payout.</p></div><Toggle defaultChecked={draft.live} onChange={v=>setField('live',v)}/></div></div>
+
+      <div><h4 className="text-xs font-bold uppercase tracking-wide text-brown-500">Advanced details</h4>
+        <div className="mt-3 grid gap-4 md:grid-cols-2">
+          <Field label="Purpose" hint="Shown to devotees on the booking page" className="md:col-span-2"><textarea className="input" rows={2} value={draft.purpose} onChange={e=>setField('purpose',e.target.value)}/></Field>
+          <Field label="Start time"><Input placeholder="6:00 AM" value={draft.startTime} onChange={e=>setField('startTime',e.target.value)}/></Field>
+          <Field label="End time"><Input placeholder="6:30 AM" value={draft.endTime} onChange={e=>setField('endTime',e.target.value)}/></Field>
+          <Field label="Minimum booking time" hint={draft.live?'Live poojas are always instant':'How far ahead a devotee must book'}><Input value={draft.live?'Instant · live booking':draft.minBookingTime} onChange={e=>setField('minBookingTime',e.target.value)} disabled={draft.live}/></Field>
+          <Field label="Deity"><Input value={draft.deity} onChange={e=>setField('deity',e.target.value)}/></Field>
+          <Field label="Daily limit" hint="0 = unlimited"><Input type="number" value={draft.dailyLimit} onChange={e=>setField('dailyLimit',+e.target.value)}/></Field>
+        </div></div>
+
+      <div className="flex gap-2 border-t border-brown-100 pt-4"><button onClick={save} className="btn-p"><Check size={16}/>Save pooja</button><button onClick={()=>setEditing(null)} className="btn-g">Cancel</button></div>
+    </div>}
+
+    <div className="card mt-5 grid gap-4 p-5 md:grid-cols-2"><Field label="Chart closes at" hint="Bookings after this move to the next day — live poojas are unaffected"><Select options={['6:00 PM','7:00 PM','8:00 PM','9:00 PM']} defaultValue="8:00 PM"/></Field><Field label="Bookings open up to"><Select options={['7 days ahead','15 days ahead','30 days ahead']} defaultValue="30 days ahead"/></Field></div></Shell>)
 }
 
 export function VDonations() {
@@ -48,20 +142,21 @@ export function VDonations() {
 /* -------- PAYOUTS: three variants by gateway -------- */
 export function VPayouts() {
   const [q]=useSearchParams(); const mode=q.get('mode')||'ta'
-  const tabs=[['ta','Razorpay/PayU via TA'],['own','Own gateway (Omniware)'],['manual','Bank account only']]
+  const tabs=[['ta','Omniware via TA'],['own','Own gateway (Razorpay/PayU)'],['manual','Bank account only']]
   const Sw = () => <div className="mb-4 flex gap-2">{tabs.map(([k,l])=><Link key={k} to={`/vendor/payouts?mode=${k}`} className={`rounded-full px-3 py-1 text-xs font-semibold ${mode===k?'bg-brown-900 text-white':'bg-white shadow-ring'}`}>{l}</Link>)}</div>
-  if(mode==='own') return (<Shell temple="Bilathikulam Sree Shiva Temple · Secretary"><H t="Payouts"/><Sw/>
-    <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 text-sm text-blue-900"><b className="text-base">No payouts for this temple.</b><p className="mt-1">Bilathikulam Sree Shiva Temple collects payments directly through its own <b>Omniware (Federal Bank)</b> merchant account. Money never passes through TempleAddress, so there is nothing to pay out. Settlement reports are in the Omniware merchant portal.</p></div>
-    <div className="card mt-5 p-5"><h3 className="font-semibold">What TempleAddress still records</h3><p className="text-sm text-brown-500">Gateway order ID, payment ID and status for every booking — so charts and receipts stay accurate.</p><div className="mt-3"><Table head={['Date','Bookings','Collected via Omniware ₹','Gateway ref']} rows={[['12 Sept','8','1,940','OMW-2609-…'],['11 Sept','6','1,260','OMW-2609-…']]}/></div></div>
+  if(mode==='own') return (<Shell temple="T1044 · Bilathikulam Sree Shiva Temple · Secretary"><H t="Payouts"/><Sw/>
+    <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 text-sm text-blue-900"><b className="text-base">No TempleAddress payouts for this temple.</b><p className="mt-1">Bilathikulam Sree Shiva Temple collects payments through its own <b>Razorpay / PayU merchant account</b>. Money never passes through TempleAddress, so settlement happens in the temple's gateway account.</p></div>
+    <div className="card mt-5 p-5"><h3 className="font-semibold">What TempleAddress still records</h3><p className="text-sm text-brown-500">Chart ID, gateway order ID, payment ID and status for every booking — so charts and receipts stay accurate.</p><div className="mt-3"><Table head={['Chart ID','Date','Bookings','Collected ₹','Gateway ref']} rows={[['CH-T1044-260912','12 Sept','8','1,940','RPY-2609-…'],['CH-T1044-260911','11 Sept','6','1,260','PAYU-2609-…']]}/></div></div>
     <p className="mt-4 text-sm text-brown-500">Want TempleAddress to collect and settle instead? <Link to="/vendor/settings?tab=0" className="text-saffron-600 underline">Change gateway in Settings → Payments</Link>.</p></Shell>)
-  if(mode==='manual') return (<Shell temple="Vengamala Bhagavathi Temple · Secretary"><H t="Payouts" s="No payment gateway on file — TempleAddress collects and the accountant pays you by NEFT"/><Sw/>
+  if(mode==='manual') return (<Shell temple="T1221 · Vengamala Bhagavathi Temple · Secretary"><H t="Payouts" s="No payment gateway on file — TempleAddress collects and the accountant pays you by NEFT"/><Sw/>
     <div className="grid grid-cols-3 gap-3"><Stat v="₹2,460" l="payable now"/><Stat v="Mon 15 Sept" l="next manual payout run"/><Stat v="₹18,900" l="paid this year"/></div>
     <div className="card mt-5 p-5"><div className="flex items-center gap-2"><Landmark size={18}/><b>Bank on file</b><Pill tone="ok">Verified</Pill></div><div className="mt-2 text-sm">Vengamala Devaswom · Federal Bank ····2201 · IFSC FDRL0002201</div><p className="mt-2 text-xs text-brown-500">Devotees pay through TempleAddress (Razorpay). Every Monday the accountant exports an Excel of pending payouts, transfers from internet banking, and updates the UTR in the same sheet. You get a WhatsApp message when it's marked paid.</p></div>
     <div className="card mt-5 p-5"><h3 className="font-semibold">History</h3><Table head={['Period','Charts','₹','Paid on','UTR / journal','Status']} rows={[['1–7 Sept','5','2,460','—','—',<Pill tone="warn">In this week's sheet</Pill>],['25–31 Aug','4','1,880','1 Sept','FDRLN26244000212',<Pill tone="ok">Paid (manual NEFT)</Pill>],['18–24 Aug','6','2,140','25 Aug','FDRLN26237000098',<Pill tone="ok">Paid (manual NEFT)</Pill>]]}/></div></Shell>)
-  return (<Shell><H t="Payouts" s="Payments collected via Razorpay / PayU are paid to your bank every week. Gateway charges are deducted by the gateway; TempleAddress deducts nothing."/><Sw/>
+  return (<Shell><H t="Payouts" s="Payments collected through Omniware via TempleAddress are paid to your bank every week. Gateway charges are deducted by the gateway; TempleAddress deducts nothing."/><Sw/>
     <div className="grid grid-cols-3 gap-3"><Stat v="₹12,650" l="payable now"/><Stat v="Mon 15 Sept" l="next payout"/><Stat v="₹1,84,300" l="paid this year"/></div>
     <div className="card mt-5 p-5"><div className="flex items-center gap-2"><Landmark size={18}/><b>Bank</b><Pill tone="ok">Verified</Pill></div><div className="mt-2 text-sm">Kottur Devaswom Committee · Federal Bank ····4412 · IFSC FDRL0001234 · <Link to="/vendor/settings" className="text-saffron-600">Change</Link></div></div>
-    <div className="card mt-5 p-5"><h3 className="font-semibold">History</h3><Table head={['Period','Charts','₹','Paid on','UTR','Status']} rows={[['1–7 Sept','7','18,940','8 Sept','FDRLN26251000431',<Pill tone="ok">Paid</Pill>],['25–31 Aug','7','16,120','1 Sept','FDRLN26244000212',<Pill tone="ok">Paid</Pill>],['18–24 Aug','6','14,860','25 Aug','FDRLN26237000098',<Pill tone="ok">Paid</Pill>]]}/><button className="btn-g mt-3"><Download size={16}/>Statement (Excel)</button></div></Shell>)
+    <div className="card mt-5 p-5"><h3 className="font-semibold">Chart settlement details</h3><p className="mb-3 text-sm text-brown-500">Open a Chart ID to verify its bookings, donations, chart total and payment reference.</p><Table head={['Chart ID','Date','Chart total','Payment reference','Status']} rows={templeCharts.map(c=>[<Link to={`/vendor/charts/${c.id}`} className="font-semibold text-saffron-600">{c.id}</Link>,c.date,<Money v={c.bookingTotal+c.donationTotal}/>,c.payoutRef,<Pill tone={c.payoutStatus==='Paid'?'ok':'warn'}>{c.payoutStatus}</Pill>])}/></div>
+    <div className="card mt-5 p-5"><h3 className="font-semibold">Payout history</h3><Table head={['Period','Charts','₹','Paid on','UTR','Status']} rows={[['1–7 Sept','7','18,940','8 Sept','FDRLN26251000431',<Pill tone="ok">Paid</Pill>],['25–31 Aug','7','16,120','1 Sept','FDRLN26244000212',<Pill tone="ok">Paid</Pill>],['18–24 Aug','6','14,860','25 Aug','FDRLN26237000098',<Pill tone="ok">Paid</Pill>]]}/><button className="btn-g mt-3"><Download size={16}/>Statement (Excel)</button></div></Shell>)
 }
 
 /* -------- SETTINGS: multi-gateway, fee, 80G, domain, team, plan, ownership -------- */
@@ -72,12 +167,11 @@ export function VSettings() {
   return (<Shell>{el}<H t="Settings"/><Tabs tabs={['Payments','Convenience fee','80G','Website & domain','Team','Plan & sponsor','Ownership']} at={tab} set={setTab}/>
     {tab===0 && <div className="space-y-5">
       <div className="card p-5"><h3 className="font-semibold">How do you receive payments?</h3>
-        <div className="mt-3 grid gap-3 md:grid-cols-3">{[['ta','Through TempleAddress','Razorpay, PayU or Stripe collect; weekly payout to your bank'],['own','Temple\'s own gateway','Omniware (Federal Bank) settles to your account; no TA payout'],['manual','No gateway — bank only','Devotees pay TA; accountant pays you by NEFT each week']].map(([k,h,p])=><button key={k} onClick={()=>setMode(k)} className={`rounded-2xl border p-4 text-left ${mode===k?'border-saffron-500 bg-saffron-50':'border-brown-200 bg-white'}`}><b className="text-sm">{h}</b><div className="mt-1 text-xs text-brown-500">{p}</div></button>)}</div></div>
-      {mode==='ta' && <div className="card p-5"><div className="flex items-center justify-between"><h3 className="font-semibold">Gateways</h3><span className="text-xs text-brown-500">Enable one or more · the devotee picks at checkout</span></div>
-        <div className="mt-3 divide-y divide-brown-100">{['razorpay','payu','stripe'].map(k=><div key={k} className="flex flex-wrap items-center gap-3 py-3"><CreditCard size={18} className="text-brown-500"/><div className="flex-1"><b>{gateways[k].name}</b><div className="text-xs text-brown-500">{gateways[k].note}</div></div>{enabled[k]&&<label className="flex items-center gap-1 text-xs"><input type="radio" checked={primary===k} onChange={()=>setPrimary(k)}/>Default</label>}<Toggle defaultChecked={enabled[k]} onChange={v=>setEnabled({...enabled,[k]:v})}/></div>)}</div>
-        <div className="mt-3 rounded-xl bg-brown-50 p-3 text-xs text-brown-600">Keys are held by TempleAddress (platform account). Customer-fee-bearer is on for Razorpay and PayU; Stripe charges are absorbed and shown as a separate line.</div></div>}
+        <div className="mt-3 grid gap-3 md:grid-cols-3">{[['ta','Omniware via TA','TempleAddress collects through Omniware; weekly payout to your bank'],['own','Own gateway (Razorpay/PayU)','Your gateway settles directly; no TempleAddress payout'],['manual','Bank account only','TempleAddress collects; accountant pays you by NEFT each week']].map(([k,h,p])=><button key={k} onClick={()=>setMode(k)} className={`rounded-2xl border p-4 text-left ${mode===k?'border-saffron-500 bg-saffron-50':'border-brown-200 bg-white'}`}><b className="text-sm">{h}</b><div className="mt-1 text-xs text-brown-500">{p}</div></button>)}</div></div>
+      {mode==='ta' && <div className="card p-5"><div className="flex items-center justify-between"><h3 className="font-semibold">Omniware via TempleAddress</h3><Pill tone="ok">Connected</Pill></div>
+        <div className="mt-3 flex items-center gap-3 rounded-xl bg-brown-50 p-3"><CreditCard size={18}/><div><b>{gateways.omniware.name}</b><div className="text-xs text-brown-500">{gateways.omniware.note} · platform merchant account</div></div></div></div>}
       {mode==='ta'||mode==='manual' ? <div className="card grid gap-4 p-5 md:grid-cols-2"><h3 className="font-semibold md:col-span-2">Payout bank account</h3><Field label="Account holder"><Input defaultValue="Kottur Devaswom Committee"/></Field><Field label="Account number"><Input defaultValue="XXXXXXXX4412"/></Field><Field label="IFSC"><Input defaultValue="FDRL0001234"/></Field><Field label="UPI (optional)"><Input defaultValue="kotturtemple@fbl"/></Field><div className="md:col-span-2"><Pill tone="ok">Penny-drop verified by staff on 2 Aug</Pill>{mode==='manual'&&<span className="ml-3 text-xs text-brown-500">Manual payouts run every Monday; you'll get a WhatsApp when paid.</span>}</div></div>
-      : <div className="card p-5"><div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">With your own gateway, money goes straight to your account and <b>the Payouts screen is turned off</b> for this temple.</div><div className="mt-4 grid gap-4 md:grid-cols-2"><Field label="Gateway"><Select options={['Omniware · Federal Bank','Razorpay (temple\'s own account)','PayU (temple\'s own account)']}/></Field><Field label="Merchant ID"><Input placeholder="OMW-XXXXXX"/></Field><Field label="API key"><Input type="password"/></Field><Field label="Webhook secret" hint="TempleAddress needs this to mark bookings paid"><Input type="password"/></Field></div><button className="btn-g mt-3">Test connection</button></div>}
+      : <div className="card p-5"><div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">With your own gateway, money goes straight to your account and <b>TempleAddress does not create payouts</b> for this temple.</div><div className="mt-4 grid gap-4 md:grid-cols-2"><Field label="Gateway"><Select options={['Razorpay (temple\'s own account)','PayU (temple\'s own account)']}/></Field><Field label="Merchant ID"><Input placeholder="Merchant ID"/></Field><Field label="API key"><Input type="password"/></Field><Field label="Webhook secret" hint="TempleAddress needs this to mark bookings paid"><Input type="password"/></Field></div><button className="btn-g mt-3">Test connection</button></div>}
       <button onClick={()=>toast('Payment settings saved')} className="btn-p">Save</button></div>}
     {tab===1 && <div className="card space-y-4 p-5"><div className="rounded-xl bg-saffron-50 p-3 text-sm text-saffron-800">Platform default is <b>Off</b> for vazhipadu and donations, <b>2%</b> for special poojas. A value here overrides the default for this listing only.</div>
       <Field label="Convenience fee for this temple"><select className="input" value={fee} onChange={e=>setFee(e.target.value)}><option value="INHERIT">Inherit platform default</option><option value="OFF">Off</option><option value="PERCENT">Percentage</option><option value="FIXED">Fixed amount</option><option value="BOTH">Percentage + fixed</option></select></Field>

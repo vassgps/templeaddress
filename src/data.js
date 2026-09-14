@@ -1,3 +1,23 @@
+// ---------- INDIVIDUAL POOJA / OFFERING ITEM ----------
+// Shared shape used by both a temple's poojas and a festival's offerings — the same
+// "pooja item" concept, just sold in two different contexts.
+//   Basic: code (unique per listing), name, category, price, bookingType, live
+//   Advanced: purpose, startTime/endTime, minBookingTime, deity
+// `live` is the "Live Booking" switch: when on, a devotee can book this item instantly at
+// any time — even if the day's chart is already prepared or booking has otherwise closed for
+// that date. The vendor gets an immediate email / SMS / WhatsApp notification, but the booking
+// itself is only picked up in the temple/festival's NEXT chart for settlement — it never
+// re-opens or edits a chart that has already been locked.
+export const poojaCategories = ['Homam','Abhishekam','Archana','Pushpanjali','Seva','Neivedyam','Vazhipadu','Sponsorship','Festival ritual']
+export const bookingTypeOptions = ['Online','Offline','Online & Offline']
+const P = (code,name,ml,category,price,dailyLimit,opts={}) => ({
+  code, name, ml, category, price, dailyLimit,
+  bookingType: opts.bookingType || 'Online & Offline',
+  live: !!opts.live, bookable: opts.bookable!==false,
+  purpose: opts.purpose || '', startTime: opts.startTime || '', endTime: opts.endTime || '',
+  minBookingTime: opts.minBookingTime || 'Same day, before chart closes', deity: opts.deity || '',
+})
+
 export const temples = [
   { slug:'kottur-sree-mahavishnu-temple', code:'T1028', name:'Kottur Sree Mahavishnu Temple', ml:'കൊട്ടൂർ ശ്രീ മഹാവിഷ്ണു ക്ഷേത്രം', district:'Kozhikode', place:'Ulliyeri', deity:'Lord Vishnu', others:['Lord Krishna','Lord Ganesh','Naga'],
     gateway:'razorpay', g80:true, plan:'Pro', sponsor:'Resurge India Foundation', bookable:true, cutoff:'8:00 PM', hue:'#7A5238', rating:4.8, reviews:212,
@@ -9,21 +29,111 @@ export const temples = [
     guidelines:'Traditional dress inside the nalambalam. Mobile phones on silent. No photography of the sanctum. Prasadam counter closes 15 min after each pooja.',
     remarks:'Ilaneer abhishekam is the most booked vazhipadu; book Udayasthamana pooja 7 days ahead.',
     nearby:['Thusharagiri waterfalls (28 km)','Kakkayam dam (34 km)','Lokanarkavu temple (22 km)'],
-    poojas:[['Ganapathi Homam','ഗണപതി ഹോമം',250,20],['Ilaneer Abhishekam','ഇളനീർ അഭിഷേകം',50,0],['Naalikeram Udaykkal','നാളികേരം ഉടയ്ക്കൽ',10,0],['Pushpanjali','പുഷ്പാഞ്ജലി',20,0],['Bhagyasooktha Pushpanjali','ഭാഗ്യസൂക്ത പുഷ്പാഞ്ജലി',30,0],['Neyvilakku','നെയ്‌വിളക്ക്',15,0],['Palpayasam (1 kg)','പാൽപായസം',120,10],['Santhanagopala Pooja','സന്താനഗോപാല പൂജ',1500,3],['Udayasthamana Pooja','ഉദയാസ്തമന പൂജ',7500,1]] },
+    poojas:[
+      P('T1028-P1','Ganapathi Homam','ഗണപതി ഹോമം','Homam',250,20,{live:true,purpose:'Removes obstacles before any new undertaking',startTime:'6:00 AM',endTime:'6:45 AM',minBookingTime:'Instant · live booking',deity:'Lord Ganesh'}),
+      P('T1028-P2','Ilaneer Abhishekam','ഇളനീർ അഭിഷേകം','Abhishekam',50,0,{purpose:'Tender-coconut bathing of the deity for peace and prosperity',startTime:'7:00 AM',endTime:'7:20 AM',deity:'Lord Vishnu'}),
+      P('T1028-P3','Naalikeram Udaykkal','നാളികേരം ഉടയ്ക്കൽ','Vazhipadu',10,0,{purpose:'Breaking of coconuts to ward off obstacles',startTime:'7:30 AM',endTime:'7:40 AM',deity:'Lord Ganesh'}),
+      P('T1028-P4','Pushpanjali','പുഷ്പാഞ്ജലി','Archana',20,0,{live:true,purpose:'Flower offering with name & nakshatra archana',startTime:'7:00 AM',endTime:'9:00 AM',minBookingTime:'Instant · live booking',deity:'Lord Vishnu'}),
+      P('T1028-P5','Bhagyasooktha Pushpanjali','ഭാഗ്യസൂക്ത പുഷ്പാഞ്ജലി','Archana',30,0,{purpose:'For good fortune and removal of obstacles to prosperity',startTime:'7:00 AM',endTime:'9:00 AM',deity:'Lord Vishnu'}),
+      P('T1028-P6','Neyvilakku','നെയ്‌വിളക്ക്','Seva',15,0,{live:true,purpose:'Ghee-lamp offering for clarity and wellbeing',startTime:'5:30 PM',endTime:'7:00 PM',minBookingTime:'Instant · live booking',deity:'Lord Vishnu'}),
+      P('T1028-P7','Palpayasam (1 kg)','പാൽപായസം','Neivedyam',120,10,{purpose:'Milk payasam offering, distributed as prasadam',startTime:'8:00 AM',endTime:'8:30 AM',minBookingTime:'1 day ahead',deity:'Lord Vishnu'}),
+      P('T1028-P8','Santhanagopala Pooja','സന്താനഗോപാല പൂജ','Vazhipadu',1500,3,{bookingType:'Online',purpose:'For couples seeking a child — the temple\'s speciality',startTime:'6:00 AM',endTime:'8:00 AM',minBookingTime:'2 days ahead',deity:'Lord Vishnu (Santhanagopala Moorthy)'}),
+      P('T1028-P9','Udayasthamana Pooja','ഉദയാസ്തമന പൂജ','Vazhipadu',7500,1,{bookingType:'Offline',purpose:'Dawn-to-dusk pooja performed for the entire day',startTime:'5:30 AM',endTime:'7:30 PM',minBookingTime:'7 days ahead',deity:'Lord Vishnu'}),
+    ] },
   { slug:'bilathikulam-sree-shiva-temple', code:'T1044', name:'Bilathikulam Sree Shiva Temple', ml:'ബിലാത്തികുളം ശ്രീ ശിവ ക്ഷേത്രം', district:'Kozhikode', place:'Bilathikulam', deity:'Lord Shiva', others:['Parvathi','Ganapathi'],
     gateway:'omniware', g80:false, plan:'Basic', sponsor:null, bookable:true, cutoff:'7:00 PM', hue:'#3F4E5C', rating:4.6, reviews:88,
     timings:'5:00–10:00 AM · 5:00–8:00 PM', address:'Bilathikulam, Kozhikode – 673006', about:'A serene Shiva temple by the old town pond, known for its Monday Dhara.', story:'', history:'Rebuilt in 1932 after the great flood.', speciality:'Rudrabhishekam on Pradosham days', guidelines:'Dress code applies.', remarks:'', nearby:['Kozhikode beach (3 km)','Mananchira (2 km)'],
-    poojas:[['Dhara','ധാര',40,0],['Rudrabhishekam','രുദ്രാഭിഷേകം',500,5],['Koovalamala','കൂവളമാല',30,0],['Mrithyunjaya Homam','മൃത്യുഞ്ജയ ഹോമം',1500,2]] },
+    poojas:[
+      P('T1044-P1','Dhara','ധാര','Abhishekam',40,0,{live:true,purpose:'Continuous water/oil stream over the shivalinga for peace',startTime:'5:30 AM',endTime:'6:00 AM',minBookingTime:'Instant · live booking',deity:'Lord Shiva'}),
+      P('T1044-P2','Rudrabhishekam','രുദ്രാഭിഷേകം','Abhishekam',500,5,{purpose:'Elaborate abhishekam with Rudra chanting, for health and protection',startTime:'6:00 AM',endTime:'7:00 AM',minBookingTime:'1 day ahead',deity:'Lord Shiva'}),
+      P('T1044-P3','Koovalamala','കൂവളമാല','Vazhipadu',30,0,{purpose:'Bilva-leaf garland offering, dear to Lord Shiva',startTime:'7:00 AM',endTime:'7:15 AM',deity:'Lord Shiva'}),
+      P('T1044-P4','Mrithyunjaya Homam','മൃത്യുഞ്ജയ ഹോമം','Homam',1500,2,{bookingType:'Offline',purpose:'For health, longevity and overcoming serious illness',startTime:'6:30 AM',endTime:'8:00 AM',minBookingTime:'3 days ahead',deity:'Lord Shiva'}),
+    ] },
   { slug:'vengamala-bhagavathi-temple', code:'T1221', name:'Vengamala Bhagavathi Temple', ml:'വേങ്ങമല ഭഗവതി ക്ഷേത്രം', district:'Thiruvananthapuram', place:'Marudhumoola', deity:'Bhagavathi', others:['Ganapathi','Yakshi'],
     gateway:'bank', g80:false, plan:'Free', sponsor:null, bookable:true, cutoff:'8:00 PM', hue:'#8A3A1F', rating:4.7, reviews:41,
     timings:'6:00–9:00 AM · 5:30–7:00 PM', address:'Vengamala Temple Road, Marudhumoola, Thiruvananthapuram', about:'Hill-top Bhagavathi temple with a famous Meena Bharani festival.', story:'', history:'', speciality:'Bhagavathi Seva every Friday', guidelines:'', remarks:'', nearby:['Ponmudi (40 km)'],
-    poojas:[['Pushpanjali','പുഷ്പാഞ്ജലി',20,0],['Bhagavathi Seva','ഭഗവതി സേവ',750,6],['Kalasam','കലശം',300,0]] },
-  { slug:'thrikapaleshwaram-temple', code:'T0917', name:'Thrikapaleshwaram Temple', ml:'തൃക്കപാലേശ്വരം ക്ഷേത്രം', district:'Pathanamthitta', place:'Thiruvalla', deity:'Lord Shiva', others:['Sastha'],
+    poojas:[
+      P('T1221-P1','Pushpanjali','പുഷ്പാഞ്ജലി','Archana',20,0,{live:true,purpose:'Flower offering with name & nakshatra archana',startTime:'6:00 AM',endTime:'9:00 AM',minBookingTime:'Instant · live booking',deity:'Bhagavathi'}),
+      P('T1221-P2','Bhagavathi Seva','ഭഗവതി സേവ','Seva',750,6,{purpose:'Evening seva with family sankalpam, offered every Friday',startTime:'5:30 PM',endTime:'6:30 PM',minBookingTime:'1 day ahead',deity:'Bhagavathi'}),
+      P('T1221-P3','Kalasam','കലശം','Vazhipadu',300,0,{bookingType:'Offline',purpose:'Sacred-pot ritual for purification and blessings',startTime:'6:00 AM',endTime:'6:45 AM',deity:'Bhagavathi'}),
+    ] },
+  { slug:'thrikapaleshwaram-temple', code:'T1097', name:'Thrikapaleshwaram Temple', ml:'തൃക്കപാലേശ്വരം ക്ഷേത്രം', district:'Pathanamthitta', place:'Thiruvalla', deity:'Lord Shiva', others:['Sastha'],
     gateway:'razorpay', g80:true, plan:'Basic', sponsor:null, bookable:true, cutoff:'8:00 PM', hue:'#2F5F4E', rating:4.9, reviews:130,
     timings:'5:00–10:30 AM · 5:00–8:00 PM', address:'Thrikapaleshwaram, Thiruvalla – 689101', about:'One of the 108 Shiva temples of Kerala, on the banks of the Manimala river.', story:'', history:'', speciality:'Pithru tharpanam on Karkidaka Vavu', guidelines:'', remarks:'', nearby:['Aranmula (12 km)'],
-    poojas:[['Dhara','ധാര',40,0],['Pithru Tharpanam','പിതൃതർപ്പണം',150,0],['Sahasranama Archana','സഹസ്രനാമ അർച്ചന',60,0]] },
+    poojas:[
+      P('T1097-P1','Dhara','ധാര','Abhishekam',40,0,{live:true,purpose:'Continuous stream offering for peace of mind',startTime:'5:00 AM',endTime:'5:30 AM',minBookingTime:'Instant · live booking',deity:'Lord Shiva'}),
+      P('T1097-P2','Pithru Tharpanam','പിതൃതർപ്പണം','Vazhipadu',150,0,{purpose:'Offerings to departed ancestors, especially on Karkidaka Vavu',startTime:'6:00 AM',endTime:'8:00 AM',minBookingTime:'1 day ahead',deity:'Lord Shiva'}),
+      P('T1097-P3','Sahasranama Archana','സഹസ്രനാമ അർച്ചന','Archana',60,0,{purpose:'Chanting of the 1,000 names with flower offering',startTime:'7:00 AM',endTime:'8:00 AM',deity:'Lord Shiva'}),
+    ] },
 ]
 export const bySlug = s => temples.find(t=>t.slug===s) || temples[0]
+
+// Public listing IDs come from one MasterData sequence per listing type. Route IDs/slugs
+// remain internal; these codes are the stable references shown across the portal.
+export const listingIdPrefixes = {
+  temple:'T', service:'S', festival:'F', event:'E', holyplace:'H',
+}
+
+export const templeCharts = [
+  {
+    id:'CH-T1028-260913', listingId:'T1028', date:'13 Sept 2026', dateKey:'2026-09-13', status:'Prepared', bookingCount:14,
+    payoutStatus:'Pending', payoutRef:'Next payout · 15 Sept', bookingTotal:3420, donationTotal:1000,
+    bookings:[
+      ['BK-260913-001','Ganapathi Homam','Anand','Rohini',1,250,'Paid'],
+      ['BK-260913-002','Ganapathi Homam','Sreeja S','Uthram',1,250,'Paid'],
+      ['BK-260913-003','Ilaneer Abhishekam','Rajesh','Chothi',2,100,'Paid'],
+      ['BK-260913-004','Pushpanjali','Devi','Makayiram',1,20,'Paid'],
+      ['BK-260913-005','Palpayasam','Vinod','Anizham',1,120,'Paid'],
+      ['BK-260913-006','Santhanagopala Pooja','Meera','Thiruvonam',1,1500,'Paid'],
+      ['BK-260913-007','Neyvilakku','Hari','Pooram',2,30,'Paid'],
+      ['BK-260913-008','Bhagyasooktha Pushpanjali','Lekha','Ayilyam',2,60,'Paid'],
+      ['BK-260913-009','Ilaneer Abhishekam','Arun','Aswathi',2,100,'Paid'],
+      ['BK-260913-010','Naalikeram Udaykkal','Nisha','Bharani',4,40,'Paid'],
+      ['BK-260913-011','Pushpanjali','Maya','Pooyam',1,20,'Paid'],
+      ['BK-260913-012','Palpayasam','Rajan','Revathi',2,240,'Paid'],
+      ['BK-260913-013','Neyvilakku','Asha','Chithira',4,60,'Paid'],
+      ['BK-260913-014','Udayasthamana Pooja · advance','Kiran','Moolam',1,630,'Part-paid'],
+    ],
+    donations:[['DN-000231','Anand K','Annadanam',1000,'80G issued']],
+    // Live bookings: made instantly through a "Live" pooja after today's chart was already
+    // prepared/locked. Not part of the chart above — the vendor was notified immediately,
+    // and these roll into TOMORROW's chart (14 Sept) for payout.
+    liveBookings:[
+      ['LB-260913-101','Ganapathi Homam','Rakesh P','Anizham',1,250,'6:42 PM','Email + SMS + WhatsApp sent'],
+      ['LB-260913-102','Pushpanjali','Meera N','Pooyam',2,40,'7:15 PM','Email + SMS + WhatsApp sent'],
+      ['LB-260913-103','Neyvilakku','Suresh Babu','Chothi',1,15,'7:51 PM','WhatsApp sent · email queued'],
+    ],
+  },
+  {
+    id:'CH-T1028-260912', listingId:'T1028', date:'12 Sept 2026', dateKey:'2026-09-12', status:'Completed', bookingCount:11,
+    payoutStatus:'Pending', payoutRef:'Next payout · 15 Sept', bookingTotal:2760, donationTotal:500,
+    bookings:[['BK-260912-001','Ganapathi Homam','Suresh','Rohini',2,500,'Paid'],['BK-260912-002','Santhanagopala Pooja','Anjali','Uthram',1,1500,'Paid'],['BK-260912-003','Other bookings (9)','—','—',9,760,'Paid']],
+    donations:[['DN-000230','Anonymous','General',500,'Receipt issued']],
+  },
+  {
+    id:'CH-T1028-260911', listingId:'T1028', date:'11 Sept 2026', dateKey:'2026-09-11', status:'Completed', bookingCount:9,
+    payoutStatus:'Pending', payoutRef:'Next payout · 15 Sept', bookingTotal:1940, donationTotal:2500,
+    bookings:[['BK-260911-001','Ganapathi Homam','Sreeja S','Uthram',1,250,'Paid'],['BK-260911-002','Other bookings (8)','—','—',8,1690,'Paid']],
+    donations:[['DN-000229','Sreeja S','Renovation',2500,'80G issued']],
+  },
+  {
+    id:'CH-T1028-260910', listingId:'T1028', date:'10 Sept 2026', dateKey:'2026-09-10', status:'Completed', bookingCount:17,
+    payoutStatus:'Pending', payoutRef:'Next payout · 15 Sept', bookingTotal:4120, donationTotal:0,
+    bookings:[['BK-260910-001','Udayasthamana Pooja · advance','Madhavan','Chothi',1,3500,'Part-paid'],['BK-260910-002','Other bookings (16)','—','—',16,620,'Paid']],
+    donations:[],
+  },
+  {
+    id:'CH-T1028-260907', listingId:'T1028', date:'7 Sept 2026', dateKey:'2026-09-07', status:'Completed', bookingCount:12,
+    payoutStatus:'Paid', payoutRef:'FDRLN26251000431 · 8 Sept', bookingTotal:3200, donationTotal:800,
+    bookings:[['BK-260907-001','Bookings (12)','—','—',12,3200,'Paid']], donations:[['DN-000225','Devika','Annadanam',800,'80G issued']],
+  },
+  {
+    id:'CH-T1028-260906', listingId:'T1028', date:'6 Sept 2026', dateKey:'2026-09-06', status:'Completed', bookingCount:10,
+    payoutStatus:'Paid', payoutRef:'FDRLN26251000431 · 8 Sept', bookingTotal:2340, donationTotal:1000,
+    bookings:[['BK-260906-001','Bookings (10)','—','—',10,2340,'Paid']], donations:[['DN-000224','Anonymous','General',1000,'Receipt issued']],
+  },
+]
+export const chartById = id => templeCharts.find(c=>c.id===id) || templeCharts[0]
 
 export const specials = [
   { id:'sp1', title:'Ashta Dravya Maha Ganapathi Homam', ml:'അഷ്ടദ്രവ്യ മഹാഗണപതി ഹോമം', date:'Sat 14 Sept · Vinayaka Chathurthi', temple:temples[0], price:1500, seats:40, left:18, tag:'Obstacles', proof:'Photo + video', hue:'#B8804F',
@@ -35,10 +145,18 @@ export const specials = [
   { id:'sp6', title:'Navarathri Saraswathi Pooja', ml:'സരസ്വതി പൂജ', date:'19–21 Oct', temple:temples[2], price:500, seats:120, left:97, tag:'Festival', proof:'Photo', hue:'#8A3A1F', desc:'Vidyarambham and Saraswathi pooja.' },
 ]
 export const services = [
-  { id:'sv1', name:'Prasad Nambeesan', ml:'പ്രസാദ് നമ്പീശൻ', type:'Astrologer', district:'Kozhikode', from:300, exp:22, hue:'#5B3E2B', offerings:[['Jathakam consultation · 30 min',500,'In person / phone'],['Prasnam · 1 hr',1500,'In person'],['Muhoortham',300,'Phone']] },
-  { id:'sv2', name:'Shiju Krishnan Potty', ml:'ഷിജു കൃഷ്ണൻ പോറ്റി', type:'Poojari', district:'Thiruvananthapuram', from:1500, exp:14, hue:'#7A5238', offerings:[['Ganapathi Homam at home',3500,'Samagri included'],['Griha Pravesham',7500,'Samagri included']] },
-  { id:'sv3', name:'P.V. Sasidharan', ml:'പി.വി. ശശിധരൻ', type:'Astrologer', district:'Perinthalmanna', from:300, exp:30, hue:'#3F4E5C', offerings:[['Horoscope reading',300,'Phone']] },
-  { id:'sv4', name:'Kalamandalam Anil', ml:'കലാമണ്ഡലം അനിൽ', type:'Thayambaka', district:'Thrissur', from:15000, exp:18, hue:'#8A3A1F', offerings:[['Thayambaka (festival)',15000,'Team of 5']] },
+  { id:'sv1', code:'S1001', name:'Prasad Nambeesan', ml:'പ്രസാദ് നമ്പീശൻ', type:'Astrologer', district:'Kozhikode', place:'Koottur, Naduvannur', from:300, exp:22, hue:'#5B3E2B', rating:4.8, reviewCount:63, defaultPhoto:1,
+    timings:'Monday–Saturday · 1:00 PM–5:00 PM', availabilityDays:'Mon, Tue, Wed, Thu, Fri, Sat', slots:['1:00 PM','1:30 PM','2:00 PM','3:30 PM','4:00 PM','4:30 PM'],
+    about:'Traditional Kerala astrologer practising Prasna Marga, horoscope consultation and muhoortham for families and temples across Malabar.',
+    history:'Practising since 2004 after training in the Kanippayyur parampara. Has assisted temple committees with Devaprasnam and renovation muhoortham for more than two decades.',
+    remarks:'Birth date, exact birth time and place are recommended for horoscope consultations. Phone appointments are available for muhoortham and follow-up questions.',
+    offerings:[['Jathakam consultation · 30 min',500,'In person / phone'],['Prasnam · 1 hr',1500,'In person'],['Muhoortham',300,'Phone']],
+    specials:[['Ganapathi Homam at devotee home','20 Sept · 7:00 AM',3500],['Navagraha Pooja','28 Sept · 9:00 AM',2500]],
+    feedback:[['Meera S',5,'Knowledgeable','The explanation was calm, clear and practical.'],['Achuth P',4,'Accurate','The appointment started on time and the guidance was detailed.']] },
+  { id:'sv2', code:'S1002', name:'Shiju Krishnan Potty', ml:'ഷിജു കൃഷ്ണൻ പോറ്റി', type:'Poojari / Pandit', district:'Thiruvananthapuram', place:'Vattiyoorkavu', from:1500, exp:14, hue:'#7A5238', rating:4.7, reviewCount:38, defaultPhoto:1, timings:'Monday–Saturday · 6:00 AM–11:00 AM', availabilityDays:'Mon–Sat', slots:['6:00 AM','7:30 AM','9:00 AM'], about:'Vedic priest available for home and temple rituals.', history:'Fourteen years of ritual practice and family ceremonies.', remarks:'Travel and samagri are confirmed before booking.', offerings:[['Ganapathi Homam at home',3500,'Samagri included'],['Griha Pravesham',7500,'Samagri included']], specials:[['Maha Ganapathi Homam','22 Sept · 6:30 AM',3500]], feedback:[['Anjana R',5,'Punctual','Arrived on time and explained every step.']] },
+  { id:'sv3', code:'S1003', name:'P.V. Sasidharan', ml:'പി.വി. ശശിധരൻ', type:'Astrologer', district:'Perinthalmanna', place:'Perinthalmanna town', from:300, exp:30, hue:'#3F4E5C', rating:4.9, reviewCount:91, defaultPhoto:1, timings:'Tuesday–Sunday · 9:00 AM–1:00 PM', availabilityDays:'Tue–Sun', slots:['9:00 AM','10:00 AM','11:30 AM'], about:'Horoscope reader specialising in family consultations.', history:'Thirty years of traditional practice.', remarks:'Phone appointments require horoscope details in advance.', offerings:[['Horoscope reading',300,'Phone']], specials:[], feedback:[['Hari M',5,'Accurate','Very clear reading and helpful suggestions.']] },
+  { id:'sv4', code:'S1004', name:'Kalamandalam Anil', ml:'കലാമണ്ഡലം അനിൽ', type:'Artist', district:'Thrissur', place:'Cheruthuruthy', from:15000, exp:18, hue:'#8A3A1F', rating:4.8, reviewCount:27, defaultPhoto:1, timings:'By event schedule', availabilityDays:'Festival and event dates', slots:['Request a date'], about:'Temple percussion artist and Thayambaka team lead.', history:'Kalamandalam-trained performer with eighteen years on temple stages.', remarks:'Final team size and travel are confirmed after enquiry.', offerings:[['Thayambaka (festival)',15000,'Team of 5']], specials:[], feedback:[['Kottur Committee',5,'Professional','A disciplined team and an excellent performance.']] },
+  { id:'sv5', code:'S1005', name:'Madhavan Kazhakam', ml:'മാധവൻ കഴകം', type:'Kazhakam', district:'Kozhikode', place:'Balussery', from:800, exp:16, hue:'#6B513C', rating:4.6, reviewCount:19, defaultPhoto:1, timings:'Monday–Saturday · 5:00 AM–10:00 AM', availabilityDays:'Mon–Sat', slots:['5:00 AM','7:00 AM','9:00 AM'], about:'Experienced Kazhakam support for temple rituals and festival days.', history:'Serving temples in Kozhikode district for sixteen years.', remarks:'Available for full-day festival duty on advance request.', offerings:[['Temple ritual assistance',800,'At temple'],['Festival day duty',2500,'Full day']], specials:[], feedback:[['Temple Secretary',5,'Reliable','Reliable and familiar with temple procedures.']] },
 ]
 /* ---------- VENDOR TYPE 2 · FESTIVAL COMMITTEE ----------
    A festival listing is time-bound (a few days a year), sells sponsorships and day-limited
@@ -61,13 +179,14 @@ export const festival = {
     ['7 Dec','Sopana Sangeetham','6:30 PM','Cultural','Sreejith Marar','Confirmed'],
     ['8 Dec','Aarattu & Pallivetta','5:00 AM','Ritual','Melshanthi','Confirmed'],
   ],
-  /* name, ml, price, per-day limit (0 = unlimited), sold */
+  // Offerings use the same shared "pooja item" shape as a temple's poojas (P helper above),
+  // with `dailyLimit` read as a PER-FESTIVAL-DAY limit and `sold` tracking cumulative bookings.
   offerings:[
-    ['Utsava Bali sponsorship','ഉത്സവബലി',2500,6,19],
-    ['Annadanam (100 devotees)','അന്നദാനം',5000,2,9],
-    ['Ezhunnallippu sponsorship','എഴുന്നള്ളിപ്പ്',7500,1,4],
-    ['Deepam (festival week)','ദീപം',100,0,212],
-    ['Kalasam','കലശം',300,0,64],
+    { ...P('F1016-O1','Utsava Bali sponsorship','ഉത്സവബലി','Sponsorship',2500,6,{live:true,purpose:'Sponsor the daily bali ritual — name announced at the ritual',startTime:'6:00 AM',endTime:'6:30 AM',minBookingTime:'Instant · live booking',deity:'Lord Vishnu'}), sold:19 },
+    { ...P('F1016-O2','Annadanam (100 devotees)','അന്നദാനം','Seva',5000,2,{purpose:'Sponsor a meal seva for 100 devotees on a chosen festival day',startTime:'12:30 PM',endTime:'2:00 PM',minBookingTime:'2 days ahead'}), sold:9 },
+    { ...P('F1016-O3','Ezhunnallippu sponsorship','എഴുന്നള്ളിപ്പ്','Sponsorship',7500,1,{bookingType:'Offline',purpose:'Sponsor the elephant procession for one evening',startTime:'7:00 PM',endTime:'8:30 PM',minBookingTime:'7 days ahead'}), sold:4 },
+    { ...P('F1016-O4','Deepam (festival week)','ദീപം','Vazhipadu',100,0,{live:true,purpose:'Lamp offering through the festival week',startTime:'5:30 PM',endTime:'7:00 PM',minBookingTime:'Instant · live booking'}), sold:212 },
+    { ...P('F1016-O5','Kalasam','കലശം','Vazhipadu',300,0,{purpose:'Sacred-pot ritual performed once during the festival',startTime:'6:00 AM',endTime:'6:45 AM'}), sold:64 },
   ],
   /* sponsor, package, amount, status, note */
   sponsors:[
@@ -75,22 +194,6 @@ export const festival = {
     ['Resurge India Foundation','Annadanam — all 6 days',60000,'Paid','INV-0428'],
     ['Ulliyeri Service Co-op Bank','Ezhunnallippu · day 1',35000,'Advance ₹15,000','Balance ₹20,000 due 1 Dec'],
     ['NRI Forum · Dubai chapter','Kathakali night',25000,'Pledged','Awaiting transfer'],
-  ],
-  /* troupe, programme, when, fee, advance, status */
-  artists:[
-    ['Kottur Gajamela','3 elephants + nadaswaram','3 Dec · 7:00 PM',85000,25000,'Agreement signed'],
-    ['Kalamandalam Anil & team','Thayambaka','4 Dec · 7:30 PM',15000,7500,'Advance paid'],
-    ['Sadanam Kathakali troupe','Kathakali','4 Dec · 9:30 PM',45000,15000,'Advance paid'],
-    ['Sreejith Marar','Sopana sangeetham','7 Dec · 6:30 PM',8000,0,'To confirm'],
-    ['Kurup team, Perambra','Kalamezhuthu Pattu','6 Dec · 8:00 PM',12000,0,'Awaiting confirmation'],
-  ],
-  /* head, category, amount, paid, note */
-  expenses:[
-    ['Pandal, stage & decoration','Infrastructure',210000,210000,'Paid in full'],
-    ['Artists & troupes','Programme',165000,47500,'Balance on festival day'],
-    ['Annadanam provisions','Seva',98000,40000,'Partly sponsored'],
-    ['Sound & lighting','Infrastructure',64000,20000,'Advance paid'],
-    ['Printing & publicity','Publicity',28000,28000,'Paid in full'],
   ],
   /* day sheet rows: offering, devotee, nakshatra, qty, amount */
   sheet:[
@@ -106,9 +209,14 @@ export const festival = {
    A person or team (priest, astrologer, performer) selling time-slot appointments,
    optionally also listing Special poojas. No daily chart, no 80G — reviews and slots matter. */
 export const provider = {
-  code:'SV-1042', name:'Prasad Nambeesan', ml:'പ്രസാദ് നമ്പീശൻ', kind:'Astrologer',
+  code:'S1001', name:'Prasad Nambeesan', ml:'പ്രസാദ് നമ്പീശൻ', kind:'Astrologer',
   place:'Koottur, Naduvannur, Kozhikode', exp:22, rating:4.8, reviews:63, languages:'Malayalam · English',
-  plan:'Service Pro · valid to 4 Oct 2026', travelKm:25, slotMins:30, hours:'1:00 PM – 5:00 PM',
+  travelKm:25, slotMins:30, hours:'1:00 PM – 5:00 PM', listingEnabled:true,
+  // MVP stage: TempleAddress does not collect payment for appointments or process any payout —
+  // the devotee pays the professional directly. What the professional pays FOR is the listing
+  // itself, via a subscription (LinkedIn-Premium style), which controls visibility and features.
+  subscription:{ plan:'Service Premium', price:2999, cycle:'per year', status:'Active', renews:'4 Oct 2026',
+    features:['Verified badge on your public page','Unlimited appointment slots','Enquiries inbox with quick replies','List Special poojas','Priority placement in search','Monthly performance summary'] },
   expertise:['Horoscope','Rashi','Swarna Prasnam','Devaprasnam','Thamboolaprashnam','Muhoortham'],
   week:[['Mon',true],['Tue',true],['Wed',true],['Thu',true],['Fri',true],['Sat',true],['Sun',false]],
   /* time, devotee, service, mode, phone, status */
@@ -161,12 +269,6 @@ export const provider = {
     ['Rajesh Iyer',5,'Knowledgeable','Deep knowledge of prasnam. Worth the wait for an appointment.','—'],
     ['Meera S',3,'—','Session started 20 minutes late, but the reading was good.','Needs reply'],
   ],
-  /* period, appointments, collected, paid on, UTR, status */
-  earnings:[
-    ['1–7 Sept',18,9400,'8 Sept','FDRLN26251000512','Paid'],
-    ['25–31 Aug',21,11150,'1 Sept','FDRLN26244000318','Paid'],
-    ['18–24 Aug',16,7800,'25 Aug','FDRLN26237000201','Paid'],
-  ],
 }
 
 export const gateways = {
@@ -181,3 +283,36 @@ export const analytics = {
   bookings:[['Mon',142],['Tue',118],['Wed',131],['Thu',97],['Fri',168],['Sat',214],['Sun',188]],
   channels:[{name:'Website',value:46},{name:'WhatsApp',value:31},{name:'Mobile app',value:18},{name:'QR board',value:5}],
 }
+
+/* ==================================================================
+   AGENT CHECKOUT — simplified business model (Sept 2026)
+   TempleAddress earns through exactly three things: Temple Subscription
+   Plans (Free/Basic/Premium), Sponsored Temple Plans (a sponsor pays a
+   temple's plan), and the one-time Mini Billing App. Agent commission is
+   a flat 10% of the base plan amount, Dealer commission a flat 5% — no
+   points, coins or referral rewards; both wallets are plain ₹.
+   ================================================================== */
+export const checkoutAgent = { id:'TA-AG-00124', name:'Agent (You)', dealerId:'TA-DE-0008', dealerName:'Kozhikode Partners Pvt Ltd' }
+export const checkoutCommission = { agentPct:10, dealerPct:5 }
+// Prospect / freshly-listed temples an agent can sell a plan or sponsorship to. A separate,
+// lighter-weight list from the full `temples[]` catalogue — these use their own TEM-xxx-#### code.
+export const checkoutTemples = [
+  { slug:'sree-mahadeva-temple-kkd', name:'Sree Mahadeva Temple', place:'Kozhikode', district:'Kerala', code:'TEM-KKD-1024', hue:'#7A5238', currentPlan:'Free', uuid:'8f4b2c19-72d3-4f91-9a10-3ca1918c0a77' },
+  { slug:'devi-temple-tsr', name:'Devi Temple', place:'Thrissur', district:'Kerala', code:'TEM-TSR-1032', hue:'#8A3A1F', currentPlan:'Free', uuid:'c3f0a2e4-51b6-4dd0-9a2f-77e1b6f4d8a2' },
+  { slug:'sree-bhagavathi-temple-mlp', name:'Sree Bhagavathi Temple', place:'Malappuram', district:'Kerala', code:'TEM-MLP-1041', hue:'#2F5F4E', currentPlan:'Basic', uuid:'1a9d6b3e-84f2-4c7a-b1e0-9f3c2d5a7e61' },
+  { slug:'sree-durga-temple-wnd', name:'Sree Durga Temple', place:'Wayanad', district:'Kerala', code:'TEM-WND-1058', hue:'#3F4E5C', currentPlan:'Free', uuid:'6d2e9c41-38a5-4b0e-8f61-2c9a1d4e7b30' },
+]
+export const checkoutPlans = {
+  basic:{ key:'basic', name:'Basic Plan', price:4000, cycle:'Annual Plan', icon:'Leaf', features:['Temple Listing','Basic Information','Photo Gallery','Standard Support'] },
+  premium:{ key:'premium', name:'Premium Plan', price:10000, cycle:'Annual Plan', badge:'Most Popular', icon:'Star', features:['All Basic Features','Priority Listing','DM Support','Priority Support'] },
+  billing:{ key:'billing', name:'Billing App', price:5000, cycle:'One Time', icon:'Monitor', features:['Offline Desktop App','Temple Billing Software','Member Management','One-time Payment'] },
+}
+export const onlineGateways = [
+  { key:'omniware', name:'Omniware', bank:'Federal Bank', note:'Trusted by millions. Secure & reliable banking gateway.' },
+  { key:'razorpay', name:'Razorpay', note:'Fast. Secure. Trusted by businesses across India.' },
+]
+export const manualMethods = [
+  { key:'upi', name:'UPI / QR', upiId:'templeaddress@oksbi' },
+  { key:'bank', name:'Bank Transfer', bank:'Federal Bank · TempleAddress Technologies Pvt Ltd', account:'XXXXXXXX7710', ifsc:'FDRL0001234' },
+  { key:'cheque', name:'Cheque', payee:'TempleAddress Technologies Pvt Ltd' },
+]

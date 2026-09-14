@@ -11,9 +11,9 @@ Start at `#/map` for the full route list. Everything here is mock data — there
 (the only exception is the agent-application status, kept in `sessionStorage` so the flow can be demoed end to end).
 
 ## Structure
-- `src/data.js` — mock data: `temples`, `specials`, `services`, `festival` (festival-committee vendor), `provider` (service-provider vendor), `gateways`, `analytics`
+- `src/data.js` — mock data: `temples`, `specials`, `services`, `festival` (festival-committee vendor), `provider` (service-provider vendor), `templeCharts`, listing-ID prefixes, `gateways`, `analytics`
 - `src/ui.jsx` — design system: brand mark/logo (`TempleMark`, `Logo`), `GoogleIcon`, `TrustBadges`, buttons, cards, `Table`, `Stat`, `Pill`, `Field`/`Input`/`Select`/`Toggle`, `Tabs`, `Steps`, `useToast`, `PublicShell`, `DashShell`, `Chatbot`
-- `src/pages/public.jsx` — devotee site: home, temples directory (advanced search), temple page (white-label toggle), claim, booking, receipt + 80G, donate, special poojas, festival, services, sponsor, **login (role- and auth-aware)**, WhatsApp
+- `src/pages/public.jsx` — devotee site: home, temples directory (advanced search), temple page (white-label toggle), claim, booking, receipt + 80G, donate, special poojas, dated festival events, detailed service profiles, sponsor, **login (role- and auth-aware)**, WhatsApp
 - `src/pages/account.jsx` — devotee account: editable profile (nakshatra, gothra, rashi), OTP-verified mobile/email change, Google-linked email locked, bookings and receipts, plus the **agent application** (KYC wizard, draft → review → approved / changes requested)
 - `src/pages/vendor.jsx` — **vendor type 1 · temple committee**: daily chart, poojas & prices, donations, payouts (3 gateway variants), settings (gateways, fee, 80G, domain, team, plan, ownership transfer), page editor, my data
 - `src/pages/vendorFestival.jsx` — **vendor type 2 · festival committee**: overview with countdown & budget, programme, offerings, day sheets, sponsors, artists & vendors, finance, festival page, settings
@@ -50,7 +50,7 @@ links redirect there.
 | | **Temple committee** `/vendor` | **Festival committee** `/festival-admin` | **Service provider** `/service-admin` |
 |---|---|---|---|
 | Sells | Daily vazhipadu, donations | Time-bound offerings & sponsorships | Time-slot appointments |
-| Core screen | Today's **pooja chart** (confirm & lock) | **Day sheet** per festival day (names read at the ritual) | **Appointment diary** (slot by slot) |
+| Core screen | Today's **pooja chart** (confirm & lock), booking details and previous chart history | **Day sheet** per festival day (names read at the ritual) | **Appointment diary** (slot by slot) |
 | Catalogue | Poojas & prices, daily limits | Offerings with a **per-festival-day** limit + sponsorship packages | Services with duration, mode (in person / phone / online / at home / at temple), travel radius |
 | Money in | Bookings + donations (80G) | Online offerings + committee-sold sponsorships | Appointments + optional special poojas |
 | Money out | — | **Artists & vendors** (fees, advances, balances) | — |
@@ -62,9 +62,13 @@ links redirect there.
 Notes on the two newer dashboards:
 - **Festival** — `festival` in `data.js` drives it: `programme` (day/event/time/kind/performer/status), `offerings`, `sponsors`, `artists`, `expenses`, `sheet`. Day tabs come from `festival.days`.
 - **Service provider** — `provider` in `data.js` drives it: `today`/`upcoming`/`past` appointments, `services`, `week` (working days), `specials`, `enquiries`, `feedback`, `earnings`. Special poojas are behind a toggle, since only some providers offer them.
+- Public service profiles include category, default photo and gallery, about/history/remarks, timings, live-looking slots, enquiries, bookable services/special poojas, ratings/reviews and share links. Profile revisions remain pending until staff approval while the approved page stays live.
+- Festival identity and descriptive content stay static; each programme event has its own date/time/status, and festival poojas are booked against a selected festival date with per-day availability.
 
 ## Business rules encoded
-- Payment modes per listing: **via TempleAddress** (Razorpay / PayU / Stripe, one or more enabled, one default), **own gateway** (Omniware — no payouts shown or generated), **bank account only** (manual NEFT payout).
+- Payment modes per temple listing: **Omniware via TempleAddress** (weekly payout), **own gateway** (Razorpay / PayU settles directly, so no TempleAddress payout), or **bank account only** (manual NEFT payout).
+- Listing IDs are assigned from independent MasterData sequences and remain stable everywhere: Temple `T1001+`, Service `S1001+`, Festival `F1001+`, Event `E1001+`, and Holy place `H1001+`.
+- Temple chart IDs include their listing ID and date (for example `CH-T1028-260913`). Dashboard, chart history and payout views use the same record, so bookings, donations, total and paid/pending settlement are traceable.
 - Manual payout flow (accountant → Payouts): batch → export Excel → pay in internet banking → import the same sheet with UTR/journal → mark paid → vendor notified. RazorpayX is a future connector; the Excel flow stays as fallback.
 - 80G: temples/trusts only. A donation with a PAN generates an 80G receipt alongside the booking receipt. Festival committees and service providers do not issue 80G.
 - Convenience fee: listing override → platform default → 0, capped by a Portal-admin global ceiling. Sponsorships recorded manually by a committee carry no platform fee.
