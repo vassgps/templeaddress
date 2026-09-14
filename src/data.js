@@ -283,3 +283,36 @@ export const analytics = {
   bookings:[['Mon',142],['Tue',118],['Wed',131],['Thu',97],['Fri',168],['Sat',214],['Sun',188]],
   channels:[{name:'Website',value:46},{name:'WhatsApp',value:31},{name:'Mobile app',value:18},{name:'QR board',value:5}],
 }
+
+/* ==================================================================
+   AGENT CHECKOUT — simplified business model (Sept 2026)
+   TempleAddress earns through exactly three things: Temple Subscription
+   Plans (Free/Basic/Premium), Sponsored Temple Plans (a sponsor pays a
+   temple's plan), and the one-time Mini Billing App. Agent commission is
+   a flat 10% of the base plan amount, Dealer commission a flat 5% — no
+   points, coins or referral rewards; both wallets are plain ₹.
+   ================================================================== */
+export const checkoutAgent = { id:'TA-AG-00124', name:'Agent (You)', dealerId:'TA-DE-0008', dealerName:'Kozhikode Partners Pvt Ltd' }
+export const checkoutCommission = { agentPct:10, dealerPct:5 }
+// Prospect / freshly-listed temples an agent can sell a plan or sponsorship to. A separate,
+// lighter-weight list from the full `temples[]` catalogue — these use their own TEM-xxx-#### code.
+export const checkoutTemples = [
+  { slug:'sree-mahadeva-temple-kkd', name:'Sree Mahadeva Temple', place:'Kozhikode', district:'Kerala', code:'TEM-KKD-1024', hue:'#7A5238', currentPlan:'Free', uuid:'8f4b2c19-72d3-4f91-9a10-3ca1918c0a77' },
+  { slug:'devi-temple-tsr', name:'Devi Temple', place:'Thrissur', district:'Kerala', code:'TEM-TSR-1032', hue:'#8A3A1F', currentPlan:'Free', uuid:'c3f0a2e4-51b6-4dd0-9a2f-77e1b6f4d8a2' },
+  { slug:'sree-bhagavathi-temple-mlp', name:'Sree Bhagavathi Temple', place:'Malappuram', district:'Kerala', code:'TEM-MLP-1041', hue:'#2F5F4E', currentPlan:'Basic', uuid:'1a9d6b3e-84f2-4c7a-b1e0-9f3c2d5a7e61' },
+  { slug:'sree-durga-temple-wnd', name:'Sree Durga Temple', place:'Wayanad', district:'Kerala', code:'TEM-WND-1058', hue:'#3F4E5C', currentPlan:'Free', uuid:'6d2e9c41-38a5-4b0e-8f61-2c9a1d4e7b30' },
+]
+export const checkoutPlans = {
+  basic:{ key:'basic', name:'Basic Plan', price:4000, cycle:'Annual Plan', icon:'Leaf', features:['Temple Listing','Basic Information','Photo Gallery','Standard Support'] },
+  premium:{ key:'premium', name:'Premium Plan', price:10000, cycle:'Annual Plan', badge:'Most Popular', icon:'Star', features:['All Basic Features','Priority Listing','DM Support','Priority Support'] },
+  billing:{ key:'billing', name:'Billing App', price:5000, cycle:'One Time', icon:'Monitor', features:['Offline Desktop App','Temple Billing Software','Member Management','One-time Payment'] },
+}
+export const onlineGateways = [
+  { key:'omniware', name:'Omniware', bank:'Federal Bank', note:'Trusted by millions. Secure & reliable banking gateway.' },
+  { key:'razorpay', name:'Razorpay', note:'Fast. Secure. Trusted by businesses across India.' },
+]
+export const manualMethods = [
+  { key:'upi', name:'UPI / QR', upiId:'templeaddress@oksbi' },
+  { key:'bank', name:'Bank Transfer', bank:'Federal Bank · TempleAddress Technologies Pvt Ltd', account:'XXXXXXXX7710', ifsc:'FDRL0001234' },
+  { key:'cheque', name:'Cheque', payee:'TempleAddress Technologies Pvt Ltd' },
+]

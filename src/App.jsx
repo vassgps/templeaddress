@@ -7,6 +7,7 @@ import * as SP from './pages/vendorService'
 import * as X from './pages/partners'
 import * as A from './pages/account'
 import { StaffDirectory } from './pages/staffDirectory'
+import { AgentCheckout } from './pages/checkout'
 import { PublicShell } from './ui'
 
 const routes = [
@@ -16,7 +17,7 @@ const routes = [
   ['/vendor', V.VToday], ['/vendor/bookings', V.VBookings], ['/vendor/charts', V.VCharts], ['/vendor/charts/:chartId', V.VChartDetail], ['/vendor/poojas', V.VPoojas], ['/vendor/donations', V.VDonations], ['/vendor/payouts', V.VPayouts], ['/vendor/settings', V.VSettings], ['/vendor/page', V.VPage], ['/vendor/data', V.VData],
   ['/festival-admin', FC.FOverview], ['/festival-admin/programme', FC.FProgramme], ['/festival-admin/offerings', FC.FOfferings], ['/festival-admin/bookings', FC.FBookings], ['/festival-admin/sponsors', FC.FSponsors], ['/festival-admin/profile', FC.FPage], ['/festival-admin/settings', FC.FSettings],
   ['/service-admin', SP.SSummary], ['/service-admin/appointments', SP.SAppointments], ['/service-admin/services', SP.SServices], ['/service-admin/enquiries', SP.SEnquiries], ['/service-admin/reviews', SP.SReviews], ['/service-admin/profile', SP.SProfile],
-  ['/agent', X.AWallet], ['/agent/profile', X.AProfile], ['/agent/listings', X.AListings], ['/agent/listings/:slug/edit', X.AEditListing], ['/agent/share', X.AShare], ['/agent/submit', X.ASubmit], ['/agent/submissions', X.ASubmissions], ['/dealer', X.DDash], ['/dealer/wallet', X.DWallet], ['/dealer/profile', X.DProfile], ['/dealer/agents', X.DAgents],
+  ['/agent', X.AWallet], ['/agent/profile', X.AProfile], ['/agent/listings', X.AListings], ['/agent/listings/:slug/edit', X.AEditListing], ['/agent/share', X.AShare], ['/agent/submit', X.ASubmit], ['/agent/submissions', X.ASubmissions], ['/agent/checkout', AgentCheckout], ['/dealer', X.DDash], ['/dealer/wallet', X.DWallet], ['/dealer/profile', X.DProfile], ['/dealer/agents', X.DAgents],
   ['/staff', X.SQueues], ['/staff/analytics', X.SAnalytics], ['/staff/listing', X.SListing], ['/staff/kyc', X.SKyc], ['/staff/charts', X.SCharts], ['/staff/special', X.SSpecial], ['/staff/support', X.SSupport], ['/staff/review/:queue/:id', X.SReviewDetail], ['/staff/payouts', X.SPayouts], ['/staff/withdrawals', X.SWithdrawals], ['/staff/ownership', X.SOwnership], ['/staff/sponsors', X.SSponsors], ['/staff/backup', X.SBackup], ['/staff/wallet-credit', X.SWalletCredit], ['/staff/config', X.SConfig], ['/staff/tables', X.STables],
   // Administrator-only pages (Portal admin's own section — see the 3-way split in partners.jsx)
   ['/staff/staff-management', X.SStaffManagement], ['/staff/masterdata', X.SMasterData], ['/staff/gateway-config', X.SGatewayConfig], ['/staff/plans', X.SPlansAdmin], ['/staff/branding', X.SBranding], ['/staff/notifications', X.SNotifications], ['/staff/audit-logs', X.SAuditLogs],
@@ -26,7 +27,7 @@ const groups = [
   ['Vendor · Temple committee', ['/vendor','/vendor/bookings','/vendor/charts','/vendor/charts/CH-T1028-260912','/vendor/poojas','/vendor/donations','/vendor/payouts','/vendor/payouts?mode=own','/vendor/payouts?mode=manual','/vendor/settings','/vendor/settings?tab=6','/vendor/page','/vendor/data']],
   ['Vendor · Festival committee', ['/festival-admin','/festival-admin/programme','/festival-admin/offerings','/festival-admin/bookings','/festival-admin/sponsors','/festival-admin/profile','/festival-admin/settings']],
   ['Vendor · Service provider', ['/service-admin','/service-admin/appointments','/service-admin/services','/service-admin/enquiries','/service-admin/reviews','/service-admin/profile']],
-  ['Agent & dealer', ['/agent','/agent/profile','/agent/listings','/agent/listings/vengamala-bhagavathi-temple/edit','/agent/share','/agent/submit','/agent/submissions','/dealer','/dealer/wallet','/dealer/profile','/dealer/agents']],
+  ['Agent & dealer', ['/agent','/agent/profile','/agent/listings','/agent/listings/vengamala-bhagavathi-temple/edit','/agent/share','/agent/submit','/agent/submissions','/agent/checkout','/dealer','/dealer/wallet','/dealer/profile','/dealer/agents']],
   ['Staff · Moderator', ['/staff?role=moderator','/staff/listing?role=moderator','/staff/kyc?role=moderator','/staff/charts?role=moderator','/staff/special?role=moderator','/staff/ownership?role=moderator','/staff/support?role=moderator']],
   ['Staff · Accountant', ['/staff?role=accountant','/staff/payouts?role=accountant','/staff/withdrawals?role=accountant','/staff/sponsors?role=accountant']],
   ['Staff · Portal admin — Administrator', ['/staff?role=admin','/staff/analytics?role=admin','/staff/staff-management?role=admin','/staff/tables?role=admin','/staff/masterdata?role=admin','/staff/gateway-config?role=admin','/staff/config?role=admin','/staff/plans?role=admin','/staff/backup?role=admin','/staff/branding?role=admin','/staff/notifications?role=admin','/staff/audit-logs?role=admin','/staff/wallet-credit?role=admin']],

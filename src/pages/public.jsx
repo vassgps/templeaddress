@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star, Gift, BadgeCheck, ArrowRight, Download, CalendarDays, Users, QrCode, Lock, Check, Sparkles, Landmark, Flame, PartyPopper, Music, HeartHandshake, Receipt as ReceiptIcon, RefreshCcw, SlidersHorizontal, Globe2, Smartphone, Zap, Handshake } from 'lucide-react'
-import { temples, bySlug, specials, services, festival as festivalData } from '../data'
+import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star, Gift, BadgeCheck, ArrowRight, Download, CalendarDays, Users, QrCode, Lock, Check, Sparkles, Landmark, Flame, PartyPopper, Music, HeartHandshake, Receipt as ReceiptIcon, RefreshCcw, SlidersHorizontal, Globe2, Smartphone, Zap, Handshake, Plus, X, PenLine } from 'lucide-react'
+import { temples, bySlug, specials, services, festival as festivalData, onlineGateways, manualMethods } from '../data'
 import { PublicShell, Photo, Pill, Field, Input, Select, Toggle, Table, Section, Steps, Money, useToast, GoogleIcon, TempleMark } from '../ui'
+import { FileField } from './checkout'
 
 const Wrap = ({ children, className='' }) => <div className={`mx-auto max-w-6xl px-4 ${className}`}>{children}</div>
 
@@ -395,11 +396,66 @@ export function ServiceDetail() {
 }
 
 /* ---------------- SPONSOR ---------------- */
+const sponsorPacks = [['Supporter',15000,'Temple Pro plan · logo on page & receipts · GST invoice',false],['Patron',30000,'+ QR board & standee printed with your logo · festival micro-site',true],['Benefactor',50000,'+ up to 3 temples · sponsor page on templeaddress.com',false]]
+const sponsorPayIcon = { omniware:ShieldCheck, razorpay:Zap, upi:QrCode, bank:Landmark, cheque:PenLine }
 export function Sponsor() {
-  return (<PublicShell><Wrap className="py-10"><div className="grid gap-10 lg:grid-cols-[1fr_400px]"><div><h1 className="text-4xl font-semibold">Sponsor a temple's online presence</h1><p className="mt-3 max-w-xl text-brown-600">Your name on the temple's page, on every receipt sent to devotees, and on the QR board at the temple. The temple gets its website, WhatsApp bookings and paperless receipts at no cost.</p>
-      <div className="mt-8 grid gap-4 md:grid-cols-3">{[['Supporter','15,000','Temple Pro plan · logo on page & receipts · GST invoice',false],['Patron','30,000','+ QR board & standee printed with your logo · festival micro-site',true],['Benefactor','50,000','+ up to 3 temples · sponsor page on templeaddress.com',false]].map(([n,p,d,hi])=><div key={n} className={`card p-5 ${hi?'ring-2 ring-saffron-500':''}`}>{hi&&<Pill tone="warn">Most chosen</Pill>}<h3 className="mt-2 text-lg font-semibold">{n}</h3><div className="text-2xl font-bold">₹{p}<span className="text-sm font-normal text-brown-500">/yr</span></div><p className="mt-2 text-sm text-brown-600">{d}</p></div>)}</div></div>
-      <aside className="card space-y-4 p-6"><h3 className="text-lg font-semibold">Sponsor now</h3><Field label="Temple" hint="Search by name or code"><Input defaultValue="Kottur Sree Mahavishnu Temple"/></Field><Field label="Pack"><Select options={['Supporter ₹15,000','Patron ₹30,000','Benefactor ₹50,000']} defaultValue="Patron ₹30,000"/></Field><Field label="Sponsor name (as shown)"><Input defaultValue="Resurge India Foundation"/></Field><Field label="GSTIN"><Input defaultValue="32AAACR1234A1Z5"/></Field><Field label="Logo"><Input type="file"/></Field>
-        <div className="divide-y divide-brown-100 rounded-xl bg-brown-50 px-4"><Row l="Patron pack" v={30000}/><Row l="GST 18%" v={5400}/><Row l="Total" v={35400} big/></div><Link to="/receipt" className="btn-p w-full">Pay online</Link><p className="text-xs text-brown-500">Prefer bank transfer or cheque? <a className="text-saffron-600">Request an invoice</a> — staff activate on receipt.</p></aside></div></Wrap></PublicShell>)
+  const [toast,el] = useToast()
+  const [agentCode,setAgentCode] = useState('')
+  const [query,setQuery] = useState('')
+  const [selected,setSelected] = useState([{ temple: bySlug('kottur-sree-mahavishnu-temple'), pack:'Patron' }])
+  const [payMethod,setPayMethod] = useState('razorpay')
+  const results = query.trim() ? temples.filter(t=>!selected.some(s=>s.temple.slug===t.slug) && (t.name.toLowerCase().includes(query.toLowerCase())||t.code.toLowerCase().includes(query.toLowerCase())||t.place.toLowerCase().includes(query.toLowerCase()))).slice(0,6) : []
+  const addTemple = t => { setSelected(s=>[...s,{ temple:t, pack:'Patron' }]); setQuery('') }
+  const removeTemple = slug => setSelected(s=>s.filter(x=>x.temple.slug!==slug))
+  const setPack = (slug,pack) => setSelected(s=>s.map(x=>x.temple.slug===slug?{...x,pack}:x))
+  const packPrice = Object.fromEntries(sponsorPacks.map(([n,p])=>[n,p]))
+  const subtotal = selected.reduce((s,x)=>s+packPrice[x.pack],0)
+  const gst = Math.round(subtotal*0.18)
+  const total = subtotal+gst
+  const isOnline = payMethod==='razorpay' || payMethod==='omniware'
+  const submitManual = () => toast(`Submitted via ${manualMethods.find(m=>m.key===payMethod)?.name} — our accounts team will verify and activate within 24 hours`)
+
+  return (<PublicShell><Wrap className="py-10">{el}<div className="grid gap-10 lg:grid-cols-[1fr_440px]"><div><h1 className="text-4xl font-semibold">Sponsor a temple's online presence</h1><p className="mt-3 max-w-xl text-brown-600">Your name on the temple's page, on every receipt sent to devotees, and on the QR board at the temple. The temple gets its website, WhatsApp bookings and paperless receipts at no cost.</p>
+      <div className="mt-8 grid gap-4 md:grid-cols-3">{sponsorPacks.map(([n,p,d,hi])=><div key={n} className={`card p-5 ${hi?'ring-2 ring-saffron-500':''}`}>{hi&&<Pill tone="warn">Most chosen</Pill>}<h3 className="mt-2 text-lg font-semibold">{n}</h3><div className="text-2xl font-bold">₹{p.toLocaleString('en-IN')}<span className="text-sm font-normal text-brown-500">/yr</span></div><p className="mt-2 text-sm text-brown-600">{d}</p></div>)}</div></div>
+
+      <aside className="card space-y-4 p-6">
+        <h3 className="text-lg font-semibold">Sponsor now</h3>
+
+        <Field label="Agent code (optional)" hint="Referred by a TempleAddress agent? Enter their code to credit the sale."><Input placeholder="e.g. TA-AG-00124" value={agentCode} onChange={e=>setAgentCode(e.target.value)}/></Field>
+
+        <div>
+          <span className="label">Temples to sponsor</span>
+          <div className="relative"><Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-brown-400"/>
+            <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search by name, place or code…" className="input !pl-9"/>
+            {results.length>0 && <div className="absolute z-10 mt-1 w-full space-y-1 rounded-xl border border-brown-100 bg-white p-1.5 shadow-soft">{results.map(t=>
+              <button key={t.slug} onClick={()=>addTemple(t)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-brown-50"><Photo hue={t.hue} className="h-8 w-11 shrink-0 rounded-md"/><span className="min-w-0 flex-1"><b className="block truncate">{t.name}</b><span className="block text-xs text-brown-500">{t.place}, {t.district} · {t.code}</span></span><Plus size={14} className="shrink-0 text-saffron-600"/></button>)}</div>}
+          </div>
+          <div className="mt-2 space-y-2">{selected.map(s=><div key={s.temple.slug} className="flex items-center gap-2 rounded-xl border border-brown-100 p-2.5">
+            <Photo hue={s.temple.hue} className="h-10 w-14 shrink-0 rounded-lg"/>
+            <div className="min-w-0 flex-1"><b className="block truncate text-sm">{s.temple.name}</b><div className="text-xs text-brown-500">{s.temple.place}, {s.temple.district}</div></div>
+            <div className="w-28 shrink-0"><Select options={sponsorPacks.map(([n])=>n)} value={s.pack} onChange={e=>setPack(s.temple.slug,e.target.value)}/></div>
+            {selected.length>1 && <button onClick={()=>removeTemple(s.temple.slug)} className="shrink-0 rounded-lg bg-red-50 p-1.5 text-red-600 hover:bg-red-100"><X size={14}/></button>}
+          </div>)}</div>
+        </div>
+
+        <Field label="Sponsor name (as shown)"><Input defaultValue="Resurge India Foundation"/></Field>
+        <Field label="GSTIN"><Input defaultValue="32AAACR1234A1Z5"/></Field>
+        <div className="grid grid-cols-2 gap-3"><FileField label="Logo"/><FileField label="Banner" hint="Horizontal, for QR board"/></div>
+
+        <div>
+          <span className="label">Payment method</span>
+          <div className="grid grid-cols-3 gap-2">{[...onlineGateways,...manualMethods].map(m=>{ const Icon=sponsorPayIcon[m.key]; return (
+            <button key={m.key} onClick={()=>setPayMethod(m.key)} className={`flex flex-col items-center gap-1 rounded-xl border-2 p-2.5 text-center text-xs font-semibold transition ${payMethod===m.key?'border-saffron-500 bg-saffron-50':'border-brown-100 bg-white hover:border-brown-200'}`}><Icon size={17} className={payMethod===m.key?'text-saffron-600':'text-brown-400'}/>{m.name}</button>
+          )})}</div>
+        </div>
+
+        <div className="divide-y divide-brown-100 rounded-xl bg-brown-50 px-4"><Row l={`Subtotal (${selected.length} temple${selected.length!==1?'s':''})`} v={subtotal}/><Row l="GST 18%" v={gst}/><Row l="Total" v={total} big/></div>
+
+        {isOnline
+          ? <Link to="/receipt" className="btn-p w-full">Pay Securely via {onlineGateways.find(g=>g.key===payMethod)?.name}</Link>
+          : <button onClick={submitManual} className="btn-p w-full">Submit for Verification</button>}
+        <p className="text-xs text-brown-500">{isOnline ? 'Secure payment · sponsorship activates instantly on success.' : `Pay via ${manualMethods.find(m=>m.key===payMethod)?.name} and our accounts team will verify & activate within 24 hours.`}</p>
+      </aside></div></Wrap></PublicShell>)
 }
 
 /* ---------------- LOGIN / ACCOUNT ---------------- */
