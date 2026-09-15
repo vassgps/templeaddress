@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Leaf, Star, Monitor, Check, X, Plus, Trash2, Upload, MapPin, UserRound, Building2, Landmark, QrCode, Lock, ShieldCheck, Download, Copy, ArrowRight, Search, Info, PenLine, Sparkles } from 'lucide-react'
-import { checkoutTemples, checkoutPlans, checkoutAgent, checkoutCommission, onlineGateways, manualMethods } from '../data'
+import { checkoutTemples, checkoutPlans, checkoutPartner, checkoutCommission, onlineGateways, manualMethods } from '../data'
 import { PublicShell, Photo, Pill, Field, Input, Select, Toggle, Steps, useToast } from '../ui'
 
 /* =============================================================================
-   AGENT CHECKOUT — simplified business model prototype (Sept 2026)
+   PARTNER CHECKOUT — simplified business model prototype (Sept 2026)
    Listing → Plan → Sponsor → Payment → Review, all client-side mock state, no API.
    Reuses the existing design system (PublicShell, card/btn/Pill/Field styles, brown ·
    saffron · gold palette) rather than a bespoke look — see Steps for the stepper.
@@ -39,8 +39,8 @@ const TempleSummaryCard = ({ temple, planPill }) => (
     {planPill && <Pill tone="ok">{planPill}</Pill>}
   </div>
     <div className="mt-4 flex flex-wrap gap-6 border-t border-brown-100 pt-4 text-sm">
-      <div className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-full bg-brown-100 text-brown-600"><UserRound size={16}/></span><div><div className="text-xs text-brown-500">Assigned Agent</div><b>{checkoutAgent.id}</b></div></div>
-      <div className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-full bg-brown-100 text-brown-600"><Building2 size={16}/></span><div><div className="text-xs text-brown-500">Dealer / Partner</div><b>{checkoutAgent.dealerId}</b></div></div>
+      <div className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-full bg-brown-100 text-brown-600"><UserRound size={16}/></span><div><div className="text-xs text-brown-500">Assigned Partner</div><b>{checkoutPartner.id}</b></div></div>
+      <div className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-full bg-brown-100 text-brown-600"><Building2 size={16}/></span><div><div className="text-xs text-brown-500">Dealer / Partner</div><b>{checkoutPartner.dealerId}</b></div></div>
     </div></div>
 )
 
@@ -55,16 +55,16 @@ const OrderSummary = ({ lines, total, ctaLabel, onCta, ctaDisabled, note }) => (
 )
 
 const CommissionPreview = ({ base, status }) => {
-  const agent = round(base*checkoutCommission.agentPct/100), dealer = round(base*checkoutCommission.dealerPct/100)
+  const partner = round(base*checkoutCommission.partnerPct/100), dealer = round(base*checkoutCommission.dealerPct/100)
   const available = status==='approved'
   return <div className="grid gap-3 sm:grid-cols-2">
-    <div className={`rounded-xl p-4 ${available?'bg-emerald-50':'bg-saffron-50'}`}><div className="text-xs font-semibold uppercase text-brown-500">Agent commission · {checkoutCommission.agentPct}%</div><div className={`mt-1 text-2xl font-bold ${available?'text-emerald-700':'text-saffron-700'}`}>{rs(agent)}</div><Pill tone={available?'ok':'warn'}>{available?'Available':'Pending'}</Pill></div>
+    <div className={`rounded-xl p-4 ${available?'bg-emerald-50':'bg-saffron-50'}`}><div className="text-xs font-semibold uppercase text-brown-500">Partner commission · {checkoutCommission.partnerPct}%</div><div className={`mt-1 text-2xl font-bold ${available?'text-emerald-700':'text-saffron-700'}`}>{rs(partner)}</div><Pill tone={available?'ok':'warn'}>{available?'Available':'Pending'}</Pill></div>
     <div className={`rounded-xl p-4 ${available?'bg-emerald-50':'bg-saffron-50'}`}><div className="text-xs font-semibold uppercase text-brown-500">Dealer commission · {checkoutCommission.dealerPct}%</div><div className={`mt-1 text-2xl font-bold ${available?'text-emerald-700':'text-saffron-700'}`}>{rs(dealer)}</div><Pill tone={available?'ok':'warn'}>{available?'Available':'Pending'}</Pill></div>
   </div>
 }
 
 /* ================================================================= */
-export function AgentCheckout() {
+export function PartnerCheckout() {
   const nav = useNavigate(); const [toast,el] = useToast()
   const [step,setStep] = useState(0)
   const [temple,setTemple] = useState(null)
@@ -90,7 +90,7 @@ export function AgentCheckout() {
   const addSponsoredTemple = t => { setSponsored(sp=>[...sp,{temple:t, product:'basic'}]); setAddingTemple(false); toast(`${t.name} added to sponsorship`) }
   const removeSponsoredTemple = i => setSponsored(sp=>sp.filter((_,j)=>j!==i))
   const submitPayment = () => { setStatus(isOnline?'received':'submitted'); setStep(4); toast(isOnline?'Payment received — verification pending':'Payment submitted for verification') }
-  const simulate = s => { setStatus(s); toast(s==='approved'?'Approved by accounts team — subscription active':'Marked rejected — the agent can retry payment') }
+  const simulate = s => { setStatus(s); toast(s==='approved'?'Approved by accounts team — subscription active':'Marked rejected — the partner can retry payment') }
 
   return (<PublicShell hideChatbot><Wrap className="py-6 sm:py-8">{el}
     <div className="mb-1 flex items-center gap-2"><Sparkles size={18} className="text-saffron-500"/><h1 className="text-2xl font-semibold sm:text-3xl">Temple Checkout</h1></div>
@@ -122,13 +122,13 @@ export function AgentCheckout() {
       {!billingOnly && <div className="card mt-5 flex flex-wrap items-center justify-between gap-3 p-4"><div><b>Enable Sponsorship</b><p className="text-sm text-brown-500">Allow a sponsor to support this listing.</p></div>
         <div className="flex items-center gap-3"><Toggle defaultChecked={sponsorship} onChange={setSponsorship}/><span className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-800"><Info size={13}/>Sponsors help temples grow. You can enable this later.</span></div></div>}
 
-      <div className="card mt-5 p-4"><span className="label">Agent ID</span><div className="flex items-center justify-between rounded-xl bg-brown-50 px-3 py-2.5"><b>{checkoutAgent.id}</b><span className="flex items-center gap-1 text-xs text-brown-500"><Lock size={12}/>Auto-filled (Agent is logged in)</span></div></div>
+      <div className="card mt-5 p-4"><span className="label">Partner ID</span><div className="flex items-center justify-between rounded-xl bg-brown-50 px-3 py-2.5"><b>{checkoutPartner.id}</b><span className="flex items-center gap-1 text-xs text-brown-500"><Lock size={12}/>Auto-filled (Partner is logged in)</span></div></div>
 
       <div className="mt-6"><h3 className="text-lg font-semibold">Choose Payment Method</h3><p className="text-sm text-brown-500">Select your preferred payment option.</p>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">{[['omniware','Omniware',Landmark],['razorpay','Razorpay',Landmark],['upi','UPI / QR',QrCode],['bank','Bank Transfer',Landmark],['cheque','Cheque',PenLine]].map(([k,l,Icon])=>
           <button key={k} onClick={()=>setPayMethod(k)} className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center text-sm font-semibold transition ${payMethod===k?'border-saffron-500 bg-saffron-50':'border-brown-100 bg-white hover:border-brown-200'}`}><Icon size={22} className={payMethod===k?'text-saffron-600':'text-brown-400'}/>{l}</button>)}</div></div>
 
-      <div className="mt-5 flex items-start gap-2 rounded-xl bg-gold-300/25 p-3 text-sm text-brown-700"><Info size={16} className="mt-0.5 shrink-0 text-saffron-600"/>Agent/Dealer commission will be processed internally after payment approval. You don't need to pay any additional amount for commission.</div>
+      <div className="mt-5 flex items-start gap-2 rounded-xl bg-gold-300/25 p-3 text-sm text-brown-700"><Info size={16} className="mt-0.5 shrink-0 text-saffron-600"/>Partner/Dealer commission will be processed internally after payment approval. You don't need to pay any additional amount for commission.</div>
 
       <div className="mt-5"><OrderSummary lines={[[checkoutPlans[product].name+(checkoutPlans[product].cycle==='One Time'?'':' (Annual)'), checkoutPlans[product].price],['GST (18%)', round(checkoutPlans[product].price*0.18)],['Convenience Fee', 0]]} total={round(checkoutPlans[product].price*1.18)} ctaLabel="Continue to Payment" onCta={continueFromPlan}/></div>
     </>}
@@ -250,12 +250,12 @@ export function AgentCheckout() {
           <div className="mt-4 flex flex-wrap gap-2"><button onClick={()=>toast('Download started (prototype — no real file)')} className="btn-p"><Download size={16}/>Download Billing App</button><button onClick={()=>toast('Activation details copied')} className="btn-g"><Copy size={16}/>Copy Activation Details</button></div>
           <p className="mt-2 text-xs text-brown-500">Use the download link and activation details above to activate the offline software on your temple computer. One system per licence.</p></div>
         <div className="card mt-5 p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-semibold">Order Summary</h3><div className="mt-1 text-sm text-brown-600">Billing App (One-Time) {rs(subtotal)} + GST {rs(gst)}</div><div className="text-lg font-bold">Total Paid {rs(total)}</div></div><Pill tone="ok"><Check size={12}/>Payment Successful</Pill></div></div>
-        <button onClick={()=>nav('/agent')} className="btn-p mt-5 w-full !py-3">Go to Dashboard <ArrowRight size={16}/></button>
+        <button onClick={()=>nav('/partner')} className="btn-p mt-5 w-full !py-3">Go to Dashboard <ArrowRight size={16}/></button>
       </> : <>
         <div className={`flex items-center gap-3 rounded-2xl p-4 ${status==='approved'?'bg-emerald-50 text-emerald-800':status==='rejected'?'bg-red-50 text-red-800':'bg-saffron-50 text-saffron-800'}`}>
           <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-white ${status==='approved'?'bg-emerald-500':status==='rejected'?'bg-red-500':'bg-saffron-500'}`}>{status==='approved'?<Check size={20}/>:status==='rejected'?<X size={20}/>:<Info size={20}/>}</span>
           <div><b>{status==='received'?'Payment Received':status==='submitted'?'Payment Submitted':status==='approved'?'Subscription Active':'Payment Rejected'}</b>
-            <p className="text-sm">{status==='approved'?`${sponsorship?'Sponsorship':checkoutPlans[product].name} is now active for ${sponsorship?sponsored.length+' temple(s)':temple.name}.`:status==='rejected'?'The payment could not be verified. The agent can retry from the Payment step.':'Verification Pending — our accounts team will confirm shortly.'}</p></div></div>
+            <p className="text-sm">{status==='approved'?`${sponsorship?'Sponsorship':checkoutPlans[product].name} is now active for ${sponsorship?sponsored.length+' temple(s)':temple.name}.`:status==='rejected'?'The payment could not be verified. The partner can retry from the Payment step.':'Verification Pending — our accounts team will confirm shortly.'}</p></div></div>
 
         <div className="mt-5"><TempleSummaryCard temple={temple} planPill={checkoutPlans[product].name}/></div>
         <div className="card mt-5 p-5"><h3 className="font-semibold">Commission</h3><p className="text-sm text-brown-500">Calculated on the base amount of {rs(subtotal)}, released only after payment approval.</p><div className="mt-3"><CommissionPreview base={subtotal} status={status}/></div></div>
@@ -267,7 +267,7 @@ export function AgentCheckout() {
         {(status==='received'||status==='submitted') && <div className="card mt-5 p-5"><h3 className="font-semibold">Prototype: simulate accounts-team action</h3><p className="text-sm text-brown-500">In production, staff approve this from Accountant view. Here you can simulate either outcome.</p>
           <div className="mt-3 flex flex-wrap gap-2"><button onClick={()=>simulate('approved')} className="btn-p"><Check size={16}/>Simulate Approval</button><button onClick={()=>simulate('rejected')} className="btn-g">Simulate Rejection</button></div></div>}
         {status==='rejected' && <button onClick={()=>setStep(3)} className="btn-p mt-5 w-full !py-3">Retry Payment</button>}
-        {status==='approved' && <button onClick={()=>nav('/agent')} className="btn-p mt-5 w-full !py-3">Go to Dashboard <ArrowRight size={16}/></button>}
+        {status==='approved' && <button onClick={()=>nav('/partner')} className="btn-p mt-5 w-full !py-3">Go to Dashboard <ArrowRight size={16}/></button>}
       </>}
     </>}
   </Wrap></PublicShell>)

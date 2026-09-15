@@ -100,8 +100,8 @@ export function PublicShell({ children, tenant, hideChatbot=false }) {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-4">
         <div><Logo light/><p className="mt-2 text-sm text-brown-200">A digital address for every temple. Zero platform fee on vazhipadu and donations.</p>
           <div className="mt-4 flex flex-wrap gap-2 text-[11px]"><span className="pill glass text-brown-50"><ShieldCheck size={12} className="text-emerald-300"/>Committee verified</span><span className="pill glass text-brown-50"><Lock size={12} className="text-gold-400"/>Secure payments</span></div></div>
-        <div className="text-sm"><b className="text-white">For temples</b><br/><Link to="/claim/kottur-sree-mahavishnu-temple">Claim your temple page</Link><br/><Link to="/agent/submit">Add a temple</Link><br/><Link to="/vendor">Temple login</Link><br/><Link to="/sponsor">Sponsor a temple</Link></div>
-        <div className="text-sm"><b className="text-white">Partners</b><br/><Link to="/agent">Become an agent</Link><br/><Link to="/dealer">Dealer portal</Link><br/><Link to="/staff">Staff panel</Link></div>
+        <div className="text-sm"><b className="text-white">For temples</b><br/><Link to="/claim/kottur-sree-mahavishnu-temple">Claim your temple page</Link><br/><Link to="/partner/submit">Add a temple</Link><br/><Link to="/vendor">Temple login</Link><br/><Link to="/sponsor">Sponsor a temple</Link></div>
+        <div className="text-sm"><b className="text-white">Partners</b><br/><Link to="/partner">Become a partner</Link><br/><Link to="/dealer">Dealer portal</Link><br/><Link to="/staff">Staff panel</Link></div>
         <div className="text-sm"><b className="text-white">Devotee support</b><br/><Link to="/whatsapp">WhatsApp +91 9495 041196</Link><br/>help@templeaddress.com<br/>English · മലയാളം</div>
       </div>
       <div className="border-t border-white/10"><div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5">
