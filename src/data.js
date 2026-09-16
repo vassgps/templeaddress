@@ -285,16 +285,16 @@ export const analytics = {
 }
 
 /* ==================================================================
-   AGENT CHECKOUT — simplified business model (Sept 2026)
+   PARTNER CHECKOUT — simplified business model (Sept 2026)
    TempleAddress earns through exactly three things: Temple Subscription
    Plans (Free/Basic/Premium), Sponsored Temple Plans (a sponsor pays a
-   temple's plan), and the one-time Mini Billing App. Agent commission is
+   temple's plan), and the one-time Mini Billing App. Partner commission is
    a flat 10% of the base plan amount, Dealer commission a flat 5% — no
    points, coins or referral rewards; both wallets are plain ₹.
    ================================================================== */
-export const checkoutAgent = { id:'TA-AG-00124', name:'Agent (You)', dealerId:'TA-DE-0008', dealerName:'Kozhikode Partners Pvt Ltd' }
-export const checkoutCommission = { agentPct:10, dealerPct:5 }
-// Prospect / freshly-listed temples an agent can sell a plan or sponsorship to. A separate,
+export const checkoutPartner = { id:'TA-AG-00124', name:'Partner (You)', dealerId:'TA-DE-0008', dealerName:'Kozhikode Partners Pvt Ltd' }
+export const checkoutCommission = { partnerPct:10, dealerPct:5 }
+// Prospect / freshly-listed temples a partner can sell a plan or sponsorship to. A separate,
 // lighter-weight list from the full `temples[]` catalogue — these use their own TEM-xxx-#### code.
 export const checkoutTemples = [
   { slug:'sree-mahadeva-temple-kkd', name:'Sree Mahadeva Temple', place:'Kozhikode', district:'Kerala', code:'TEM-KKD-1024', hue:'#7A5238', currentPlan:'Free', uuid:'8f4b2c19-72d3-4f91-9a10-3ca1918c0a77' },

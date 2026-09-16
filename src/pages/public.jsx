@@ -148,7 +148,7 @@ export function Home() {
         <div className="relative grid gap-6 p-8 md:grid-cols-[1fr_auto] md:items-center md:p-12">
           <svg className="pointer-events-none absolute -right-10 -top-10 h-64 w-64 opacity-[.07]" viewBox="0 0 100 100">{[48,36,24].map(r=><circle key={r} cx="50" cy="50" r={r} fill="none" stroke="#fff" strokeWidth=".8"/>)}</svg>
           <div className="relative"><h2 className="font-display text-3xl font-semibold">Is your temple listed?</h2><p className="mt-2 max-w-xl text-brown-100">Get a free verified page, a QR board and WhatsApp bookings. No computer or printer needed — the daily chart arrives on the secretary's phone at 8 PM.</p></div>
-          <div className="relative flex flex-col gap-2 sm:flex-row"><Link to="/agent/submit" className="btn-p">Add a temple</Link><Link to="/claim/kottur-sree-mahavishnu-temple" className="btn bg-white/15 text-white hover:bg-white/25">Claim an existing page</Link></div>
+          <div className="relative flex flex-col gap-2 sm:flex-row"><Link to="/partner/submit" className="btn-p">Add a temple</Link><Link to="/claim/kottur-sree-mahavishnu-temple" className="btn bg-white/15 text-white hover:bg-white/25">Claim an existing page</Link></div>
         </div>
       </section>
     </Wrap>
@@ -260,7 +260,7 @@ export function Claim() {
     <Steps items={['Who you are','Verify','Documents','Review']} at={step}/>
     <div className="card p-6">
       {step===0 && <div className="space-y-4"><Field label="Your role"><Select options={['Secretary','President','Treasurer','Devaswom officer','Melshanthi','Trustee']}/></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Your name"><Input placeholder="Nishanth K"/></Field><Field label="WhatsApp number"><Input placeholder="+91"/></Field></div><Field label="Email (for the daily chart)"><Input placeholder="office@…"/></Field>
-        <div className="rounded-xl bg-brown-50 p-3 text-sm">This page is currently managed by <b>agent Jinsha (JIN-4471)</b>. On approval, ownership transfers to you; the agent keeps referral credit.</div><button onClick={()=>setStep(1)} className="btn-p w-full">Continue</button></div>}
+        <div className="rounded-xl bg-brown-50 p-3 text-sm">This page is currently managed by <b>partner Jinsha (JIN-4471)</b>. On approval, ownership transfers to you; the partner keeps referral credit.</div><button onClick={()=>setStep(1)} className="btn-p w-full">Continue</button></div>}
       {step===1 && <div className="space-y-4"><p className="text-sm">We'll call the temple's listed number <b>+91 90… 422</b> and send an OTP to your WhatsApp.</p><Field label="OTP"><Input placeholder="••••••"/></Field><button onClick={()=>setStep(2)} className="btn-p w-full">Verify</button></div>}
       {step===2 && <div className="space-y-4"><Field label="Committee resolution / authorisation letter" hint="PDF or photo"><Input type="file"/></Field><Field label="Trust / committee PAN"><Input placeholder="AAATK…"/></Field><Field label="ID proof of the claimant"><Input type="file"/></Field><button onClick={()=>setStep(3)} className="btn-p w-full">Submit</button></div>}
       {step===3 && <div className="space-y-3 text-center"><ShieldCheck size={40} className="mx-auto text-emerald-600"/><h3 className="text-xl font-semibold">Claim submitted</h3><p className="text-sm text-brown-500">Staff verify within 2 working days. You'll get a WhatsApp invite to the temple dashboard where you can edit the page, poojas, prices and payment settings — and transfer ownership later if needed.</p><Link to="/vendor" className="btn-g">Preview the temple dashboard</Link></div>}
@@ -400,7 +400,7 @@ const sponsorPacks = [['Supporter',15000,'Temple Pro plan · logo on page & rece
 const sponsorPayIcon = { omniware:ShieldCheck, razorpay:Zap, upi:QrCode, bank:Landmark, cheque:PenLine }
 export function Sponsor() {
   const [toast,el] = useToast()
-  const [agentCode,setAgentCode] = useState('')
+  const [partnerCode,setPartnerCode] = useState('')
   const [query,setQuery] = useState('')
   const [selected,setSelected] = useState([{ temple: bySlug('kottur-sree-mahavishnu-temple'), pack:'Patron' }])
   const [payMethod,setPayMethod] = useState('razorpay')
@@ -421,7 +421,7 @@ export function Sponsor() {
       <aside className="card space-y-4 p-6">
         <h3 className="text-lg font-semibold">Sponsor now</h3>
 
-        <Field label="Agent code (optional)" hint="Referred by a TempleAddress agent? Enter their code to credit the sale."><Input placeholder="e.g. TA-AG-00124" value={agentCode} onChange={e=>setAgentCode(e.target.value)}/></Field>
+        <Field label="Partner code (optional)" hint="Referred by a TempleAddress partner? Enter their code to credit the sale."><Input placeholder="e.g. TA-AG-00124" value={partnerCode} onChange={e=>setPartnerCode(e.target.value)}/></Field>
 
         <div>
           <span className="label">Temples to sponsor</span>
@@ -459,7 +459,7 @@ export function Sponsor() {
 }
 
 /* ---------------- LOGIN / ACCOUNT ---------------- */
-const roleTabs = [['user','Devotee',Users],['agent','Agent',BadgeCheck],['dealer','Dealer',ShieldCheck],['vendor','Vendor',Landmark],['staff','Staff',Lock]]
+const roleTabs = [['user','Devotee',Users],['partner','Partner',BadgeCheck],['dealer','Dealer',ShieldCheck],['vendor','Vendor',Landmark],['staff','Staff',Lock]]
 const vendorTypes = ['Temple','Festival committee','Service provider']
 const staffRoles = [['moderator','Moderator','Reviews listings, KYC, charts & special poojas'],['accountant','Accountant','Payout and wallet NEFT batches · view received payments'],['admin','Portal admin','Configuration, approvals, high-level settings']]
 export function Login() {
@@ -471,7 +471,7 @@ export function Login() {
   const needsPassword = role==='dealer' || role==='staff'
   const pickRole = k => { setRole(k); setOtp(false) }
   const vendorHome = { 'Temple':'/vendor', 'Festival committee':'/festival-admin', 'Service provider':'/service-admin' }
-  const dest = () => role==='user' ? '/account' : role==='agent' ? '/agent' : role==='vendor' ? vendorHome[vendorType] : role==='dealer' ? '/dealer' : `/staff?role=${staffRole}`
+  const dest = () => role==='user' ? '/account' : role==='partner' ? '/partner' : role==='vendor' ? vendorHome[vendorType] : role==='dealer' ? '/dealer' : `/staff?role=${staffRole}`
   return (<PublicShell><Wrap className="max-w-lg py-12">
     <div className="text-center"><TempleMark size={44} className="mx-auto"/><h1 className="mt-3 text-3xl font-semibold">Login</h1><p className="mx-auto mt-1 max-w-sm text-sm text-brown-500">Just browsing or submitting a temple's basic details? You don't need an account — <Link to="/temples" className="font-semibold text-saffron-600 underline">continue as guest</Link>.</p></div>
 
@@ -502,9 +502,9 @@ export function Login() {
 
       <p className="mt-4 text-center text-xs text-brown-500">
         {role==='user' && 'New devotees are created automatically on first login.'}
-        {role==='agent' && <>Not an agent yet? <Link to="/agent/submit" className="font-semibold text-saffron-600">Apply to become one</Link>.</>}
+        {role==='partner' && <>Not a partner yet? <Link to="/partner/submit" className="font-semibold text-saffron-600">Apply to become one</Link>.</>}
         {role==='vendor' && <>Managing a temple already? <Link to="/claim/kottur-sree-mahavishnu-temple" className="font-semibold text-saffron-600">Claim your page</Link> first.</>}
-        {role==='dealer' && 'Dealer accounts are created by TempleAddress staff after agent-network approval.'}
+        {role==='dealer' && 'Dealer accounts are created by TempleAddress staff after partner-network approval.'}
         {role==='staff' && 'Staff accounts are provisioned by the Portal admin and can be disabled instantly.'}
       </p>
     </div>
@@ -527,5 +527,5 @@ export function WhatsApp() {
       <M me>KMV</M><M>🙏 <b>Kottur Sree Mahavishnu Temple</b><br/>Choose language / ഭാഷ<Q>English</Q><Q>മലയാളം</Q></M><M me>English</M><M>What would you like to do?<Q>1 · Book a pooja</Q><Q>2 · Donate</Q><Q>3 · Timings & info</Q></M><M me>1</M>
       <M>Poojas at Kottur:<br/>1. Ganapathi Homam — ₹250<br/>2. Ilaneer Abhishekam — ₹50<br/>3. Naalikeram Udaykkal — ₹10<br/>4. Pushpanjali — ₹20<br/><i>Reply with the number</i></M><M me>1</M><M>Ganapathi Homam ₹250. Which date?<Q>Tomorrow · Sat 13 Sept</Q><Q>Sun 14 Sept</Q></M><M me>Tomorrow</M><M>For whom? Last time: <b>Anand · Rohini</b><Q>Same</Q><Q>Someone else</Q></M><M me>Same</M>
       <M>Ganapathi Homam · 13 Sept · Anand (Rohini)<br/>Amount ₹250 (temple receives ₹250)<Link to="/receipt"><Q>Pay ₹250 →</Q></Link></M><M>✅ Booked. Receipt TA-2609-004812<br/>📄 Receipt PDF attached<br/>Your pooja is on tomorrow's chart. Reply <b>CANCEL</b> before 8 PM tonight.</M></div></div>
-    <div className="mx-auto mt-6 max-w-sm rounded-2xl bg-white p-4 text-sm shadow-ring"><b>Temple side (same bot)</b><div className="text-brown-600">8:00 PM: “Chart for 13 Sept ready — 14 bookings, ₹3,420. Reply <b>OK</b> to confirm.” → PDF sent. Agents: <b>BALANCE</b>, <b>WITHDRAW</b>.</div></div></Wrap></PublicShell>)
+    <div className="mx-auto mt-6 max-w-sm rounded-2xl bg-white p-4 text-sm shadow-ring"><b>Temple side (same bot)</b><div className="text-brown-600">8:00 PM: “Chart for 13 Sept ready — 14 bookings, ₹3,420. Reply <b>OK</b> to confirm.” → PDF sent. Partners: <b>BALANCE</b>, <b>WITHDRAW</b>.</div></div></Wrap></PublicShell>)
 }
