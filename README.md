@@ -7,19 +7,31 @@ Clickable prototype for the development agency. All routes are hash-linked; open
     npm run dev        # http://localhost:5173
     npm run build      # single-file dist/index.html
 
-Start at `#/map` for the full route list. Everything here is mock data — there is no backend; state resets on reload
-(the only exception is the partner-application status, kept in `sessionStorage` as `ta-partner-status` so the flow can be demoed end to end).
+Start at `#/map` for the full route list. Everything here is mock data — there is no backend. A few demo flows use
+browser storage, including partner status, listing drafts and Mini ERP activation details.
 
 ## Structure
 - `src/data.js` — mock data: `temples`, `specials`, `services`, `festival` (festival-committee vendor), `provider` (service-provider vendor), `templeCharts`, listing-ID prefixes, `gateways`, `analytics`
 - `src/ui.jsx` — design system: brand mark/logo (`TempleMark`, `Logo`), `GoogleIcon`, `TrustBadges`, buttons, cards, `Table`, `Stat`, `Pill`, `Field`/`Input`/`Select`/`Toggle`, `Tabs`, `Steps`, `useToast`, `PublicShell`, `DashShell`, `Chatbot`
 - `src/pages/public.jsx` — devotee site: home, temples directory (advanced search), temple page (white-label toggle), claim, booking, receipt + 80G, donate, special poojas, dated festival events, detailed service profiles, sponsor, **login (role- and auth-aware)**, WhatsApp
-- `src/pages/account.jsx` — devotee account: editable profile (nakshatra, gothra, rashi), OTP-verified mobile/email change, Google-linked email locked, bookings and receipts, plus the **partner application** (KYC wizard, draft → review → approved / changes requested)
+- `src/pages/account.jsx` — devotee account: profile, bookings, receipts, partner application, user-created listings and Mini ERP activation details
 - `src/pages/vendor.jsx` — **vendor type 1 · temple committee**: daily chart, poojas & prices, donations, payouts (3 gateway variants), settings (gateways, fee, 80G, domain, team, plan, ownership transfer), page editor, my data
 - `src/pages/vendorFestival.jsx` — **vendor type 2 · festival committee**: overview with countdown & budget, programme, offerings, day sheets, sponsors, artists & vendors, finance, festival page, settings
 - `src/pages/vendorService.jsx` — **vendor type 3 · service provider**: appointment diary, services, availability & slots, enquiries, special poojas, reviews, earnings, profile & page
 - `src/pages/partners.jsx` — field partner (wallet, profile & KYC card, listings, edit listing, share, submit, submissions), dealer (territory, profile & agreement, partners), staff (moderator / accountant / portal admin)
 - `src/App.jsx` — routes + site map
+
+## Latest prototype decisions
+
+- **Listing entry:** the landing page offers **Submit a temple** (a public, no-login contact form) and **Create a profile** (OTP/Google login, then the full listing editor). Claiming is available only from a specific listing detail page.
+- **Listing editor:** devotees and partners can create, view and edit listings. Each section saves as a draft; staff can view all drafts. Photos and KYC documents are optional.
+- **Generic listings:** the public form uses “Name of listing” and supports temples, kavus, holy places, Jain temples, Buddhist pagodas, festivals and services. Church and mosque categories are excluded.
+- **Temple data:** Main deity 1, optional Main deity 2 and other deities use the shared Admin master-data list.
+- **Contacts:** store both official public phone/email (shown publicly and used for booking notifications) and private committee-member phone/email (staff verification/support only).
+- **Sponsorship checkout:** supports self sponsorship and third-party sponsorship. Third-party branding fields are optional. Packages include Supporter, Patron, Benefactor and the one-time **Temple Billing mini ERP** product.
+- **Payments and tax:** gateway payments complete automatically; UPI, bank transfer and cheque require transaction details and staff verification. Manual payments receive only a provisional receipt until verified. Sponsorship sales issue tax invoices, never 80G receipts.
+- **Mini ERP fulfilment:** after payment, the payer can see the temple code, activation UUID, download link and activation steps. Normal plans show that activation starts after invoice/payment confirmation.
+- **Partner dashboard:** the separate “sell a product” option is removed; commercial sales are handled through sponsorship checkout. The “Become a Partner” dashboard card is removed, while the footer link remains.
 
 ## User roles & auth (prototype)
 Chosen on the `/login` page, which adapts its form per role:
