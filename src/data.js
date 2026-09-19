@@ -9,6 +9,16 @@
 // itself is only picked up in the temple/festival's NEXT chart for settlement — it never
 // re-opens or edits a chart that has already been locked.
 export const poojaCategories = ['Homam','Abhishekam','Archana','Pushpanjali','Seva','Neivedyam','Vazhipadu','Sponsorship','Festival ritual']
+export const deityMasterData = [
+  {name:'Lord Vishnu',ml:'വിഷ്ണു',active:true},
+  {name:'Lord Shiva',ml:'ശിവൻ',active:true},
+  {name:'Bhagavathi',ml:'ഭഗവതി',active:true},
+  {name:'Lord Ganesh',ml:'ഗണപതി',active:true},
+  {name:'Lord Krishna',ml:'കൃഷ്ണൻ',active:true},
+  {name:'Sastha (Ayyappan)',ml:'ശാസ്താവ്',active:true},
+  {name:'Naga',ml:'നാഗം',active:true},
+  {name:'Subrahmanya',ml:'സുബ്രഹ്മണ്യൻ',active:true},
+]
 export const bookingTypeOptions = ['Online','Offline','Online & Offline']
 const P = (code,name,ml,category,price,dailyLimit,opts={}) => ({
   code, name, ml, category, price, dailyLimit,
