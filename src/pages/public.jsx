@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star, Gift, BadgeCheck, ArrowRight, Download, CalendarDays, Users, QrCode, Lock, Check, Sparkles, Landmark, Flame, PartyPopper, Music, HeartHandshake, Receipt as ReceiptIcon, RefreshCcw, SlidersHorizontal, Globe2, Smartphone, Zap, Handshake, Plus, X, PenLine } from 'lucide-react'
-import { temples, bySlug, specials, services, festival as festivalData, onlineGateways, manualMethods } from '../data'
+import { temples, bySlug, specials, services, festival as festivalData, checkoutPlans, onlineGateways, manualMethods } from '../data'
 import { PublicShell, Photo, Pill, Field, Input, Select, Toggle, Table, Section, Steps, Money, useToast, GoogleIcon, TempleMark } from '../ui'
 import { FileField } from './checkout'
 
@@ -148,7 +149,7 @@ export function Home() {
         <div className="relative grid gap-6 p-8 md:grid-cols-[1fr_auto] md:items-center md:p-12">
           <svg className="pointer-events-none absolute -right-10 -top-10 h-64 w-64 opacity-[.07]" viewBox="0 0 100 100">{[48,36,24].map(r=><circle key={r} cx="50" cy="50" r={r} fill="none" stroke="#fff" strokeWidth=".8"/>)}</svg>
           <div className="relative"><h2 className="font-display text-3xl font-semibold">Is your temple listed?</h2><p className="mt-2 max-w-xl text-brown-100">Get a free verified page, a QR board and WhatsApp bookings. No computer or printer needed — the daily chart arrives on the secretary's phone at 8 PM.</p></div>
-          <div className="relative flex flex-col gap-2 sm:flex-row"><Link to="/partner/submit" className="btn-p">Add a temple</Link><Link to="/claim/kottur-sree-mahavishnu-temple" className="btn bg-white/15 text-white hover:bg-white/25">Claim an existing page</Link></div>
+          <div className="relative flex flex-col gap-2 sm:flex-row"><Link to="/submit-temple" className="btn-p">Submit a temple</Link><Link to="/login?next=/account/listings/new&intent=create-profile" className="btn bg-white/15 text-white hover:bg-white/25">Create a Profile</Link></div>
         </div>
       </section>
     </Wrap>
@@ -251,6 +252,25 @@ export function TemplePage() {
   </Wrap></PublicShell>)
 }
 const Info = ({ h, p }) => <div><h3 className="font-semibold">{h}</h3><p className="mt-1 text-sm text-brown-700">{p}</p></div>
+
+/* ---------------- PUBLIC TEMPLE SUBMISSION ---------------- */
+export function SubmitTemple() {
+  const [submitted,setSubmitted] = useState(false)
+  const [form,setForm] = useState({listingName:'',type:'Hindu temple',location:'',address:'',listingContact:'',contactPerson:'',submitterName:'',submitterContact:''})
+  const [error,setError] = useState('')
+  const set = (key,value) => { setForm(f=>({...f,[key]:value})); setError('') }
+  const submit = e => {
+    e.preventDefault()
+    if(!form.listingName.trim()||!form.location.trim()||!form.address.trim()||!form.listingContact.trim()||!form.contactPerson.trim()) { setError('Please complete the listing name, location, address and contact details.'); return }
+    setSubmitted(true)
+  }
+  if(submitted) return (<PublicShell><Wrap className="max-w-2xl py-12"><div className="card p-8 text-center"><Check size={42} className="mx-auto text-emerald-600"/><Pill tone="ok">Submission received</Pill><h1 className="mt-3 text-3xl font-semibold">Thank you for submitting this listing</h1><p className="mt-2 text-brown-500">Our team will review the basic information and contact the organisation if clarification is needed. No account was created.</p><div className="mt-5 flex flex-wrap justify-center gap-2"><Link to="/" className="btn-p">Back to home</Link><button onClick={()=>{setSubmitted(false);setForm({listingName:'',type:'Hindu temple',location:'',address:'',listingContact:'',contactPerson:'',submitterName:'',submitterContact:''})}} className="btn-g">Submit another listing</button></div></div></Wrap></PublicShell>)
+  return (<PublicShell><Wrap className="max-w-2xl py-10"><div><Pill tone="gold">No login required</Pill><h1 className="mt-3 text-3xl font-semibold">Submit a listing</h1><p className="mt-2 text-brown-500">Share basic details for a temple, holy place, festival or service. TempleAddress staff will review them before creating a public listing.</p></div>
+    <form onSubmit={submit} className="card mt-6 space-y-4 p-5 sm:p-7"><div className="grid gap-4 sm:grid-cols-2"><Field label="Name of Listing"><Input value={form.listingName} onChange={e=>set('listingName',e.target.value)} placeholder="Temple, festival, holy place or service name"/></Field><Field label="Type / category"><Select value={form.type} onChange={e=>set('type',e.target.value)} options={['Hindu temple','Kavu','Holy place','Jain temple','Buddhist pagoda','Sacred grove','Festival','Service provider','Special pooja','Other']}/></Field><Field label="Location"><Input value={form.location} onChange={e=>set('location',e.target.value)} placeholder="Town, district or landmark"/></Field><Field label="Contact number"><Input type="tel" value={form.listingContact} onChange={e=>set('listingContact',e.target.value)} placeholder="+91"/></Field><Field label="Address" className="sm:col-span-2"><textarea className="input" rows={3} value={form.address} onChange={e=>set('address',e.target.value)} placeholder="Full postal address"/></Field><Field label="Contact person"><Input value={form.contactPerson} onChange={e=>set('contactPerson',e.target.value)} placeholder="Secretary, trustee, organiser or representative"/></Field><FileField label="Photo (optional)" hint="JPG or PNG · clear front or event image" accept=".jpg,.jpeg,.png"/></div>
+      <div className="rounded-2xl bg-brown-50 p-4"><h2 className="font-semibold">About you <span className="text-xs font-normal text-brown-500">(optional)</span></h2><div className="mt-3 grid gap-4 sm:grid-cols-2"><Field label="Your name (optional)"><Input value={form.submitterName} onChange={e=>set('submitterName',e.target.value)}/></Field><Field label="Your contact number (optional)"><Input type="tel" value={form.submitterContact} onChange={e=>set('submitterContact',e.target.value)} placeholder="+91"/></Field></div></div>
+      {error&&<p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}<button className="btn-p w-full">Send listing details</button><p className="text-center text-xs text-brown-500">This does not claim an existing page or grant editing access.</p></form>
+  </Wrap></PublicShell>)
+}
 
 /* ---------------- CLAIM OWNERSHIP ---------------- */
 export function Claim() {
@@ -396,14 +416,31 @@ export function ServiceDetail() {
 }
 
 /* ---------------- SPONSOR ---------------- */
-const sponsorPacks = [['Supporter',15000,'Temple Pro plan · logo on page & receipts · GST invoice',false],['Patron',30000,'+ QR board & standee printed with your logo · festival micro-site',true],['Benefactor',50000,'+ up to 3 temples · sponsor page on templeaddress.com',false]]
-const sponsorPayIcon = { omniware:ShieldCheck, razorpay:Zap, upi:QrCode, bank:Landmark, cheque:PenLine }
+const sponsorPacks = [
+  ['Supporter',15000,'Temple Pro plan · logo on page & receipts · GST invoice',false,'yr'],
+  ['Patron',30000,'+ QR board & standee printed with your logo · festival micro-site',true,'yr'],
+  ['Benefactor',50000,'+ up to 3 temples · sponsor page on templeaddress.com',false,'yr'],
+  ['Temple Billing mini ERP',checkoutPlans.billing.price,'Offline billing, receipts and member management for the temple',false,'one time'],
+]
+const sponsorPartners = { 'TA-AG-00124':'Jinsha', 'JIN-4471':'Jinsha' }
+const sponsorGateways = [...onlineGateways.map(g=>g.key==='omniware'?{...g,name:'Omniware / Federal Bank'}:g),{key:'stripe',name:'Stripe',note:'Secure international card payment.'}]
+const sponsorPayIcon = { omniware:ShieldCheck, razorpay:Zap, stripe:Globe2, upi:QrCode, bank:Landmark, cheque:PenLine }
+const templeAddressTax = {gstin:'32AACCT1234B1Z9',pan:'AACCT1234B',state:'Kerala',stateCode:'32',address:'Kozhikode, Kerala – 673001'}
+const billingActivationKey='ta-billing-activations-v1'
+const readBillingActivations=()=>{try{return JSON.parse(localStorage.getItem(billingActivationKey)||'[]')}catch{return []}}
+const saveBillingActivations=records=>localStorage.setItem(billingActivationKey,JSON.stringify(records))
 export function Sponsor() {
   const [toast,el] = useToast()
+  const [sponsorType,setSponsorType] = useState('self')
   const [partnerCode,setPartnerCode] = useState('')
+  const [partnerValidation,setPartnerValidation] = useState(null)
   const [query,setQuery] = useState('')
   const [selected,setSelected] = useState([{ temple: bySlug('kottur-sree-mahavishnu-temple'), pack:'Patron' }])
   const [payMethod,setPayMethod] = useState('razorpay')
+  const [sponsorDetails,setSponsorDetails] = useState({name:'',gstin:'',adsText:''})
+  const [manualPayment,setManualPayment] = useState({date:'',transactionNo:'',amount:'',bankName:'',chequeNo:'',payerName:'',proof:''})
+  const [paymentError,setPaymentError] = useState('')
+  const [paymentResult,setPaymentResult] = useState(null)
   const results = query.trim() ? temples.filter(t=>!selected.some(s=>s.temple.slug===t.slug) && (t.name.toLowerCase().includes(query.toLowerCase())||t.code.toLowerCase().includes(query.toLowerCase())||t.place.toLowerCase().includes(query.toLowerCase()))).slice(0,6) : []
   const addTemple = t => { setSelected(s=>[...s,{ temple:t, pack:'Patron' }]); setQuery('') }
   const removeTemple = slug => setSelected(s=>s.filter(x=>x.temple.slug!==slug))
@@ -412,16 +449,73 @@ export function Sponsor() {
   const subtotal = selected.reduce((s,x)=>s+packPrice[x.pack],0)
   const gst = Math.round(subtotal*0.18)
   const total = subtotal+gst
-  const isOnline = payMethod==='razorpay' || payMethod==='omniware'
-  const submitManual = () => toast(`Submitted via ${manualMethods.find(m=>m.key===payMethod)?.name} — our accounts team will verify and activate within 24 hours`)
+  const isOnline = sponsorGateways.some(g=>g.key===payMethod)
+  const validatePartner = () => {
+    const code = partnerCode.trim().toUpperCase()
+    if(!code) { setPartnerValidation(null); return }
+    const name = sponsorPartners[code]
+    setPartnerValidation(name ? { valid:true, name, code } : { valid:false })
+  }
+  const updateManual = (key,value) => { setManualPayment(p=>({...p,[key]:value})); setPaymentError('') }
+  const paymentReady = () => {
+    if(partnerCode.trim()&&!partnerValidation?.valid) { setPaymentError('Validate the partner code, or remove it before continuing.'); return false }
+    if(sponsorType==='third-party'&&!sponsorDetails.name.trim()) { setPaymentError('Enter the sponsor name for the tax invoice.'); return false }
+    return true
+  }
+  const completePayment = ({status,reference,documentNo,method}) => {
+    const activations=selected.filter(item=>item.pack==='Temple Billing mini ERP').map(item=>({temple:item.temple.name,templeCode:item.temple.code,activationUuid:globalThis.crypto?.randomUUID?.()||`TA-${Date.now()}-${item.temple.code}`,status:status==='paid'?'Active':'Pending payment verification',createdAt:new Date().toISOString()}))
+    if(activations.length){const existing=readBillingActivations();saveBillingActivations([...existing.filter(old=>!activations.some(item=>item.activationUuid===old.activationUuid)),...activations])}
+    setPaymentResult({status,reference,documentNo,method,activations})
+  }
+  const payByGateway = () => {
+    if(!paymentReady()) return
+    const stamp=Date.now().toString().slice(-8)
+    completePayment({status:'paid',reference:`PAY-${stamp}`,documentNo:`TA/26-27/INV/${stamp}`,method:sponsorGateways.find(g=>g.key===payMethod)?.name})
+  }
+  const submitManual = () => {
+    if(!paymentReady()) return
+    const amount=Number(manualPayment.amount||total)
+    const reference=payMethod==='cheque'?manualPayment.chequeNo:manualPayment.transactionNo
+    if(!manualPayment.date||!reference||!manualPayment.payerName.trim()||(payMethod!=='upi'&&!manualPayment.bankName.trim())) { setPaymentError(`Enter the payer, transaction date, ${payMethod==='cheque'?'cheque number':'transaction / UTR number'}${payMethod==='upi'?'.':' and bank name.'}`); return }
+    if(amount!==total) { setPaymentError(`Full payment of ₹${total.toLocaleString('en-IN')} is required.`); return }
+    const stamp=Date.now().toString().slice(-8)
+    completePayment({status:'pending',reference,documentNo:`TA/26-27/ACK/${stamp}`,method:manualMethods.find(m=>m.key===payMethod)?.name})
+  }
 
-  return (<PublicShell><Wrap className="py-10">{el}<div className="grid gap-10 lg:grid-cols-[1fr_440px]"><div><h1 className="text-4xl font-semibold">Sponsor a temple's online presence</h1><p className="mt-3 max-w-xl text-brown-600">Your name on the temple's page, on every receipt sent to devotees, and on the QR board at the temple. The temple gets its website, WhatsApp bookings and paperless receipts at no cost.</p>
-      <div className="mt-8 grid gap-4 md:grid-cols-3">{sponsorPacks.map(([n,p,d,hi])=><div key={n} className={`card p-5 ${hi?'ring-2 ring-saffron-500':''}`}>{hi&&<Pill tone="warn">Most chosen</Pill>}<h3 className="mt-2 text-lg font-semibold">{n}</h3><div className="text-2xl font-bold">₹{p.toLocaleString('en-IN')}<span className="text-sm font-normal text-brown-500">/yr</span></div><p className="mt-2 text-sm text-brown-600">{d}</p></div>)}</div></div>
+  if(paymentResult) return (<PublicShell><Wrap className="max-w-4xl py-10">{el}<div className={`rounded-3xl p-6 sm:p-8 ${paymentResult.status==='paid'?'bg-emerald-50 text-emerald-900':'bg-saffron-50 text-saffron-900'}`}><div className="flex flex-wrap items-start justify-between gap-3"><div><Pill tone={paymentResult.status==='paid'?'ok':'warn'}>{paymentResult.status==='paid'?'Payment successful':'Staff verification pending'}</Pill><h1 className="mt-3 text-3xl font-semibold">{paymentResult.status==='paid'?'GST tax invoice issued':'Partial receipt issued'}</h1><p className="mt-2 text-sm">{paymentResult.status==='paid'?'The gateway confirmed full payment. Purchased plans are queued for activation immediately after invoice generation.':'Payment details were submitted. Staff verification is required before the final tax invoice, plan activation, or software download is released.'}</p></div><ShieldCheck size={40}/></div></div>
+    <div className="card mt-5 overflow-hidden"><div className="bg-brown-900 px-6 py-5 text-white"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="text-xs font-semibold uppercase tracking-[.2em] text-gold-300">{paymentResult.status==='paid'?'Tax invoice':'Provisional payment acknowledgement'}</div><h2 className="mt-1 text-2xl font-semibold">TempleAddress Technologies Pvt Ltd</h2><p className="text-sm text-brown-100">{templeAddressTax.address}</p></div><div className="text-right text-sm"><b className="text-gold-300">{paymentResult.documentNo}</b><div>Invoice date: {new Date().toLocaleDateString('en-IN')}</div><div>Payment ref: {paymentResult.reference}</div></div></div></div>
+      <div className="grid gap-5 border-b border-brown-100 p-6 sm:grid-cols-2"><div><div className="text-xs font-semibold uppercase text-brown-500">Supplier tax details</div><div className="mt-2 text-sm"><b>GSTIN: {templeAddressTax.gstin}</b><br/>PAN: {templeAddressTax.pan}<br/>State: {templeAddressTax.state} · Code {templeAddressTax.stateCode}<br/>Reverse charge: No</div></div><div><div className="text-xs font-semibold uppercase text-brown-500">Bill to</div><div className="mt-2 text-sm"><b>{sponsorType==='third-party'?sponsorDetails.name:`${selected[0]?.temple.name} Committee`}</b><br/>{sponsorDetails.gstin?<>GSTIN: {sponsorDetails.gstin}<br/></>:'Unregistered recipient'}Place of supply: Kerala (32)<br/>Payment: {paymentResult.method}</div></div></div>
+      <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-brown-50"><tr><th className="px-4 py-3 text-left">Description</th><th className="px-3 py-3 text-left">SAC</th><th className="px-3 py-3 text-right">Taxable ₹</th><th className="px-3 py-3 text-right">CGST 9%</th><th className="px-3 py-3 text-right">SGST 9%</th><th className="px-4 py-3 text-right">Total ₹</th></tr></thead><tbody>{selected.map(item=>{const base=packPrice[item.pack],tax=Math.round(base*.09);return <tr key={item.temple.slug} className="border-t border-brown-100"><td className="px-4 py-3"><b>{item.pack}</b><span className="block text-xs text-brown-500">{item.temple.name} · Temple code {item.temple.code}</span></td><td className="px-3 py-3">{item.pack==='Temple Billing mini ERP'?'997331':'998361'}</td><td className="px-3 py-3 text-right">{base.toLocaleString('en-IN')}</td><td className="px-3 py-3 text-right">{tax.toLocaleString('en-IN')}</td><td className="px-3 py-3 text-right">{tax.toLocaleString('en-IN')}</td><td className="px-4 py-3 text-right font-semibold">{(base+tax*2).toLocaleString('en-IN')}</td></tr>})}</tbody></table></div>
+      <div className="grid gap-5 border-t border-brown-100 p-6 sm:grid-cols-[1fr_300px]"><div className="text-xs text-brown-500"><b className="text-brown-800">Tax note</b><p className="mt-1">Amounts are taxable commercial sponsorship or software services. This document is digitally generated and does not require a signature.</p><p className="mt-2">Status: <b className={paymentResult.status==='paid'?'text-emerald-700':'text-saffron-700'}>{paymentResult.status==='paid'?'Paid in full · final invoice':'Reported payment · verification pending'}</b></p></div><div className="divide-y divide-brown-100 rounded-xl bg-brown-50 px-4"><Row l="Taxable value" v={subtotal}/><Row l="CGST 9%" v={Math.round(subtotal*.09)}/><Row l="SGST 9%" v={Math.round(subtotal*.09)}/><Row l={paymentResult.status==='paid'?'Invoice total':'Amount reported'} v={total} big/></div></div>
+    </div>
+    {selected.some(item=>item.pack!=='Temple Billing mini ERP')&&<div className="card mt-5 p-5"><div className="flex items-center gap-2"><ShieldCheck size={20} className="text-saffron-600"/><h2 className="text-lg font-semibold">Plan activation</h2></div><div className="mt-3 space-y-2">{selected.filter(item=>item.pack!=='Temple Billing mini ERP').map(item=><div key={item.temple.slug} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brown-50 p-3 text-sm"><span><b>{item.pack}</b> · {item.temple.name}<span className="block text-xs text-brown-500">Temple code: {item.temple.code}</span></span><Pill tone={paymentResult.status==='paid'?'info':'warn'}>{paymentResult.status==='paid'?'Activation queued':'Waiting for payment verification'}</Pill></div>)}</div><p className="mt-3 text-xs text-brown-500">{paymentResult.status==='paid'?'The selected plan will be activated shortly after this invoice is generated.':'Activation starts after staff verifies the payment and issues the final tax invoice.'}</p></div>}
+    {paymentResult.activations.map(record=><div key={record.activationUuid} className="card mt-5 overflow-hidden"><div className="bg-blue-50 p-5"><div className="flex flex-wrap items-center justify-between gap-2"><div><Pill tone="info">Temple Billing mini ERP</Pill><h2 className="mt-2 text-xl font-semibold">{record.temple}</h2></div><Pill tone={paymentResult.status==='paid'?'ok':'warn'}>{record.status}</Pill></div></div><div className="grid gap-5 p-5 md:grid-cols-2"><dl className="divide-y divide-brown-100 text-sm"><div className="flex justify-between gap-3 py-2"><dt className="text-brown-500">Temple code</dt><dd className="font-semibold">{record.templeCode}</dd></div><div className="py-2"><dt className="text-brown-500">Activation UUID</dt><dd className="mt-1 break-all font-mono text-xs font-semibold">{record.activationUuid}</dd></div><div className="flex justify-between gap-3 py-2"><dt className="text-brown-500">Licence</dt><dd className="font-semibold">One-time · 1 temple</dd></div></dl><div><b className="text-sm">Activation steps</b><ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-brown-600"><li>Download and install the Temple Billing app.</li><li>Enter the temple code shown here.</li><li>Paste the activation UUID.</li><li>Complete the first sync and create the billing operator.</li></ol></div></div><div className="flex flex-wrap gap-2 border-t border-brown-100 p-5">{paymentResult.status==='paid'?<a href="data:text/plain;charset=utf-8,TempleAddress%20Billing%20mini%20ERP%20installer%20prototype" download="TempleAddress-Billing-Setup.txt" className="btn-p"><Download size={16}/>Download Temple Billing</a>:<button disabled className="btn-p opacity-50"><Download size={16}/>Download after verification</button>}<button onClick={()=>navigator.clipboard?.writeText(`${record.templeCode} · ${record.activationUuid}`)} className="btn-g">Copy activation details</button></div></div>)}
+    <div className="mt-5 flex flex-wrap gap-2"><button onClick={()=>window.print()} className="btn-p"><Download size={16}/>{paymentResult.status==='paid'?'Print tax invoice':'Print partial receipt'}</button><button onClick={()=>setPaymentResult(null)} className="btn-g">Back to sponsorship</button></div>
+  </Wrap></PublicShell>)
+
+  return (<PublicShell><Wrap className="py-10">{el}<div className="grid gap-10 lg:grid-cols-[1fr_440px]"><div><h1 className="text-4xl font-semibold">Sponsor a temple's online presence</h1><p className="mt-3 max-w-xl text-brown-600">Fund a temple directly as its committee, or support it as a third-party sponsor with optional branding. The temple gets its website, WhatsApp bookings and paperless receipts.</p>
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{sponsorPacks.map(([n,p,d,hi,cycle])=><div key={n} className={`card p-5 ${hi?'ring-2 ring-saffron-500':''}`}>{hi&&<Pill tone="warn">Most chosen</Pill>}<h3 className="mt-2 text-lg font-semibold">{n}</h3><div className="text-2xl font-bold">₹{p.toLocaleString('en-IN')}<span className="text-sm font-normal text-brown-500">/{cycle}</span></div><p className="mt-2 text-sm text-brown-600">{d}</p></div>)}</div></div>
 
       <aside className="card space-y-4 p-6">
         <h3 className="text-lg font-semibold">Sponsor now</h3>
 
-        <Field label="Partner code (optional)" hint="Referred by a TempleAddress partner? Enter their code to credit the sale."><Input placeholder="e.g. TA-AG-00124" value={partnerCode} onChange={e=>setPartnerCode(e.target.value)}/></Field>
+        <fieldset>
+          <legend className="label">Sponsorship type</legend>
+          <div className="grid gap-2 sm:grid-cols-2">{[
+            ['self','Self sponsorship','Temple committee pays · no sponsor branding'],
+            ['third-party','Third-party sponsor','Sponsor identity and advertising options'],
+          ].map(([value,title,description])=><label key={value} className={`cursor-pointer rounded-xl border-2 p-3 transition ${sponsorType===value?'border-saffron-500 bg-saffron-50':'border-brown-100 bg-white hover:border-brown-200'}`}>
+            <span className="flex items-start gap-2"><input type="radio" name="sponsorType" value={value} checked={sponsorType===value} onChange={e=>setSponsorType(e.target.value)} className="mt-1 accent-orange-600"/><span><b className="block text-sm">{title}</b><span className="mt-0.5 block text-xs text-brown-500">{description}</span></span></span>
+          </label>)}</div>
+        </fieldset>
+
+        <div>
+          <span className="label">Partner code (optional)</span>
+          <div className="flex gap-2"><Input placeholder="e.g. TA-AG-00124" value={partnerCode} onChange={e=>{setPartnerCode(e.target.value.toUpperCase());setPartnerValidation(null)}} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();validatePartner()}}}/><button type="button" onClick={validatePartner} className="btn-g shrink-0">Validate</button></div>
+          {partnerValidation?.valid&&<p className="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-800"><Check size={14} className="mr-1 inline"/><b>Valid partner:</b> {partnerValidation.name} · {partnerValidation.code}</p>}
+          {partnerValidation&&!partnerValidation.valid&&<p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700"><X size={14} className="mr-1 inline"/><b>Invalid partner code.</b> Check the code and try again.</p>}
+          {!partnerValidation&&<p className="mt-1 text-xs text-brown-500">Referred by a TempleAddress partner? Validate their code to credit the sale.</p>}
+        </div>
 
         <div>
           <span className="label">Temples to sponsor</span>
@@ -438,23 +532,40 @@ export function Sponsor() {
           </div>)}</div>
         </div>
 
-        <Field label="Sponsor name (as shown)"><Input defaultValue="Resurge India Foundation"/></Field>
-        <Field label="GSTIN"><Input defaultValue="32AAACR1234A1Z5"/></Field>
-        <div className="grid grid-cols-2 gap-3"><FileField label="Logo"/><FileField label="Banner" hint="Horizontal, for QR board"/></div>
+        {sponsorType==='third-party'&&<div className="space-y-4 rounded-2xl border border-brown-100 bg-brown-50/60 p-4">
+          <div><b className="text-sm">Sponsor branding</b><p className="text-xs text-brown-500">These details identify the sponsor on approved temple placements.</p></div>
+          <Field label="Sponsor name (as shown)"><Input placeholder="Business or sponsor name" value={sponsorDetails.name} onChange={e=>setSponsorDetails(s=>({...s,name:e.target.value}))}/></Field>
+          <Field label="GSTIN (if registered)"><Input placeholder="e.g. 32AAACR1234A1Z5" value={sponsorDetails.gstin} onChange={e=>setSponsorDetails(s=>({...s,gstin:e.target.value.toUpperCase()}))}/></Field>
+          <div className="grid grid-cols-2 gap-3"><FileField label="Sponsor logo"/><FileField label="Ads banner" hint="Horizontal, for QR board"/></div>
+          <Field label="Ads text (optional)"><textarea className="input" rows={3} placeholder="Short sponsor message or advertisement copy" value={sponsorDetails.adsText} onChange={e=>setSponsorDetails(s=>({...s,adsText:e.target.value}))}/></Field>
+        </div>}
 
         <div>
           <span className="label">Payment method</span>
-          <div className="grid grid-cols-3 gap-2">{[...onlineGateways,...manualMethods].map(m=>{ const Icon=sponsorPayIcon[m.key]; return (
-            <button key={m.key} onClick={()=>setPayMethod(m.key)} className={`flex flex-col items-center gap-1 rounded-xl border-2 p-2.5 text-center text-xs font-semibold transition ${payMethod===m.key?'border-saffron-500 bg-saffron-50':'border-brown-100 bg-white hover:border-brown-200'}`}><Icon size={17} className={payMethod===m.key?'text-saffron-600':'text-brown-400'}/>{m.name}</button>
+          <div className="grid grid-cols-3 gap-2">{[...sponsorGateways,...manualMethods].map(m=>{ const Icon=sponsorPayIcon[m.key]; return (
+            <button key={m.key} onClick={()=>{setPayMethod(m.key);setPaymentError('')}} className={`flex flex-col items-center gap-1 rounded-xl border-2 p-2.5 text-center text-xs font-semibold transition ${payMethod===m.key?'border-saffron-500 bg-saffron-50':'border-brown-100 bg-white hover:border-brown-200'}`}><Icon size={17} className={payMethod===m.key?'text-saffron-600':'text-brown-400'}/>{m.name}</button>
           )})}</div>
         </div>
 
-        <div className="divide-y divide-brown-100 rounded-xl bg-brown-50 px-4"><Row l={`Subtotal (${selected.length} temple${selected.length!==1?'s':''})`} v={subtotal}/><Row l="GST 18%" v={gst}/><Row l="Total" v={total} big/></div>
+        {!isOnline&&<div className="space-y-4 rounded-2xl border border-saffron-200 bg-saffron-50/50 p-4">
+          <div><b className="text-sm">{manualMethods.find(m=>m.key===payMethod)?.name} payment details</b><p className="text-xs text-brown-500">Enter the full-payment details. Staff verification is required before activation and final tax invoice issuance.</p></div>
+          {payMethod==='upi'&&<div className="grid items-center gap-4 rounded-xl bg-white p-4 sm:grid-cols-[128px_1fr]"><div className="grid aspect-square place-items-center rounded-xl border-4 border-brown-900 bg-white p-2" aria-label="Default TempleAddress UPI QR code"><QRCodeSVG value={`upi://pay?pa=${manualMethods.find(m=>m.key==='upi')?.upiId}&pn=TempleAddress%20Technologies%20Pvt%20Ltd&am=${total}&cu=INR`} size={104} level="M"/></div><div className="text-sm"><b className="text-base">Scan the default UPI QR</b><p className="mt-1 text-brown-500">Pay the full amount of ₹{total.toLocaleString('en-IN')} using any UPI app.</p><div className="mt-2 rounded-lg bg-brown-50 px-3 py-2 font-semibold text-brown-800">{manualMethods.find(m=>m.key==='upi')?.upiId}</div></div></div>}
+          {payMethod==='bank'&&<div className="rounded-xl bg-white p-3 text-sm"><b>{manualMethods.find(m=>m.key==='bank')?.bank}</b><div className="text-brown-600">A/c {manualMethods.find(m=>m.key==='bank')?.account} · IFSC {manualMethods.find(m=>m.key==='bank')?.ifsc}</div></div>}
+          {payMethod==='cheque'&&<div className="rounded-xl bg-white p-3 text-sm"><b>Cheque payable to</b><div className="text-brown-600">{manualMethods.find(m=>m.key==='cheque')?.payee}</div></div>}
+          <Field label="Payer / account holder name"><Input value={manualPayment.payerName} onChange={e=>updateManual('payerName',e.target.value)} placeholder="Name used for payment"/></Field>
+          <div className="grid gap-3 sm:grid-cols-2"><Field label={payMethod==='cheque'?'Cheque date':'Transaction date'}><Input type="date" value={manualPayment.date} onChange={e=>updateManual('date',e.target.value)}/></Field><Field label="Amount paid"><Input type="number" min={total} value={manualPayment.amount||total} onChange={e=>updateManual('amount',e.target.value)}/></Field></div>
+          {payMethod==='cheque'?<Field label="Cheque number"><Input value={manualPayment.chequeNo} onChange={e=>updateManual('chequeNo',e.target.value)} placeholder="Enter cheque number"/></Field>:<Field label={payMethod==='upi'?'UPI transaction number':'UTR / transaction reference'}><Input value={manualPayment.transactionNo} onChange={e=>updateManual('transactionNo',e.target.value)} placeholder="Enter payment reference"/></Field>}
+          {payMethod!=='upi'&&<Field label="Payer bank"><Input value={manualPayment.bankName} onChange={e=>updateManual('bankName',e.target.value)} placeholder="Bank name"/></Field>}
+          <Field label="Payment proof (optional)" hint="Upload UPI confirmation, bank advice or cheque image"><Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e=>updateManual('proof',e.target.files?.[0]?.name||'')}/></Field>
+        </div>}
 
+        <div className="divide-y divide-brown-100 rounded-xl bg-brown-50 px-4"><Row l={`Selected plans (${selected.length} temple${selected.length!==1?'s':''})`} v={subtotal}/><Row l="GST 18%" v={gst}/><Row l="Total" v={total} big/></div>
+
+        {paymentError&&<p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{paymentError}</p>}
         {isOnline
-          ? <Link to="/receipt" className="btn-p w-full">Pay Securely via {onlineGateways.find(g=>g.key===payMethod)?.name}</Link>
-          : <button onClick={submitManual} className="btn-p w-full">Submit for Verification</button>}
-        <p className="text-xs text-brown-500">{isOnline ? 'Secure payment · sponsorship activates instantly on success.' : `Pay via ${manualMethods.find(m=>m.key===payMethod)?.name} and our accounts team will verify & activate within 24 hours.`}</p>
+          ? <button onClick={payByGateway} className="btn-p w-full">Pay Full Amount via {sponsorGateways.find(g=>g.key===payMethod)?.name}</button>
+          : <button onClick={submitManual} className="btn-p w-full">Submit Full Payment for Verification</button>}
+        <p className="text-xs text-brown-500">{isOnline ? 'Gateway-confirmed payments activate immediately and issue a final GST tax invoice.' : `A partial receipt is issued now. The final GST tax invoice and activation follow staff verification of the ${manualMethods.find(m=>m.key===payMethod)?.name} payment.`}</p>
       </aside></div></Wrap></PublicShell>)
 }
 
@@ -464,6 +575,9 @@ const vendorTypes = ['Temple','Festival committee','Service provider']
 const staffRoles = [['moderator','Moderator','Reviews listings, KYC, charts & special poojas'],['accountant','Accountant','Payout and wallet NEFT batches · view received payments'],['admin','Portal admin','Configuration, approvals, high-level settings']]
 export function Login() {
   const nav = useNavigate()
+  const [loginParams] = useSearchParams()
+  const next = loginParams.get('next')
+  const creatingProfile = loginParams.get('intent')==='create-profile'
   const [role,setRole] = useState('user')
   const [vendorType,setVendorType] = useState('Temple')
   const [staffRole,setStaffRole] = useState('moderator')
@@ -471,14 +585,14 @@ export function Login() {
   const needsPassword = role==='dealer' || role==='staff'
   const pickRole = k => { setRole(k); setOtp(false) }
   const vendorHome = { 'Temple':'/vendor', 'Festival committee':'/festival-admin', 'Service provider':'/service-admin' }
-  const dest = () => role==='user' ? '/account' : role==='partner' ? '/partner' : role==='vendor' ? vendorHome[vendorType] : role==='dealer' ? '/dealer' : `/staff?role=${staffRole}`
+  const dest = () => role==='user'&&next ? next : role==='user' ? '/account' : role==='partner' ? '/partner' : role==='vendor' ? vendorHome[vendorType] : role==='dealer' ? '/dealer' : `/staff?role=${staffRole}`
   return (<PublicShell><Wrap className="max-w-lg py-12">
-    <div className="text-center"><TempleMark size={44} className="mx-auto"/><h1 className="mt-3 text-3xl font-semibold">Login</h1><p className="mx-auto mt-1 max-w-sm text-sm text-brown-500">Just browsing or submitting a temple's basic details? You don't need an account — <Link to="/temples" className="font-semibold text-saffron-600 underline">continue as guest</Link>.</p></div>
+    <div className="text-center"><TempleMark size={44} className="mx-auto"/><h1 className="mt-3 text-3xl font-semibold">{creatingProfile?'Create your profile':'Login'}</h1><p className="mx-auto mt-1 max-w-sm text-sm text-brown-500">{creatingProfile?'Verify your phone number or continue with Google. After login, you can create and manage your own listings.':<>Just browsing or submitting a temple's basic details? You don't need an account — <Link to="/submit-temple" className="font-semibold text-saffron-600 underline">use the public form</Link>.</>}</p></div>
 
     <div className="card mt-6 p-6">
-      <div className="grid grid-cols-5 gap-1 rounded-xl bg-brown-50 p-1 text-[11px] font-semibold sm:text-xs">
+      {!creatingProfile&&<div className="grid grid-cols-5 gap-1 rounded-xl bg-brown-50 p-1 text-[11px] font-semibold sm:text-xs">
         {roleTabs.map(([k,l])=><button key={k} onClick={()=>pickRole(k)} className={`rounded-lg px-1 py-2 transition ${role===k?'bg-brown-900 text-white shadow-soft':'text-brown-600 hover:bg-white'}`}>{l}</button>)}
-      </div>
+      </div>}
 
       {role==='vendor' && <div className="mt-4"><span className="label">Vendor type</span>
         <div className="flex flex-wrap gap-2">{vendorTypes.map(v=><button key={v} onClick={()=>setVendorType(v)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${vendorType===v?'bg-saffron-500 text-white':'border border-brown-200 bg-white text-brown-700'}`}>{v}</button>)}</div>
@@ -503,7 +617,7 @@ export function Login() {
       <p className="mt-4 text-center text-xs text-brown-500">
         {role==='user' && 'New devotees are created automatically on first login.'}
         {role==='partner' && <>Not a partner yet? <Link to="/partner/submit" className="font-semibold text-saffron-600">Apply to become one</Link>.</>}
-        {role==='vendor' && <>Managing a temple already? <Link to="/claim/kottur-sree-mahavishnu-temple" className="font-semibold text-saffron-600">Claim your page</Link> first.</>}
+        {role==='vendor' && <>Managing a temple already? Find its public temple page and use <b>Claim this temple</b>.</>}
         {role==='dealer' && 'Dealer accounts are created by TempleAddress staff after partner-network approval.'}
         {role==='staff' && 'Staff accounts are provisioned by the Portal admin and can be disabled instantly.'}
       </p>
