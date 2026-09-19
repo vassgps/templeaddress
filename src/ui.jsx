@@ -59,10 +59,21 @@ export const Toggle = ({ label, defaultChecked, onChange }) => (
   <label className="inline-flex items-center gap-3 text-sm font-medium"><input type="checkbox" defaultChecked={defaultChecked} onChange={e=>onChange&&onChange(e.target.checked)} className="peer sr-only"/>
     <span className="relative h-6 w-11 rounded-full bg-brown-200 transition peer-checked:bg-emerald-500 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-5"/>{label}</label>
 )
-export const Table = ({ head, rows }) => (
-  <div className="overflow-x-auto"><table className="w-full border-separate border-spacing-0"><thead><tr>{head.map(h=><th key={h} className="th">{h}</th>)}</tr></thead>
-    <tbody>{rows.map((r,i)=><tr key={i}>{r.map((c,j)=><td key={j} className="td">{c}</td>)}</tr>)}</tbody></table></div>
-)
+const tableCellText = value => {
+  if(value===null||value===undefined||value===false)return '—'
+  if(typeof value==='string'||typeof value==='number')return String(value)
+  if(Array.isArray(value))return value.map(tableCellText).join(' ')
+  if(React.isValidElement(value))return tableCellText(value.props?.children)
+  return String(value)
+}
+export function Table({ head, rows, title='Record details', rowDetails }) {
+  const [selected,setSelected]=useState(null)
+  const open=(row,index)=>setSelected({row,index,extra:typeof rowDetails==='function'?rowDetails(row,index):rowDetails?.[index]})
+  return <><div className="overflow-x-auto"><table className="w-full border-separate border-spacing-0"><thead><tr>{head.map((h,i)=><th key={i} className="th">{h}</th>)}</tr></thead>
+    <tbody>{rows.map((r,i)=><tr key={i} tabIndex={0} title="Click to view full record" className="cursor-pointer transition hover:bg-brown-50 focus:bg-brown-50 focus:outline-none" onClick={event=>{const control=event.target.closest('a,button,input,select,textarea,label');const detailAction=/invoice|details|view/i.test(control?.textContent||'');if(!control||detailAction)open(r,i)}} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open(r,i)}}}>{r.map((c,j)=><td key={j} className="td">{c}</td>)}</tr>)}</tbody></table></div>
+    {selected&&<div className="fixed inset-0 z-[100] grid place-items-center bg-brown-950/60 p-4" role="dialog" aria-modal="true" onClick={()=>setSelected(null)}><div className="card max-h-[88vh] w-full max-w-2xl overflow-y-auto p-5 shadow-2xl" onClick={event=>event.stopPropagation()}><div className="flex items-start justify-between gap-3"><div><div className="text-xs font-semibold uppercase tracking-wide text-saffron-700">Table record</div><h2 className="mt-1 text-xl font-semibold">{title}</h2></div><button onClick={()=>setSelected(null)} className="rounded-lg p-2 hover:bg-brown-50" aria-label="Close details"><X size={18}/></button></div><table className="mt-5 w-full border-separate border-spacing-0"><tbody>{head.map((label,index)=><tr key={index}><th className="w-[38%] border-b border-brown-100 py-3 pr-4 text-left text-xs font-semibold uppercase text-brown-500">{tableCellText(label)}</th><td className="border-b border-brown-100 py-3 text-sm font-medium text-brown-900">{tableCellText(selected.row[index])}</td></tr>)}{selected.extra&&Object.entries(selected.extra).map(([label,value])=><tr key={label}><th className="border-b border-brown-100 py-3 pr-4 text-left text-xs font-semibold uppercase text-brown-500">{label}</th><td className="border-b border-brown-100 py-3 text-sm font-medium text-brown-900">{tableCellText(value)}</td></tr>)}</tbody></table><div className="mt-5 flex justify-end"><button onClick={()=>setSelected(null)} className="btn-p">Close</button></div></div></div>}
+  </>
+}
 export const Stat = ({ v, l, delta }) => (
   <div className="card p-4"><div className="text-2xl font-bold text-brown-900">{v}</div><div className="text-sm text-brown-500">{l}</div>{delta && <div className="mt-1 text-xs font-semibold text-emerald-600">{delta}</div>}</div>
 )

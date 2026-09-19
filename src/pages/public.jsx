@@ -427,8 +427,10 @@ const sponsorGateways = [...onlineGateways.map(g=>g.key==='omniware'?{...g,name:
 const sponsorPayIcon = { omniware:ShieldCheck, razorpay:Zap, stripe:Globe2, upi:QrCode, bank:Landmark, cheque:PenLine }
 const templeAddressTax = {gstin:'32AACCT1234B1Z9',pan:'AACCT1234B',state:'Kerala',stateCode:'32',address:'Kozhikode, Kerala – 673001'}
 const billingActivationKey='ta-billing-activations-v1'
+const partnerWalletTransactionKey='ta-partner-wallet-transactions-v1'
 const readBillingActivations=()=>{try{return JSON.parse(localStorage.getItem(billingActivationKey)||'[]')}catch{return []}}
 const saveBillingActivations=records=>localStorage.setItem(billingActivationKey,JSON.stringify(records))
+const readPartnerWalletTransactions=()=>{try{return JSON.parse(localStorage.getItem(partnerWalletTransactionKey)||'[]')}catch{return []}}
 export function Sponsor() {
   const [toast,el] = useToast()
   const [sponsorType,setSponsorType] = useState('self')
@@ -465,6 +467,7 @@ export function Sponsor() {
   const completePayment = ({status,reference,documentNo,method}) => {
     const activations=selected.filter(item=>item.pack==='Temple Billing mini ERP').map(item=>({temple:item.temple.name,templeCode:item.temple.code,activationUuid:globalThis.crypto?.randomUUID?.()||`TA-${Date.now()}-${item.temple.code}`,status:status==='paid'?'Active':'Pending payment verification',createdAt:new Date().toISOString()}))
     if(activations.length){const existing=readBillingActivations();saveBillingActivations([...existing.filter(old=>!activations.some(item=>item.activationUuid===old.activationUuid)),...activations])}
+    if(partnerValidation?.valid){const createdAt=new Date().toISOString();const customerName=sponsorType==='third-party'?sponsorDetails.name:`${selected[0]?.temple.name} Committee`;const credits=selected.map((item,index)=>{const base=packPrice[item.pack];const activation=activations.find(record=>record.templeCode===item.temple.code);return {date:createdAt,id:`WLT-${Date.now().toString().slice(-8)}-${index+1}`,campaign:'—',description:`${item.temple.name} → ${item.pack}`,type:`${item.pack==='Temple Billing mini ERP'?'Software sale':'Sponsorship'} 15%`,amount:Math.round(base*.15),direction:'Credit',status:status==='paid'?'Credited':'Pending',product:item.pack,temple:item.temple.name,templeCode:item.temple.code,activationUuid:activation?.activationUuid,customerName,customerGstin:sponsorDetails.gstin||'',invoiceNo:documentNo,paymentReference:reference,paymentMethod:method,taxableValue:base,cgst:Math.round(base*.09),sgst:Math.round(base*.09),invoiceTotal:base+Math.round(base*.18),commissionRate:'15% of taxable value',source:'Sponsorship checkout',partnerCode:partnerValidation.code}});const existing=readPartnerWalletTransactions();localStorage.setItem(partnerWalletTransactionKey,JSON.stringify([...credits,...existing.filter(old=>!credits.some(item=>item.id===old.id))]))}
     setPaymentResult({status,reference,documentNo,method,activations})
   }
   const payByGateway = () => {
