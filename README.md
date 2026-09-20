@@ -23,6 +23,11 @@ browser storage, including partner status, listing drafts and Mini ERP activatio
 
 ## Latest prototype decisions
 
+- **Pooja checkout (20 September):** `/book/:slug` uses `pages/booking.jsx`: date/time availability, Nakshatra/Gothra/Rashi choice, guest mobile, donation, one additional recurring date, demo OTP `123456`, summary and simulated gateway success/failure/timeout/retry. Fees appear only at the gateway and on the final receipt. Successful receipts use `/receipt/:bookingCode` and session storage (no real payment or notification).
+- **Availability:** `booking.js` checks IST time, offline-only items, advance cutoff, configured date/weekday restrictions and session-local paid capacity. Run `node --test src/booking.test.js`. Production needs server-side inventory reservations, OTP validation, payment verification and idempotency; this browser simulation is not an API integration.
+- **Public pages:** strict temple slug lookup, real listing QR, address-based Google map (coordinates when provided), optional public contacts and `sponsorAd: {banner, text, url}`. No invented office contacts or event dates. Header offers opt-in Google translation; booking/receipt personal data is excluded from translation. Footer policy pages clearly await approved policy content.
+- **Scope:** only this React prototype is present; no Django/Next.js source or database models were changed. Existing generic `/receipt` remains a legacy sample; new bookings use their unique receipt URL.
+
 - **Listing entry:** the landing page offers **Submit a temple** (a public, no-login contact form) and **Create a profile** (OTP/Google login, then the full listing editor). Claiming is available only from a specific listing detail page.
 - **Listing editor:** devotees and partners can create, view and edit listings. Each section saves as a draft; staff can view all drafts. Photos and KYC documents are optional.
 - **Generic listings:** the public form uses “Name of listing” and supports temples, kavus, holy places, Jain temples, Buddhist pagodas, festivals and services. Church and mosque categories are excluded.

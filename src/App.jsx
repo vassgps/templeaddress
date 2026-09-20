@@ -8,10 +8,13 @@ import * as X from './pages/partners'
 import * as A from './pages/account'
 import { StaffDirectory } from './pages/staffDirectory'
 import { PublicShell } from './ui'
+import { Booking, BookingReceipt } from './pages/booking'
+import { Policy } from './pages/policy'
 
 const routes = [
+  ['/book/:slug', Booking], ['/receipt/:bookingCode', BookingReceipt], ['/policies/:kind', Policy], ['/listing/:slug', P.TemplePage],
   ['/staff/directory/:kind', StaffDirectory],
-  ['/', P.Home], ['/temples', P.Temples], ['/t/:slug', P.TemplePage], ['/claim/:slug', P.Claim], ['/submit-temple', P.SubmitTemple], ['/book/:slug', P.Book], ['/receipt', P.Receipt], ['/donate/:slug', P.Donate],
+  ['/', P.Home], ['/temples', P.Temples], ['/t/:slug', P.TemplePage], ['/claim/:slug', P.Claim], ['/submit-temple', P.SubmitTemple], ['/receipt', P.Receipt], ['/donate/:slug', P.Donate],
   ['/special', P.Special], ['/special/:id', P.SpecialDetail], ['/festival', P.Festival], ['/services', P.Services], ['/service/:id', P.ServiceDetail], ['/sponsor', P.Sponsor], ['/login', P.Login], ['/account', A.Account], ['/account/listings', A.UserListings], ['/account/listings/new', A.UserCreateListing], ['/account/listings/:slug/edit', A.UserEditListing], ['/account/partner-application', A.PartnerApplication], ['/whatsapp', P.WhatsApp],
   ['/vendor', V.VToday], ['/vendor/bookings', V.VBookings], ['/vendor/charts', V.VCharts], ['/vendor/charts/:chartId', V.VChartDetail], ['/vendor/poojas', V.VPoojas], ['/vendor/donations', V.VDonations], ['/vendor/payouts', V.VPayouts], ['/vendor/settings', V.VSettings], ['/vendor/page', V.VPage], ['/vendor/data', V.VData],
   ['/festival-admin', FC.FOverview], ['/festival-admin/programme', FC.FProgramme], ['/festival-admin/offerings', FC.FOfferings], ['/festival-admin/bookings', FC.FBookings], ['/festival-admin/sponsors', FC.FSponsors], ['/festival-admin/profile', FC.FPage], ['/festival-admin/settings', FC.FSettings],
