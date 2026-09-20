@@ -33,3 +33,9 @@
 .ticker-track{animation:ticker 36s linear infinite}
 .ticker-track:hover{animation-play-state:paused}
 @media (prefers-reduced-motion:reduce){.animate-float,.animate-float-2,.animate-float-3,.ticker-track,.fade-up,.fade-up-1,.fade-up-2{animation:none}}
+@media print {
+  body:has(#booking-receipt) * { visibility: hidden; }
+  body:has(#booking-receipt) #booking-receipt,
+  body:has(#booking-receipt) #booking-receipt * { visibility: visible; }
+  #booking-receipt { position: absolute; inset: 0; width: 100%; box-shadow: none; }
+}

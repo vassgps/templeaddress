@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star, Gift, BadgeCheck, ArrowRight, Download, CalendarDays, Users, QrCode, Lock, Check, Sparkles, Landmark, Flame, PartyPopper, Music, HeartHandshake, Receipt as ReceiptIcon, RefreshCcw, SlidersHorizontal, Globe2, Smartphone, Zap, Handshake, Plus, X, PenLine } from 'lucide-react'
+import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star, Gift, BadgeCheck, ArrowRight, Download, CalendarDays, Users, QrCode, Lock, Check, Sparkles, Landmark, Flame, PartyPopper, Music, HeartHandshake, Receipt as ReceiptIcon, RefreshCcw, SlidersHorizontal, Globe2, Smartphone, Zap, Handshake, Plus, X, PenLine, Eye, TrendingUp, Mail, UserRound } from 'lucide-react'
 import { temples, bySlug, specials, services, festival as festivalData, checkoutPlans, onlineGateways, manualMethods } from '../data'
-import { PublicShell, Photo, Pill, Field, Input, Select, Toggle, Table, Section, Steps, Money, useToast, GoogleIcon, TempleMark } from '../ui'
+import { PublicShell, Photo, Pill, Field, Input, Select, Toggle, Table, Section, Steps, Tabs, Money, useToast, GoogleIcon, TempleMark } from '../ui'
 import { FileField } from './checkout'
 
 const Wrap = ({ children, className='' }) => <div className={`mx-auto max-w-6xl px-4 ${className}`}>{children}</div>
@@ -212,40 +212,111 @@ export function Temples() {
 }
 
 /* ---------------- TEMPLE PAGE ---------------- */
+/* Temple detail page tabs: Basic Info (default) carries the at-a-glance facts, gallery, deities and
+   nearby places; Details is the narrative/record tab — story, history, remarks and the chief priest;
+   Contact, Donations and Poojas stay separate since each has its own actions/forms. */
+const templeTabs = ['Basic Info','Details','Contact','Donations','Poojas']
+const Fact = ({ l, v }) => <div><dt className="text-xs font-semibold uppercase tracking-wide text-brown-500">{l}</dt><dd className="mt-0.5 text-sm font-semibold text-brown-900">{v}</dd></div>
+const StatBox = ({ icon:Icon, v, l }) => <div className="rounded-xl bg-brown-50 p-3"><div className="flex items-center gap-1.5 text-brown-400"><Icon size={13}/><span className="text-[11px] font-semibold uppercase tracking-wide">{l}</span></div><div className="mt-1 text-lg font-bold text-brown-900">{v}</div></div>
+
 export function TemplePage() {
-  const { slug } = useParams(); const t = bySlug(slug); const [wl,setWl]=useState(false); const [more,setMore]=useState(false)
+  const { slug } = useParams(); const t = temples.find(item=>item.slug===slug); const [wl,setWl]=useState(false); const [more,setMore]=useState(false)
+  const [tab,setTab] = useState(0)
+  const [toast,el] = useToast()
+  const [enquiry,setEnquiry] = useState({name:'',mobile:'',message:''})
+  if(!t) return <PublicShell><Wrap className="py-10"><h1 className="text-3xl">Temple not found</h1><Link to="/temples" className="btn-p mt-4">Browse temples</Link></Wrap></PublicShell>
+  const pageUrl = `${window.location.origin}${window.location.pathname}#/t/${encodeURIComponent(t.slug)}`
+  const mapQuery = t.latitude != null && t.longitude != null ? `${t.latitude},${t.longitude}` : `${t.name}, ${t.address}`
+  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`
   const own = t.gateway==='omniware'
-  return (<PublicShell tenant={wl?t.name:null}><Wrap className="py-6">
+  const analytics = { views: t.reviews*17+140, shares: Math.round(t.reviews*0.6)+3, contacts: Math.round(t.reviews*0.12)+2, enquiries: Math.round(t.reviews*0.05)+1, poojasBooked: t.poojas.length*14+t.reviews, liveCrowd: t.poojas.some(p=>p.live)?Math.round(t.reviews/25):0 }
+  const upiUri = t.upiId ? `upi://pay?pa=${t.upiId}&pn=${encodeURIComponent(t.name)}&cu=INR` : ''
+  const sendEnquiry = e => { e.preventDefault(); if(!enquiry.name.trim()||!enquiry.mobile.trim()) return; toast('Enquiry sent — the committee will reply on WhatsApp'); setEnquiry({name:'',mobile:'',message:''}) }
+  return (<PublicShell tenant={wl?t.name:null}><Wrap className="py-6">{el}
     {!wl && <div className="mb-4 flex items-center justify-between rounded-xl bg-blue-50 px-4 py-2 text-sm text-blue-800"><span>Preview this page as the temple's own site ({t.slug.split('-')[0]}.templeaddress.com)</span><Toggle label="White-label view" onChange={setWl}/></div>}
     {wl && <div className="mb-4 flex items-center justify-between rounded-xl bg-gold-300/30 px-4 py-2 text-sm"><span>Tenant view — no TempleAddress ads or nearby temples; only this temple's sponsor.</span><button onClick={()=>setWl(false)} className="font-semibold underline">Exit</button></div>}
     <Photo hue={t.hue} className="rounded-3xl p-6 text-white md:p-10">
-      <div className="relative flex flex-wrap gap-2"><Pill tone="ok"><BadgeCheck size={12}/>Verified</Pill><Pill tone="n">{t.code}</Pill>{t.g80&&<Pill tone="gold">80G certified</Pill>}{own&&<Pill tone="info">Pays temple directly</Pill>}</div>
+      <div className="relative flex flex-wrap gap-2"><Pill tone="ok"><BadgeCheck size={12}/>Verified</Pill><Pill tone="n">{t.code}</Pill>{t.category&&<Pill tone="info">{t.category}</Pill>}{t.g80&&<Pill tone="gold">80G certified</Pill>}{own&&<Pill tone="info">Pays temple directly</Pill>}</div>
       <h1 className="relative mt-24 text-3xl font-semibold md:text-5xl">{t.name}</h1><div className="ml relative mt-1 text-lg text-brown-100">{t.ml} · {t.place}, {t.district}</div>
       <div className="relative mt-4 flex flex-wrap gap-4 text-sm text-brown-100"><span className="flex items-center gap-1"><Clock size={14}/>{t.timings}</span><span className="flex items-center gap-1"><Star size={14} className="text-gold-300" fill="currentColor"/>{t.rating} · {t.reviews} reviews</span></div>
     </Photo>
-    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
+
+    <div className="sticky top-16 z-20 -mx-4 mt-4 bg-brown-50/95 px-4 pt-4 backdrop-blur"><Tabs tabs={templeTabs} at={tab} set={setTab}/></div>
+
+    <div className="mt-2 grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="space-y-6">
-        <div className="card p-5"><div className="flex items-center justify-between"><h2 className="text-xl font-semibold">Book a vazhipadu</h2><span className="text-xs text-brown-500">Chart closes {t.cutoff} the day before</span></div>
+
+        {tab===0 && <>
+          <div className="card p-5"><h2 className="text-xl font-semibold">About</h2><p className="mt-2 text-brown-700">{t.about}</p></div>
+          <div className="card p-5"><h3 className="font-semibold">Basic details</h3>
+            <dl className="mt-3 grid gap-4 sm:grid-cols-2">
+              <Fact l="Name (English)" v={t.name}/><Fact l="Name (Malayalam)" v={<span className="ml">{t.ml}</span>}/>
+              <Fact l="Temple code" v={t.code}/><Fact l="Category" v={t.category||'Hindu Temple'}/>
+              <Fact l="Main deity" v={t.deity}/><Fact l="Location" v={`${t.place}, ${t.district}`}/>
+              <Fact l="Opening hours" v={t.timings}/><Fact l="Rating" v={`${t.rating} ★ (${t.reviews} reviews)`}/>
+            </dl></div>
+          {own && <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">Payments for this temple go directly to the temple's own account through Omniware (Federal Bank). TempleAddress does not hold this money.</div>}
+          {(t.speciality||t.guidelines) && <div className="card p-5"><h3 className="font-semibold">More details</h3><div className="mt-3 grid gap-4 sm:grid-cols-2">{t.speciality&&<Info h="Speciality" p={t.speciality}/>}{t.guidelines&&<Info h="Guidelines" p={t.guidelines}/>}</div></div>}
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="card p-5"><h3 className="font-semibold">Deities</h3><div className="mt-2 flex flex-wrap gap-2"><Pill tone="warn">{t.deity} (main)</Pill>{t.others.map(o=><Pill key={o}>{o}</Pill>)}</div></div>
+            <div className="card p-5"><h3 className="font-semibold">Nearby places to visit</h3><ul className="mt-2 space-y-1 text-sm text-brown-700">{t.nearby.map(n=><li key={n} className="flex gap-2"><MapPin size={14} className="mt-1 shrink-0 text-saffron-500"/>{n}</li>)}</ul></div>
+          </div>
+          <div className="card p-5"><h3 className="font-semibold">Gallery</h3><div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">{[1,2,3,4].map(i=><Photo key={i} hue={t.hue} className="aspect-square rounded-xl"/>)}</div><p className="mt-2 text-xs text-brown-500">Photos are illustrative sample images for this prototype.</p></div>
+          {t.sponsor && <Photo hue={t.hue} className="relative flex h-24 items-center gap-4 overflow-hidden rounded-2xl px-6 text-white"><span className="pill absolute left-4 top-3 bg-black/30 text-[10px]">Sponsored</span><div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-white text-sm font-bold text-emerald-700">RIF</div><div><div className="text-xs text-brown-100">Sponsored by</div><b className="text-lg">{t.sponsor}</b></div></Photo>}
+        </>}
+
+        {tab===1 && <div className="card p-5"><h3 className="font-semibold">Details</h3>
+          <div className="mt-3 space-y-4">
+            <div><h4 className="font-semibold">Story</h4>{t.story ? <p className="mt-1 text-brown-700">{t.story}</p> : <p className="mt-1 text-sm text-brown-500">No story or aithihyam has been recorded for this temple yet.</p>}</div>
+            <div><h4 className="font-semibold">History</h4>{t.history ? <p className="mt-1 text-brown-700">{t.history}</p> : <p className="mt-1 text-sm text-brown-500">No history has been recorded for this temple yet.</p>}</div>
+            <div><h4 className="font-semibold">Remarks</h4>{t.remarks ? <p className="mt-1 text-brown-700">{t.remarks}</p> : <p className="mt-1 text-sm text-brown-500">No remarks have been recorded for this temple yet.</p>}</div>
+          </div>
+          {t.chiefPriest&&<div className="mt-4 flex items-center gap-2 rounded-xl bg-brown-50 p-3 text-sm"><UserRound size={16} className="text-saffron-600"/><span>Chief priest (Thantri/Melshanthi): <b>{t.chiefPriest}</b></span></div>}
+        </div>}
+
+        {tab===2 && <>
+          <div className="card p-5"><h2 className="text-xl font-semibold">Contact & directions</h2><p className="mt-1 text-sm text-brown-700">{t.address}</p>
+            <div className="mt-3 flex flex-wrap gap-2">{t.publicPhone&&<a href={`tel:${t.publicPhone}`} className="btn-g"><Phone size={16}/>Call office</a>}{t.publicPhone&&<a href={`https://wa.me/${t.publicPhone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="btn-wa"><MessageCircle size={16}/>WhatsApp</a>}{t.publicEmail&&<a href={`mailto:${t.publicEmail}`} className="btn-g"><Mail size={16}/>Email office</a>}<a href={mapUrl} target="_blank" rel="noopener noreferrer" className="btn-g"><MapPin size={16}/>Open in Maps</a><a href={`https://wa.me/?text=${encodeURIComponent(`${t.name} ${pageUrl}`)}`} target="_blank" rel="noopener noreferrer" className="btn-g"><Share2 size={16}/>Share</a></div>
+            {(t.publicPhone||t.publicEmail)&&<div className="mt-3 grid gap-4 sm:grid-cols-2 rounded-xl bg-brown-50 p-3">{t.publicPhone&&<Fact l="Office contact" v={t.publicPhone}/>}{t.publicEmail&&<Fact l="Office email" v={t.publicEmail}/>}</div>}
+            <iframe title={`Map of ${t.name}`} loading="lazy" referrerPolicy="no-referrer" src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`} className="mt-4 h-64 w-full rounded-xl border-0"/><p className="mt-2 text-xs text-brown-500">{t.latitude == null ? 'Map searches the listing address; verify directions before travel.' : 'Map uses the listing coordinates.'}</p></div>
+          {!wl && <div className="card p-5"><h2 className="text-xl font-semibold">Nearby temples</h2><div className="mt-3 grid gap-3 sm:grid-cols-3">{temples.filter(x=>x.slug!==t.slug).slice(0,3).map(x=><Link key={x.slug} to={`/t/${x.slug}`} className="rounded-xl border border-brown-100 p-3 hover:bg-brown-50"><b className="text-sm">{x.name}</b><div className="text-xs text-brown-500">{x.district}</div></Link>)}</div></div>}
+        </>}
+
+        {tab===3 && <>
+          <div className="card p-5"><div className="flex items-center gap-2"><Gift size={18} className="text-saffron-600"/><h3 className="font-semibold">Direct UPI donation</h3><Pill tone="ok">No charges</Pill></div><p className="mt-1 text-sm text-brown-500">Donate directly to the temple's own UPI ID — the temple receives 100%.</p>
+            {t.upiId ? <div className="mt-4 grid items-center gap-4 sm:grid-cols-[128px_1fr]"><div className="mx-auto grid aspect-square w-32 place-items-center rounded-xl border-4 border-brown-900 bg-white p-2"><QRCodeSVG value={upiUri} size={104} level="M"/></div><div className="text-sm"><b className="text-base">{t.upiId}</b><p className="mt-1 text-brown-500">Scan with any UPI app, or tap below on a phone.</p><a href={upiUri} className="btn-g mt-2 inline-flex"><QrCode size={16}/>Pay via UPI app</a></div></div> : <p className="mt-3 text-sm text-brown-500">This temple hasn't published a direct UPI ID yet.</p>}</div>
+          <div className="card p-5"><div className="flex items-center gap-2"><ReceiptIcon size={18} className="text-saffron-600"/><h3 className="font-semibold">Donation with receipt</h3><Pill tone="info">2–5% fee</Pill></div><p className="mt-1 text-sm text-brown-500">Get an official numbered receipt{t.g80?' with an 80G tax certificate':''} and secure gateway payment support.</p>
+            <div className="mt-3 flex flex-wrap gap-2">{['Razorpay','PayU','Stripe','UPI'].map(g=><Pill key={g}>{g}</Pill>)}</div>
+            <Link to={`/donate/${t.slug}`} className="btn-p mt-4 w-full">Donate with receipt <ArrowRight size={16}/></Link></div>
+          <form onSubmit={sendEnquiry} className="card space-y-3 p-5"><h3 className="font-semibold">Quick enquiry</h3><p className="text-sm text-brown-500">Send a simple enquiry to this listing with your name, mobile number and message.</p>
+            <Field label="Your name"><Input value={enquiry.name} onChange={e=>setEnquiry(v=>({...v,name:e.target.value}))} placeholder="Your name"/></Field>
+            <Field label="Mobile number"><Input type="tel" value={enquiry.mobile} onChange={e=>setEnquiry(v=>({...v,mobile:e.target.value}))} placeholder="+91"/></Field>
+            <Field label="Message"><textarea className="input" rows={3} value={enquiry.message} onChange={e=>setEnquiry(v=>({...v,message:e.target.value}))} placeholder={`I have an enquiry about ${t.name}.`}/></Field>
+            <button className="btn-p w-full">Send enquiry</button></form>
+        </>}
+
+        {tab===4 && <div className="card p-5"><div className="flex items-center justify-between"><h2 className="text-xl font-semibold">Book a vazhipadu</h2><span className="text-xs text-brown-500">Chart closes {t.cutoff} the day before</span></div>
           <div className="mt-2 divide-y divide-brown-100">{(more?t.poojas:t.poojas.slice(0,6)).map(pj=><div key={pj.code} className="flex items-center gap-3 py-3"><div className="flex-1"><div className="flex items-center gap-2"><span className="font-semibold">{pj.name}</span>{pj.live&&<span className="pill bg-emerald-50 text-emerald-700"><Zap size={11}/>Live</span>}</div><div className="ml text-sm text-brown-500">{pj.ml}{pj.dailyLimit?` · ${pj.dailyLimit}/day`:''}</div></div><div className="w-20 text-right text-lg font-bold">₹{pj.price}</div><Link to={`/book/${t.slug}?pooja=${pj.code}`} className="btn-p !py-2">Book</Link></div>)}</div>
           {t.poojas.length>6 && <button onClick={()=>setMore(!more)} className="mt-2 text-sm font-semibold text-saffron-600">{more?'Show fewer':`Show all ${t.poojas.length} poojas`}</button>}
-          {t.poojas.some(pj=>pj.live) && <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-800"><Zap size={13} className="mt-0.5 shrink-0"/><span><b>Live</b> poojas can be booked instantly, any time — even after tonight's chart is prepared. They're added to the temple's next chart automatically.</span></p>}</div>
-        {own && <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">Payments for this temple go directly to the temple's own account through Omniware (Federal Bank). TempleAddress does not hold this money.</div>}
-        <div className="card p-5"><h2 className="text-xl font-semibold">About</h2><p className="mt-2 text-brown-700">{t.about}</p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">{t.story&&<Info h="Story" p={t.story}/>}{t.history&&<Info h="History" p={t.history}/>}{t.speciality&&<Info h="Speciality" p={t.speciality}/>}{t.remarks&&<Info h="Remarks" p={t.remarks}/>}</div>
-          <div className="mt-4 grid grid-cols-4 gap-2">{[1,2,3,4].map(i=><Photo key={i} hue={t.hue} className="aspect-square rounded-xl"/>)}</div></div>
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div className="card p-5"><h3 className="font-semibold">Deities</h3><div className="mt-2 flex flex-wrap gap-2"><Pill tone="warn">{t.deity} (main)</Pill>{t.others.map(o=><Pill key={o}>{o}</Pill>)}</div>{t.guidelines&&<><h3 className="mt-4 font-semibold">Guidelines</h3><p className="mt-1 text-sm text-brown-700">{t.guidelines}</p></>}</div>
-          <div className="card p-5"><h3 className="font-semibold">Nearby places to visit</h3><ul className="mt-2 space-y-1 text-sm text-brown-700">{t.nearby.map(n=><li key={n} className="flex gap-2"><MapPin size={14} className="mt-1 shrink-0 text-saffron-500"/>{n}</li>)}</ul></div>
-        </div>
-        <div className="card p-5"><h2 className="text-xl font-semibold">Contact & directions</h2><p className="mt-1 text-sm text-brown-700">{t.address}</p><div className="mt-3 flex flex-wrap gap-2"><a className="btn-g"><Phone size={16}/>Call office</a><Link to="/whatsapp" className="btn-wa"><MessageCircle size={16}/>WhatsApp</Link><a className="btn-g"><MapPin size={16}/>Open in Maps</a><a className="btn-g"><Share2 size={16}/>Share</a></div><Photo hue="#5B6B5E" className="mt-4 aspect-[16/6] rounded-xl"/></div>
-        {!wl && <div className="card p-5"><h2 className="text-xl font-semibold">Nearby temples</h2><div className="mt-3 grid gap-3 sm:grid-cols-3">{temples.filter(x=>x.slug!==t.slug).slice(0,3).map(x=><Link key={x.slug} to={`/t/${x.slug}`} className="rounded-xl border border-brown-100 p-3 hover:bg-brown-50"><b className="text-sm">{x.name}</b><div className="text-xs text-brown-500">{x.district}</div></Link>)}</div></div>}
+          {t.poojas.some(pj=>pj.live) && <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-800"><Zap size={13} className="mt-0.5 shrink-0"/><span><b>Live</b> poojas can be booked instantly, any time — even after tonight's chart is prepared. They're added to the temple's next chart automatically.</span></p>}</div>}
+
       </div>
-      <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+      <aside className="space-y-4 lg:sticky lg:top-32 lg:self-start">
         <div className="card p-5"><Link to={`/book/${t.slug}`} className="btn-p w-full !py-3 text-base">Book pooja</Link><Link to={`/donate/${t.slug}`} className="btn-s mt-2 w-full"><Gift size={16}/>Donate{t.g80?' · 80G receipt':''}</Link><Link to="/whatsapp" className="btn-wa mt-2 w-full"><MessageCircle size={16}/>Book on WhatsApp</Link><p className="mt-3 text-xs text-brown-500">Temple receives 100% of the pooja amount. The payment gateway shows its processing fee before you pay.</p></div>
-        <div className="card p-5"><h3 className="font-semibold">Upcoming</h3><div className="mt-2 text-sm"><b>Ashtami Rohini</b> · 14 Sept<div className="text-brown-500">Special poojas open</div></div><div className="mt-3 text-sm"><b>Annual festival</b> · 3–8 Dec<div><Link to="/festival" className="text-saffron-600">Festival page</Link></div></div></div>
-        {t.sponsor ? <div className="flex items-center gap-3 rounded-2xl bg-gold-300/25 p-4 text-sm"><div className="grid h-10 w-10 place-items-center rounded-lg bg-white text-xs font-bold text-emerald-700">RIF</div><div>Sponsored by<br/><b>{t.sponsor}</b></div></div>
-          : !wl && <Link to="/sponsor" className="block rounded-2xl border-2 border-dashed border-brown-200 p-4 text-sm hover:bg-white"><b>Sponsor slot available</b><div className="text-brown-500">Put your name on this temple's page, receipts and QR board.</div></Link>}
-        <div className="card p-5"><div className="flex items-center gap-2"><QrCode size={18}/><b>QR board</b></div><p className="mt-1 text-xs text-brown-500">Scan at the temple to book instantly.</p></div>
+
+        <div className="card p-5"><h3 className="font-semibold">Quick info</h3>
+          <div className="mt-2 flex flex-wrap gap-1.5">{t.bookable&&<Pill tone="ok">Booking open</Pill>}<Pill tone="info">Donation open</Pill>{t.g80&&<Pill tone="gold">80G</Pill>}</div>
+          <dl className="mt-3 space-y-3">
+            <Fact l="Temple code" v={t.code}/><Fact l="Category" v={t.category||'Hindu Temple'}/><Fact l="Main deity" v={t.deity}/><Fact l="Location" v={`${t.place}, ${t.district}`}/><Fact l="Opening" v={t.timings}/>
+          </dl></div>
+
+        <div className="card p-5"><h3 className="font-semibold">Listing analytics</h3><p className="text-xs text-brown-500">Illustrative sample metrics for this prototype.</p>
+          <div className="mt-3 grid grid-cols-2 gap-2"><StatBox icon={Eye} v={analytics.views.toLocaleString('en-IN')} l="Views"/><StatBox icon={Share2} v={analytics.shares} l="Shares"/><StatBox icon={Phone} v={analytics.contacts} l="Contacts"/><StatBox icon={Mail} v={analytics.enquiries} l="Enquiries"/><StatBox icon={CalendarDays} v={analytics.poojasBooked.toLocaleString('en-IN')} l="Poojas booked"/><StatBox icon={TrendingUp} v={analytics.liveCrowd} l="Live crowd"/></div></div>
+
+        {t.events?.length>0&&<div className="card p-5"><h3 className="font-semibold">Upcoming</h3>{t.events.filter(event=>event.date>=new Date().toISOString().slice(0,10)).map(event=><p key={event.date+event.name}>{event.name} · {event.date}</p>)}</div>}
+        {!t.sponsor && !wl && <Link to="/sponsor" className="block rounded-2xl border-2 border-dashed border-brown-200 p-4 text-sm hover:bg-white"><b>Sponsor slot available</b><div className="text-brown-500">Put your name on this temple's page, receipts and QR board.</div></Link>}
+        {t.sponsorAd&&<div className="card p-4"><p className="mb-2 text-xs text-brown-500">Sponsored advertisement · {t.sponsor}</p>{t.sponsorAd.banner&&<img src={t.sponsorAd.banner} alt={t.sponsorAd.text||'Sponsor advertisement'} className="w-full rounded-xl"/>}{t.sponsorAd.text&&<p className="mt-2">{t.sponsorAd.text}</p>}{/^https?:\/\//.test(t.sponsorAd.url||'')&&<a href={t.sponsorAd.url} rel="sponsored noopener noreferrer" target="_blank" className="underline">Visit sponsor</a>}</div>}
+        <div className="card p-3"><div className="flex items-center gap-3"><QRCodeSVG value={pageUrl} size={64} marginSize={2}/><div className="min-w-0"><div className="flex items-center gap-1.5 text-sm font-semibold"><QrCode size={14}/>Temple QR code</div><p className="mt-0.5 truncate text-xs text-brown-500">Scan to open {t.name}</p></div></div></div>
         <div className="card p-5 text-sm"><b>Are you the temple committee?</b><p className="mt-1 text-brown-500">Claim this page to manage poojas, prices and the daily chart.</p><Link to={`/claim/${t.slug}`} className="btn-g mt-2 w-full"><Lock size={14}/>Claim this temple</Link></div>
       </aside>
     </div>

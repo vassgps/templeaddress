@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
+import LanguageControl from './LanguageControl'
 import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2 } from 'lucide-react'
 
 /* ---------- BRAND MARK ---------- */
@@ -99,7 +100,7 @@ export function PublicShell({ children, tenant, hideChatbot=false }) {
         {tenant ? <Link to="/t/kottur-sree-mahavishnu-temple" className="font-display text-lg font-semibold">{tenant}</Link> : <Logo light/>}
         {!tenant && <nav className="ml-4 hidden gap-1 md:flex">{pubNav.map(([h,t])=><NavLink key={h} to={h} end={h==='/'} className={({isActive})=>`rounded-lg px-3 py-1.5 text-sm font-medium ${isActive?'bg-white/15 text-white':'text-brown-100 hover:bg-white/10'}`}>{t}</NavLink>)}</nav>}
         <div className="flex-1"/>
-        <select className={`hidden rounded-lg px-2 py-1.5 text-sm md:block ${tenant?'bg-brown-50':'bg-white/10 text-white'}`}><option>English</option><option>മലയാളം</option></select>
+        <LanguageControl/>
         <Link to="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>
         <Link to="/login" className={`btn !py-2 ${tenant?'bg-brown-900 text-white':'bg-white/15 text-white hover:bg-white/25'}`}>Login</Link>
         <button className="md:hidden" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
@@ -120,7 +121,7 @@ export function PublicShell({ children, tenant, hideChatbot=false }) {
           <span className="text-xs text-brown-200">Payments by <b className="text-brown-100">Razorpay · PayU · Stripe · Omniware</b> — TempleAddress never stores card details.</span>
           <TrustBadges/>
         </div>
-        <div className="flex flex-col gap-1 text-xs text-brown-300 sm:flex-row sm:items-center sm:justify-between"><span>Terms · Privacy · Refunds</span><span>© 2026 TempleAddress</span></div>
+        <div className="flex flex-col gap-1 text-xs text-brown-300 sm:flex-row sm:items-center sm:justify-between"><nav aria-label="Policies" className="flex flex-wrap gap-3">{[['terms','Terms of service'],['privacy','Privacy'],['data','Data policy'],['cancellation','Cancellation'],['refund','Refunds']].map(([path,label])=><Link key={path} to={`/policies/${path}`} className="underline">{label}</Link>)}</nav><span>© 2026 TempleAddress</span></div>
       </div></div>
     </footer>
     {!hideChatbot&&<Chatbot/>}
