@@ -6,14 +6,14 @@ import * as FC from './pages/vendorFestival'
 import * as SP from './pages/vendorService'
 import * as X from './pages/partners'
 import * as A from './pages/account'
-import { StaffDirectory } from './pages/staffDirectory'
+import { StaffDirectory, StaffBookingsDirectory } from './pages/staffDirectory'
 import { PublicShell } from './ui'
 import { Booking, BookingReceipt } from './pages/booking'
 import { Policy } from './pages/policy'
 
 const routes = [
   ['/book/:slug', Booking], ['/receipt/:bookingCode', BookingReceipt], ['/policies/:kind', Policy], ['/listing/:slug', P.TemplePage],
-  ['/staff/directory/:kind', StaffDirectory],
+  ['/staff/directory/bookings', StaffBookingsDirectory], ['/staff/directory/:kind', StaffDirectory],
   ['/', P.Home], ['/temples', P.Temples], ['/t/:slug', P.TemplePage], ['/claim/:slug', P.Claim], ['/submit-temple', P.SubmitTemple], ['/receipt', P.Receipt], ['/donate/:slug', P.Donate],
   ['/special', P.Special], ['/special/:id', P.SpecialDetail], ['/festival', P.Festival], ['/services', P.Services], ['/service/:id', P.ServiceDetail], ['/sponsor', P.Sponsor], ['/login', P.Login], ['/account', A.Account], ['/account/listings', A.UserListings], ['/account/listings/new', A.UserCreateListing], ['/account/listings/:slug/edit', A.UserEditListing], ['/account/partner-application', A.PartnerApplication], ['/whatsapp', P.WhatsApp],
   ['/vendor', V.VToday], ['/vendor/bookings', V.VBookings], ['/vendor/charts', V.VCharts], ['/vendor/charts/:chartId', V.VChartDetail], ['/vendor/poojas', V.VPoojas], ['/vendor/donations', V.VDonations], ['/vendor/payouts', V.VPayouts], ['/vendor/settings', V.VSettings], ['/vendor/page', V.VPage], ['/vendor/data', V.VData],
@@ -30,9 +30,9 @@ const groups = [
   ['Vendor · Festival committee', ['/festival-admin','/festival-admin/programme','/festival-admin/offerings','/festival-admin/bookings','/festival-admin/sponsors','/festival-admin/profile','/festival-admin/settings']],
   ['Vendor · Service provider', ['/service-admin','/service-admin/appointments','/service-admin/services','/service-admin/enquiries','/service-admin/reviews','/service-admin/profile']],
   ['Partner & dealer', ['/partner','/partner/profile','/partner/listings','/partner/listings/vengamala-bhagavathi-temple/edit','/partner/share','/partner/submit','/partner/submissions','/dealer','/dealer/wallet','/dealer/profile','/dealer/partners']],
-  ['Staff · Moderator', ['/staff?role=moderator','/staff/listing?role=moderator','/staff/kyc?role=moderator','/staff/charts?role=moderator','/staff/special?role=moderator','/staff/ownership?role=moderator','/staff/support?role=moderator']],
+  ['Staff · Moderator', ['/staff?role=moderator','/staff/listing?role=moderator','/staff/kyc?role=moderator','/staff/charts?role=moderator','/staff/special?role=moderator','/staff/ownership?role=moderator','/staff/support?role=moderator','/staff/directory/bookings?role=moderator']],
   ['Staff · Accountant', ['/staff?role=accountant','/staff/payouts?role=accountant','/staff/withdrawals?role=accountant','/staff/sponsors?role=accountant']],
-  ['Staff · Portal admin — Administrator', ['/staff?role=admin','/staff/analytics?role=admin','/staff/staff-management?role=admin','/staff/tables?role=admin','/staff/masterdata?role=admin','/staff/gateway-config?role=admin','/staff/config?role=admin','/staff/plans?role=admin','/staff/backup?role=admin','/staff/branding?role=admin','/staff/notifications?role=admin','/staff/audit-logs?role=admin','/staff/wallet-credit?role=admin']],
+  ['Staff · Portal admin — Administrator', ['/staff?role=admin','/staff/analytics?role=admin','/staff/staff-management?role=admin','/staff/tables?role=admin','/staff/masterdata?role=admin','/staff/gateway-config?role=admin','/staff/config?role=admin','/staff/plans?role=admin','/staff/backup?role=admin','/staff/branding?role=admin','/staff/notifications?role=admin','/staff/audit-logs?role=admin','/staff/wallet-credit?role=admin','/staff/directory/bookings?role=admin']],
 ]
 function SiteMap(){ return (<PublicShell><div className="mx-auto max-w-6xl px-4 py-10"><h1 className="text-3xl font-semibold">Prototype site map</h1><p className="text-brown-500">Every route in the MVP. Business rules: custom-gateway listings show no payouts · bank-only listings are paid by manual NEFT sheet · 80G receipt generated with the booking receipt · gateways: Razorpay, PayU, Stripe (platform) and Omniware (temple's own).</p>
   <div className="mt-6 grid gap-4 md:grid-cols-2">{groups.map(([g,rs])=><div key={g} className="card p-5"><h3 className="font-semibold">{g}</h3><div className="mt-2 grid gap-1">{rs.map(r=><Link key={r} to={r} className="rounded-lg px-2 py-1 text-sm hover:bg-brown-50">{r}</Link>)}</div></div>)}</div></div></PublicShell>) }

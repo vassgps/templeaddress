@@ -219,10 +219,10 @@ export function DPartners() {
 // single-purpose sidebar exactly as before — only the admin's view gets this 3-way split.
 const staffNav = role => {
   const q = `?role=${role}`
-  if (role==='moderator') return [{group:'Moderation',collapsible:false,links:[['/staff'+q,'Queues',Inbox],['/staff/listing'+q,'Listing review',ListChecks],['/staff/kyc'+q,'KYC & partners',ShieldCheck],['/staff/charts'+q,'Daily charts',CalendarCheck],['/staff/special'+q,'Special poojas',Sparkles],['/staff/ownership'+q,'Claims & transfers',ArrowRightLeft],['/staff/support'+q,'Support tickets',MessageCircle],['/staff/wallet-credit'+q,'Manual wallet points',Wallet]]},{group:'Directories',collapsible:false,links:[['/staff/directory/users'+q,'All users',Users],['/staff/directory/transactions'+q,'All transactions',Banknote]]}]
+  if (role==='moderator') return [{group:'Moderation',collapsible:false,links:[['/staff'+q,'Queues',Inbox],['/staff/listing'+q,'Listing review',ListChecks],['/staff/kyc'+q,'KYC & partners',ShieldCheck],['/staff/charts'+q,'Daily charts',CalendarCheck],['/staff/special'+q,'Special poojas',Sparkles],['/staff/ownership'+q,'Claims & transfers',ArrowRightLeft],['/staff/support'+q,'Support tickets',MessageCircle],['/staff/wallet-credit'+q,'Manual wallet points',Wallet]]},{group:'Directories',collapsible:false,links:[['/staff/directory/users'+q,'All users',Users],['/staff/directory/transactions'+q,'All transactions',Banknote],['/staff/directory/bookings'+q,'Bookings',CalendarCheck]]}]
   if (role==='accountant') return [{group:'Finance',collapsible:false,links:[['/staff'+q,'Finance queues',Inbox],['/staff/payouts'+q,'Payout NEFT batches',Landmark],['/staff/withdrawals'+q,'Wallet withdrawal NEFT',HandCoins],['/staff/sponsors'+q,'Payments received',Banknote]]}]
   return [
-    {group:'Staff panel', icon:Inbox, defaultOpen:false, links:[['/staff'+q,'Queues',Inbox],['/staff/listing'+q,'Listing review',ListChecks],['/staff/kyc'+q,'KYC & partners',ShieldCheck],['/staff/charts'+q,'Daily charts',CalendarCheck],['/staff/special'+q,'Special poojas',Sparkles],['/staff/ownership'+q,'Claims & transfers',ArrowRightLeft],['/staff/support'+q,'Support tickets',MessageCircle],['/staff/wallet-credit'+q,'Manual wallet points',Wallet],['/staff/directory/users'+q,'All users',Users],['/staff/directory/transactions'+q,'All transactions',Banknote]]},
+    {group:'Staff panel', icon:Inbox, defaultOpen:false, links:[['/staff'+q,'Queues',Inbox],['/staff/listing'+q,'Listing review',ListChecks],['/staff/kyc'+q,'KYC & partners',ShieldCheck],['/staff/charts'+q,'Daily charts',CalendarCheck],['/staff/special'+q,'Special poojas',Sparkles],['/staff/ownership'+q,'Claims & transfers',ArrowRightLeft],['/staff/support'+q,'Support tickets',MessageCircle],['/staff/wallet-credit'+q,'Manual wallet points',Wallet],['/staff/directory/users'+q,'All users',Users],['/staff/directory/transactions'+q,'All transactions',Banknote],['/staff/directory/bookings'+q,'Bookings',CalendarCheck]]},
     {group:'Accountant view', icon:Landmark, defaultOpen:false, links:[['/staff/payouts'+q,'Payouts',Landmark],['/staff/withdrawals'+q,'Wallet withdrawals',HandCoins],['/staff/sponsors'+q,'Payments received',Banknote]]},
     {group:'Administrator', icon:Settings2, defaultOpen:true, primary:true, links:[
       ['/staff/analytics'+q,'Analytics dashboard',BarChart3],
@@ -568,7 +568,7 @@ export function SStaffManagement() {
   </SShell>)
 }
 
-/* -------- 3d. Master data: deities, categories, regions, service types, listing types -------- */
+/* -------- 3d. Master data: deities, categories, service types, listing types -------- */
 function EditableMasterList({ title, hint, seed, toast }) {
   const [rows,setRows]=useState(seed); const [name,setName]=useState(''); const [ml,setMl]=useState('')
   const add=()=>{if(!name.trim())return; setRows(r=>[...r,{name:name.trim(),ml:ml.trim(),active:true}]); toast(`${name} added to ${title}`); setName('');setMl('')}
@@ -584,17 +584,15 @@ export function SMasterData() {
   const seeds = {
     deities:deityMasterData,
     categories:[...poojaCategories.map(c=>({name:c,ml:'',active:true}))],
-    regions:['Thiruvananthapuram','Kollam','Pathanamthitta','Alappuzha','Kottayam','Idukki','Ernakulam','Thrissur','Palakkad','Malappuram','Kozhikode','Wayanad','Kannur','Kasaragod'].map(d=>({name:d,ml:'',active:true})),
     serviceTypes:[{name:'Astrologer',ml:'ജ്യോതിഷി',active:true},{name:'Poojari / Pandit',ml:'പൂജാരി',active:true},{name:'Artist',ml:'കലാകാരൻ',active:true},{name:'Kazhakam',ml:'കഴകം',active:true},{name:'Thantri',ml:'തന്ത്രി',active:true}],
     listingTypes:Object.entries(listingIdPrefixes).map(([type,prefix])=>({name:`${type[0].toUpperCase()}${type.slice(1)} (${prefix}xxxx)`,ml:'',active:true})),
   }
   return (<SShell>{el}<H t="Master data" s="Add or update the reference lists used across every listing form on the platform"/>
-    <Tabs tabs={['Deities','Pooja / offering categories','Regions','Service types','Listing types']} at={tab} set={setTab}/>
+    <Tabs tabs={['Deities','Pooja / offering categories','Service types','Listing types']} at={tab} set={setTab}/>
     {tab===0 && <EditableMasterList title="Deities" hint="Shown in the Deity field for every temple, pooja and offering." seed={seeds.deities} toast={toast}/>}
     {tab===1 && <EditableMasterList title="Pooja / offering categories" hint="Used for both temple poojas and festival offerings (Homam, Abhishekam, Archana, Sponsorship, etc.)." seed={seeds.categories} toast={toast}/>}
-    {tab===2 && <EditableMasterList title="Regions / districts" hint="Used in listing location fields and search filters." seed={seeds.regions} toast={toast}/>}
-    {tab===3 && <EditableMasterList title="Service provider types" hint="Shown as the category filter on the public Services page." seed={seeds.serviceTypes} toast={toast}/>}
-    {tab===4 && <div className="card p-5"><h3 className="font-semibold">Listing types & ID sequences</h3><p className="text-xs text-brown-500">Each listing type has its own MasterData ID sequence (see Advanced → tables for live counters).</p><div className="mt-3"><Table head={['Listing type','Prefix']} rows={Object.entries(listingIdPrefixes).map(([type,prefix])=>[`${type[0].toUpperCase()}${type.slice(1)}`,prefix])}/></div></div>}
+    {tab===2 && <EditableMasterList title="Service provider types" hint="Shown as the category filter on the public Services page." seed={seeds.serviceTypes} toast={toast}/>}
+    {tab===3 && <div className="card p-5"><h3 className="font-semibold">Listing types &amp; ID sequences</h3><p className="text-xs text-brown-500">Each listing type has its own MasterData ID sequence.</p><div className="mt-3"><Table head={['Listing type','Prefix']} rows={Object.entries(listingIdPrefixes).map(([type,prefix])=>[`${type[0].toUpperCase()}${type.slice(1)}`,prefix])}/></div></div>}
   </SShell>)
 }
 
