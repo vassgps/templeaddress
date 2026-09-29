@@ -38,6 +38,15 @@ const personById=id=>people.find(person=>person.id===id)
 const dateTime=value=>new Date(value).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})
 const statusTone=status=>status.includes('confirmed')||status.includes('Completed')?'ok':status.includes('pending')||status==='Scheduled'?'warn':status==='Canceled'?'err':'info'
 
+const bookingSeed = [
+  {id:'BK-91301',devotee:'Suresh P',userId:'U10418',mobile:'+91 ••••••3312',listing:temples[0],offering:'Ganapathi Homam',bookingDate:'14 Sept 2026',slot:'6:00 AM – 6:45 AM',nakshatra:'Rohini',quantity:1,amount:250,status:'Scheduled',paymentStatus:'Paid',gateway:'Razorpay',paymentReference:'pay_RP91301',createdAt:'12 Sept 2026 · 09:42 AM',remarks:'Included in the next pooja chart.'},
+  {id:'BK-91303',devotee:'Meera P',userId:'U10422',mobile:'+91 ••••••0411',listing:temples[2],offering:'Rudrabhishekam',bookingDate:'14 Sept 2026',slot:'6:00 AM – 7:00 AM',nakshatra:'Uthram',quantity:1,amount:500,status:'Scheduled',paymentStatus:'Paid',gateway:'Razorpay',paymentReference:'pay_RP91303',createdAt:'12 Sept 2026 · 10:51 AM',remarks:'Devotee details verified.'},
+  {id:'BK-91305',devotee:'Jinsha K',userId:'U10084',mobile:'+91 ••••••1196',listing:temples[3],offering:'Pithru Tharpanam',bookingDate:'16 Sept 2026',slot:'6:00 AM – 8:00 AM',nakshatra:'Anizham',quantity:1,amount:150,status:'Payment pending',paymentStatus:'Awaiting gateway callback',gateway:'PayU',paymentReference:'PAYU91305',createdAt:'12 Sept 2026 · 11:32 AM',remarks:'Payment link remains available.'},
+  {id:'BK-91306',devotee:'Guest devotee',userId:null,mobile:'Not provided',listing:temples[0],offering:'Palpayasam',bookingDate:'15 Sept 2026',slot:'8:00 AM – 8:30 AM',nakshatra:'Chothi',quantity:1,amount:120,status:'Created',paymentStatus:'Not started',gateway:'Razorpay',paymentReference:'Not created',createdAt:'12 Sept 2026 · 12:05 PM',remarks:'Guest checkout; payment has not started.'},
+  {id:'BK-91309',devotee:'Suresh P',userId:'U10418',mobile:'+91 ••••••3312',listing:temples[0],offering:'Pushpanjali',bookingDate:'12 Sept 2026',slot:'7:00 AM – 9:00 AM',nakshatra:'Rohini',quantity:1,amount:40,status:'Completed (Done)',paymentStatus:'Paid',gateway:'Omniware',paymentReference:'OMN91309',createdAt:'11 Sept 2026 · 05:45 PM',remarks:'Included in chart CH-T1028-260912.'},
+  {id:'BK-91307',devotee:'Meera P',userId:'U10422',mobile:'+91 ••••••0411',listing:temples[1],offering:'Santhanagopala Pooja',bookingDate:'20 Sept 2026',slot:'6:00 AM – 8:00 AM',nakshatra:'Bharani',quantity:1,amount:1500,status:'Canceled',paymentStatus:'Refund initiated',gateway:'Razorpay',paymentReference:'pay_RP91307',createdAt:'12 Sept 2026 · 12:44 PM',remarks:'Canceled by devotee; refund initiated.'}
+]
+
 function FilterChips({options,value,onChange,name}){
   return <fieldset className="flex flex-wrap gap-2"><legend className="sr-only">Filter records</legend>{options.map(option=><label key={option} className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm font-semibold ${value===option?'border-brown-900 bg-brown-900 text-white':'border-brown-200 bg-white text-brown-700 hover:bg-brown-50'}`}><input className="sr-only" type="radio" name={name} checked={value===option} onChange={()=>onChange(option)}/>{option}</label>)}</fieldset>
 }
@@ -106,6 +115,35 @@ export function StaffDirectory(){
       {!filtered.length&&<p className="p-5 text-sm text-brown-500">No matching records.</p>}<div className="flex flex-col gap-3 border-t border-brown-100 px-4 py-3 text-sm text-brown-500 sm:flex-row sm:items-center sm:justify-between"><span>{filtered.length?`${(current-1)*pageSize+1}–${Math.min(current*pageSize,filtered.length)} of ${filtered.length}`:'0 records'}</span><div className="flex items-center gap-2"><button className="btn-g !px-3 !py-1.5" disabled={current===1} onClick={()=>setPage(value=>Math.max(1,value-1))}>Previous</button><span>Page {current} of {pages}</span><button className="btn-g !px-3 !py-1.5" disabled={current===pages} onClick={()=>setPage(value=>Math.min(pages,value+1))}>Next</button></div></div></section>
     {selectedTransaction&&<TransactionModal transaction={selectedTransaction} onClose={()=>setSelectedTransaction(null)} onOpenUser={openUser}/>} 
     {profile&&<UserModal profile={profile} role={role} balance={balance(profile)} records={records} reward={reward} setReward={setReward} form={{amount,setAmount,reason,setReason,campaign,setCampaign,listing,setListing,error,post}} onClose={closeProfile} onOpenTransaction={openTransaction}/>} 
+  </SShell>
+}
+
+export function StaffBookingsDirectory(){
+  const [sp]=useSearchParams(),role=sp.get('role')||'moderator'
+  const [search,setSearch]=useState(''),[filter,setFilter]=useState('All')
+  const filtered=bookingSeed.filter(booking=>{
+    if(filter!=='All'&&booking.status!==filter)return false
+    const query=search.trim().toLowerCase()
+    return !query||JSON.stringify(booking).toLowerCase().includes(query)
+  })
+  if(!['admin','moderator'].includes(role))return <SShell><p>This directory is available to moderators and portal admins.</p></SShell>
+  const statuses=['All',...new Set(bookingSeed.map(booking=>booking.status))]
+  const rows=filtered.map(booking=>[
+    <span className="font-semibold text-saffron-700">{booking.id}</span>,
+    booking.devotee,
+    `${booking.listing.name} · ${booking.listing.code}`,
+    booking.offering,
+    booking.bookingDate,
+    money(booking.amount),
+    <Pill tone={statusTone(booking.status)}>{booking.status}</Pill>,
+    <button type="button" className="btn-g !px-3 !py-1.5">View details</button>
+  ])
+  return <SShell><h1 className="text-2xl font-semibold">Bookings</h1><p className="mb-5 text-sm text-brown-500">Search and review booking records. Open a booking to view its devotee, pooja, payment and schedule details.</p>
+    <section className="card overflow-hidden" aria-label="Bookings directory"><div className="space-y-3 border-b border-brown-100 p-4"><Input aria-label="Search bookings" placeholder="Search booking, devotee, temple, pooja or payment reference" value={search} onChange={event=>setSearch(event.target.value)}/><FilterChips name="booking-status" options={statuses} value={filter} onChange={setFilter}/></div>
+      <Table title="Booking details" head={['Booking ID','Devotee','Temple · ID','Pooja / service','Booking date','Amount','Status','Action']} rows={rows} rowDetails={filtered.map(booking=>({'Devotee':booking.devotee,'User ID':booking.userId||'Guest checkout','Mobile':booking.mobile,'Pooja slot':booking.slot,'Nakshatra':booking.nakshatra,'Quantity':booking.quantity,'Payment status':booking.paymentStatus,'Payment gateway':booking.gateway,'Payment reference':booking.paymentReference,'Created':booking.createdAt,'Remarks':booking.remarks}))}/>
+      {!filtered.length&&<p className="p-5 text-sm text-brown-500">No matching bookings.</p>}
+      <div className="border-t border-brown-100 px-4 py-3 text-sm text-brown-500">{filtered.length} of {bookingSeed.length} bookings</div>
+    </section>
   </SShell>
 }
 
