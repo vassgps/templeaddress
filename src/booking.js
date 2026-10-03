@@ -18,13 +18,54 @@ export function unavailable(temple, pooja, date, quantity = 1, records = [], now
   if (pooja.availableWeekdays && !pooja.availableWeekdays.includes(new Date(`${date}T12:00:00+05:30`).getUTCDay())) return 'This pooja is not offered on this weekday.'
   if (end <= now) return 'This time slot has ended.'
   if (!pooja.live) {
-    const days = Number(/(\d+) days? ahead/.exec(pooja.minBookingTime)?.[1] || 0)
-    const hours = Number(pooja.cutoffHours || days * 24)
-    const previous = new Date(`${date}T12:00:00Z`); previous.setUTCDate(previous.getUTCDate() - 1)
-    const deadline = hours ? new Date(start.getTime() - hours * 3600000) : new Date(`${previous.toISOString().slice(0,10)}T${time24(temple.cutoff)}:00+05:30`)
-    if (now >= deadline) return hours ? `Booking closes ${hours} hours before this pooja.` : `Booking closed at ${temple.cutoff} the previous day.`
+    const hours = Number(pooja.cutoffHours || 0)
+    if (hours > 0 && now >= new Date(start.getTime() - hours * 3600000)) return `Booking closes ${hours} hours before this pooja.`
+    const days = Number(/^(\d+) days? ahead$/.exec(pooja.minBookingTime || '')?.[1] || 0)
+    const calendarDaysAhead = (Date.parse(`${date}T00:00:00Z`) - Date.parse(`${indiaDate(now)}T00:00:00Z`)) / 86400000
+    if (days > 0 && calendarDaysAhead < days) return `Book this pooja at least ${days} calendar day${days === 1 ? '' : 's'} ahead.`
   }
-  const used = records.filter(r => r.status === 'paid' && r.templeCode === temple.code && r.poojaCode === pooja.code && r.dates.includes(date)).reduce((sum,r) => sum + r.quantity, 0)
+  const used = records.filter(r => r.status === 'paid' && r.templeCode === temple.code).reduce((sum, record) => {
+    const items = Array.isArray(record.items) ? record.items : [record]
+    return sum + items.filter(item => (item.code || item.poojaCode) === pooja.code && item.dates?.includes(date)).reduce((count, item) => count + item.quantity, 0)
+  }, 0)
   if (pooja.dailyLimit > 0 && used + quantity > pooja.dailyLimit) return `Only ${Math.max(0, pooja.dailyLimit - used)} places remain for this date.`
   return ''
+}
+
+export function bookingCartIssue(temple, items, records = [], now = new Date()) {
+  for (const item of items) {
+    const pooja = temple.poojas.find(candidate => candidate.code === item.code)
+    if (!pooja) return {id: item.id, reason: 'This pooja is no longer available.'}
+    if (!item.date) return {id: item.id, reason: 'Choose pooja date to validate booking availability.'}
+    if (item.recurring && (!item.nextDate || item.nextDate <= item.date)) return {id: item.id, reason: 'Next recurring date must be after the first date.'}
+    const reserved = items.filter(other => other.id !== item.id).map(other => ({status: 'paid', templeCode: temple.code, poojaCode: other.code, dates: other.dates, quantity: other.quantity}))
+    for (const date of item.dates) {
+      const reason = unavailable(temple, pooja, date, item.quantity, [...records, ...reserved], now)
+      if (reason) return {id: item.id, reason: `${pooja.name}: ${reason}`}
+    }
+  }
+  return null
+}
+
+export function upsertBookingItem(items, item, editingId = null) {
+  return editingId ? items.map(selected => selected.id === editingId ? item : selected) : [...items, item]
+}
+
+export function bookingReceiptRows(record) {
+  const items = Array.isArray(record.items) && record.items.length ? record.items : [{
+    id: record.poojaCode, pooja: record.pooja, name: record.name, kind: record.kind,
+    ritual: record.ritual, dates: record.dates, slot: record.slot,
+    quantity: record.quantity, unitPrice: record.unitPrice,
+  }]
+  return items.flatMap((item, index) => (item.dates || []).map(date => ({
+    id: `${item.id || index}-${date}`,
+    pooja: item.pooja,
+    devoteeName: item.name,
+    ritual: `${item.kind}: ${item.ritual}`,
+    bookingDate: date,
+    slot: item.slot,
+    delivery: item.prasadCollection === 'Collect at Counter' ? 'Counter' : item.prasadCollection || '--',
+    quantity: item.quantity,
+    amount: item.unitPrice * item.quantity,
+  })))
 }
