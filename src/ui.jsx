@@ -92,20 +92,21 @@ export const Money = ({ v }) => <span className="tabular-nums">₹{Number(v).toL
 
 /* ---------- PUBLIC SHELL ---------- */
 const pubNav = [['/','Home'],['/temples','Temples'],['/special','Special poojas'],['/festival','Festivals'],['/services','Services']]
-export function PublicShell({ children, tenant, hideChatbot=false }) {
+export function PublicShell({ children, tenant, hideChatbot=false, booking=false }) {
   const [open,setOpen]=useState(false)
-  return (<div className={tenant?'tenant':''}>
-    <header className={`sticky top-0 z-30 ${tenant?'bg-white/90 text-brown-900':'bg-brown-900/95 text-white'} backdrop-blur border-b ${tenant?'border-gold-400':'border-saffron-500/60'}`}>
+  const lightHeader = tenant || booking
+  return (<div className={`${tenant?'tenant':''} ${booking?'booking-shell':''}`}>
+    <header className={`sticky top-0 z-30 ${tenant?'bg-white/90 text-brown-900':booking?'bg-white/95 text-brown-900':'bg-brown-900/95 text-white'} backdrop-blur border-b ${tenant?'border-gold-400':booking?'border-brown-100':'border-saffron-500/60'}`}>
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
-        {tenant ? <Link to="/t/kottur-sree-mahavishnu-temple" className="font-display text-lg font-semibold">{tenant}</Link> : <Logo light/>}
-        {!tenant && <nav className="ml-4 hidden gap-1 md:flex">{pubNav.map(([h,t])=><NavLink key={h} to={h} end={h==='/'} className={({isActive})=>`rounded-lg px-3 py-1.5 text-sm font-medium ${isActive?'bg-white/15 text-white':'text-brown-100 hover:bg-white/10'}`}>{t}</NavLink>)}</nav>}
+        {tenant ? <Link to="/t/kottur-sree-mahavishnu-temple" className="font-display text-lg font-semibold">{tenant}</Link> : <Logo light={!lightHeader}/>}
+        {!tenant && <nav className="ml-4 hidden gap-1 md:flex">{pubNav.map(([h,t])=><NavLink key={h} to={h} end={h==='/'} className={({isActive})=>`rounded-lg px-3 py-1.5 text-sm font-medium ${lightHeader ? (isActive?'bg-brown-50 text-brown-900':'text-brown-700 hover:bg-brown-50') : (isActive?'bg-white/15 text-white':'text-brown-100 hover:bg-white/10')}`}>{t}</NavLink>)}</nav>}
         <div className="flex-1"/>
         <LanguageControl/>
-        <Link to="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>
-        <Link to="/login" className={`btn !py-2 ${tenant?'bg-brown-900 text-white':'bg-white/15 text-white hover:bg-white/25'}`}>Login</Link>
-        <button className="md:hidden" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
+        {!booking && <Link to="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>}
+        <Link to="/login" className={`btn !py-2 ${tenant?'bg-brown-900 text-white':booking?'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50':'bg-white/15 text-white hover:bg-white/25'}`}>{booking ? 'Login / Register' : 'Login'}</Link>
+        <button className={`md:hidden ${lightHeader?'text-brown-800':''}`} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
       </div>
-      {open && <div className="border-t border-white/10 px-4 py-2 md:hidden">{pubNav.map(([h,t])=><Link key={h} to={h} onClick={()=>setOpen(false)} className="block rounded-lg px-3 py-2 text-sm">{t}</Link>)}<Link to="/whatsapp" className="block px-3 py-2 text-sm text-[#25D366]">Book on WhatsApp</Link></div>}
+      {open && <div className={`border-t px-4 py-2 md:hidden ${lightHeader?'border-brown-100':'border-white/10'}`}>{pubNav.map(([h,t])=><Link key={h} to={h} onClick={()=>setOpen(false)} className="block rounded-lg px-3 py-2 text-sm">{t}</Link>)}{!booking && <Link to="/whatsapp" className="block px-3 py-2 text-sm text-[#25D366]">Book on WhatsApp</Link>}</div>}
     </header>
     <main className="min-h-[70vh]">{children}</main>
     <footer className="mt-16 bg-brown-900 text-brown-100">
