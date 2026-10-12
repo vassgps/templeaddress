@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { CalendarCheck, ListOrdered, Gift, Landmark, Settings, Database, PenLine, Download, MessageCircle, Check, Plus, CreditCard, ArrowRightLeft, Percent, FileBadge, Globe, Users2, Crown, Power, Zap, Pencil, X } from 'lucide-react'
 import { temples, gateways, templeCharts, chartById, poojaCategories, bookingTypeOptions } from '../data'
+import ListingQr from '../ListingQr.jsx'
 import { DashShell, Pill, Field, Input, Select, Toggle, Table, Stat, Tabs, useToast, Money } from '../ui'
 
 // Vendor covers three listing types, chosen at login. Each type now has its OWN dashboard:
@@ -44,7 +45,7 @@ export function VToday() {
 
       <div className="card p-5"><h2 className="text-lg font-semibold">Tomorrow · 14 Sept</h2><div className="mt-1 flex items-center justify-between text-sm"><span>6 bookings · ₹1,850</span><span className="text-brown-500">Chart closes today 8:00 PM</span></div><div className="mt-3 rounded-xl bg-saffron-50 p-3 text-sm text-saffron-700">Ganapathi Homam: 14 of 20 slots left. <Link to="/vendor/poojas" className="font-semibold underline">Change limit</Link></div></div></div>
       <aside className="space-y-4"><div className="card p-5"><div className="flex items-center justify-between"><h3 className="font-semibold">Recent charts</h3><Link to="/vendor/charts" className="text-xs font-semibold text-saffron-600">View all</Link></div><Table head={['Chart ID','Date','Total','Status']} rows={templeCharts.slice(1,4).map(c=>[<Link to={`/vendor/charts/${c.id}`} className="font-semibold text-saffron-600">{c.id}</Link>,c.date.replace(' 2026',''),<Money v={c.bookingTotal+c.donationTotal}/>,<Pill tone="ok">{c.status}</Pill>])}/></div>
-        <div className="card p-5"><h3 className="font-semibold">Your QR board</h3><div className="photo mt-2 aspect-[3/4] rounded-xl"/><button className="btn-g mt-2 w-full">Download print file</button></div></aside></div></Shell>)
+        <ListingQr temple={temples[0]} title="Your QR board"/></aside></div></Shell>)
 }
 
 export function VBookings() {
