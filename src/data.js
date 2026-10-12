@@ -79,6 +79,14 @@ export const temples = [
       P('T1097-P2','Pithru Tharpanam','പിതൃതർപ്പണം','Vazhipadu',150,0,{purpose:'Offerings to departed ancestors, especially on Karkidaka Vavu',startTime:'6:00 AM',endTime:'8:00 AM',minBookingTime:'1 day ahead',deity:'Lord Shiva'}),
       P('T1097-P3','Sahasranama Archana','സഹസ്രനാമ അർച്ചന','Archana',60,0,{purpose:'Chanting of the 1,000 names with flower offering',startTime:'7:00 AM',endTime:'8:00 AM',deity:'Lord Shiva'}),
     ] },
+  // Sample public destination for the existing T1284 staff review; bookings stay disabled.
+  { slug:'sree-neelakeshi-mudippura-temple', code:'T1284', name:'Sree Neelakeshi Mudippura Temple', ml:'ശ്രീ നീലകേശി മുടിപ്പുര ക്ഷേത്രം', district:'Thiruvananthapuram', place:'Vellanad', deity:'Bhagavathi (Neelakeshi)', others:['Lord Ganesh','Naga'],
+    gateway:'bank', g80:false, plan:'Free', sponsor:null, bookable:false, cutoff:'8:00 PM', hue:'#7A5238', rating:0, reviews:0,
+    category:'Hindu Temple', chiefPriest:'', publicPhone:'', publicEmail:'', upiId:'',
+    timings:'To be confirmed', address:'Mudippura, Vellanad PO, Thiruvananthapuram – 695543',
+    about:'Village Bhagavathi temple in Vellanad known for its annual Mudippura festival.', story:'', history:'', speciality:'Mudippura festival',
+    guidelines:'Contact the temple committee for current visiting guidelines.', remarks:'Sample temple page. Bookings and direct UPI payments are not configured.', nearby:[], poojas:[],
+  },
 ]
 export const bySlug = s => temples.find(t=>t.slug===s) || temples[0]
 

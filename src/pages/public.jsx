@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
+import { ListingQrPreview, useListingQr } from '../ListingQr.jsx'
 import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star, Gift, BadgeCheck, ArrowRight, Download, CalendarDays, Users, QrCode, Lock, Check, Sparkles, Landmark, Flame, PartyPopper, Music, HeartHandshake, Receipt as ReceiptIcon, RefreshCcw, SlidersHorizontal, Globe2, Smartphone, Zap, Handshake, Plus, X, PenLine, Eye, TrendingUp, Mail, UserRound } from 'lucide-react'
 import { temples, bySlug, specials, services, festival as festivalData, checkoutPlans, onlineGateways, manualMethods } from '../data'
 import { PublicShell, Photo, Pill, Field, Input, Select, Toggle, Table, Section, Steps, Tabs, Money, useToast, GoogleIcon, TempleMark } from '../ui'
@@ -162,7 +163,7 @@ const TempleCard = ({ t }) => (
       <span className="absolute bottom-3 right-3 pill bg-white/90 text-brown-900"><Star size={12} className="text-gold-500" fill="currentColor"/>{t.rating}</span></Photo>
     <div className="p-4"><div className="flex items-start justify-between gap-2"><h3 className="font-semibold leading-tight">{t.name}</h3><Pill tone="n">{t.code}</Pill></div><div className="ml mt-0.5 text-sm text-brown-500">{t.ml}</div>
       <div className="mt-2 flex items-center gap-1 text-xs text-brown-500"><MapPin size={12}/>{t.place}, {t.district} · {t.deity}</div>
-      <div className="mt-3 flex items-center justify-between border-t border-brown-100 pt-3 text-sm"><span className="text-brown-500">From <b className="text-brown-900">₹{t.poojas[0].price}</b></span><span className="inline-flex items-center gap-1 font-semibold text-saffron-600 transition group-hover:gap-2">Book pooja <ArrowRight size={14}/></span></div></div></Link>
+      <div className="mt-3 flex items-center justify-between border-t border-brown-100 pt-3 text-sm"><span className="text-brown-500">{t.poojas.length?<>From <b className="text-brown-900">₹{t.poojas[0].price}</b></>:'Bookings unavailable'}</span><span className="inline-flex items-center gap-1 font-semibold text-saffron-600 transition group-hover:gap-2">{t.bookable?'Book pooja':'View temple'} <ArrowRight size={14}/></span></div></div></Link>
 )
 const SpecialCard = ({ s }) => (
   <Link to={`/special/${s.id}`} className="card-premium group overflow-hidden">
@@ -224,6 +225,7 @@ export function TemplePage() {
   const [tab,setTab] = useState(0)
   const [toast,el] = useToast()
   const [enquiry,setEnquiry] = useState({name:'',mobile:'',message:''})
+  const { record: listingQr, error: qrError } = useListingQr(t)
   if(!t) return <PublicShell><Wrap className="py-10"><h1 className="text-3xl">Temple not found</h1><Link to="/temples" className="btn-p mt-4">Browse temples</Link></Wrap></PublicShell>
   const pageUrl = `${window.location.origin}${window.location.pathname}#/t/${encodeURIComponent(t.slug)}`
   const mapQuery = t.latitude != null && t.longitude != null ? `${t.latitude},${t.longitude}` : `${t.name}, ${t.address}`
@@ -316,7 +318,7 @@ export function TemplePage() {
         {t.events?.length>0&&<div className="card p-5"><h3 className="font-semibold">Upcoming</h3>{t.events.filter(event=>event.date>=new Date().toISOString().slice(0,10)).map(event=><p key={event.date+event.name}>{event.name} · {event.date}</p>)}</div>}
         {!t.sponsor && !wl && <Link to="/sponsor" className="block rounded-2xl border-2 border-dashed border-brown-200 p-4 text-sm hover:bg-white"><b>Sponsor slot available</b><div className="text-brown-500">Put your name on this temple's page, receipts and QR board.</div></Link>}
         {t.sponsorAd&&<div className="card p-4"><p className="mb-2 text-xs text-brown-500">Sponsored advertisement · {t.sponsor}</p>{t.sponsorAd.banner&&<img src={t.sponsorAd.banner} alt={t.sponsorAd.text||'Sponsor advertisement'} className="w-full rounded-xl"/>}{t.sponsorAd.text&&<p className="mt-2">{t.sponsorAd.text}</p>}{/^https?:\/\//.test(t.sponsorAd.url||'')&&<a href={t.sponsorAd.url} rel="sponsored noopener noreferrer" target="_blank" className="underline">Visit sponsor</a>}</div>}
-        <div className="card p-3"><div className="flex items-center gap-3"><QRCodeSVG value={pageUrl} size={64} marginSize={2}/><div className="min-w-0"><div className="flex items-center gap-1.5 text-sm font-semibold"><QrCode size={14}/>Temple QR code</div><p className="mt-0.5 truncate text-xs text-brown-500">Scan to open {t.name}</p></div></div></div>
+        <div className="card p-3">{qrError?<p className="text-xs text-brown-500">Temple QR is temporarily unavailable.</p>:<div className="flex items-center gap-3"><ListingQrPreview value={listingQr?.targetUrl||pageUrl} size={64}/><div className="min-w-0"><div className="flex items-center gap-1.5 text-sm font-semibold"><QrCode size={14}/>Temple QR code</div><p className="mt-0.5 truncate text-xs text-brown-500">Scan to open {t.name}</p></div></div>}</div>
         <div className="card p-5 text-sm"><b>Are you the temple committee?</b><p className="mt-1 text-brown-500">Claim this page to manage poojas, prices and the daily chart.</p><Link to={`/claim/${t.slug}`} className="btn-g mt-2 w-full"><Lock size={14}/>Claim this temple</Link></div>
       </aside>
     </div>
