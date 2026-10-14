@@ -123,7 +123,7 @@ export function Home() {
             <span className="pill glass"><Sparkles size={13} className="text-gold-400"/>New · Temple assistant</span>
             <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">Ask anything. <span className="gold-text">English or മലയാളം.</span></h2>
             <p className="mt-3 max-w-lg text-brown-100">Timings, pooja prices, nakshatra guidance, 80G rules — the assistant answers only from verified TempleAddress data, and hands over to a human on WhatsApp when needed.</p>
-            <div className="mt-5 flex flex-wrap gap-2">{['Ganapathi Homam price','Temple timings','80G donation','Cancel a booking'].map(s=><button key={s} onClick={()=>askAI(s)} className="rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-sm transition hover:bg-white/20">{s}</button>)}</div>
+            <div className="mt-5 flex flex-wrap gap-2">{['Ganapathi Homam price','Temple timings','Cancel a booking'].map(s=><button key={s} onClick={()=>askAI(s)} className="rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-sm transition hover:bg-white/20">{s}</button>)}</div>
           </div>
           <div className="glass relative rounded-2xl p-4 text-sm">
             <div className="flex items-center gap-2 text-xs text-brown-100"><Sparkles size={13} className="text-gold-400"/>Temple assistant · answers from verified data</div>
@@ -238,7 +238,7 @@ export function TemplePage() {
     {!wl && <div className="mb-4 flex items-center justify-between rounded-xl bg-blue-50 px-4 py-2 text-sm text-blue-800"><span>Preview this page as the temple's own site ({t.slug.split('-')[0]}.templeaddress.com)</span><Toggle label="White-label view" onChange={setWl}/></div>}
     {wl && <div className="mb-4 flex items-center justify-between rounded-xl bg-gold-300/30 px-4 py-2 text-sm"><span>Tenant view — no TempleAddress ads or nearby temples; only this temple's sponsor.</span><button onClick={()=>setWl(false)} className="font-semibold underline">Exit</button></div>}
     <Photo hue={t.hue} className="rounded-3xl p-6 text-white md:p-10">
-      <div className="relative flex flex-wrap gap-2"><Pill tone="ok"><BadgeCheck size={12}/>Verified</Pill><Pill tone="n">{t.code}</Pill>{t.category&&<Pill tone="info">{t.category}</Pill>}{t.g80&&<Pill tone="gold">80G certified</Pill>}{own&&<Pill tone="info">Pays temple directly</Pill>}</div>
+      <div className="relative flex flex-wrap gap-2"><Pill tone="ok"><BadgeCheck size={12}/>Verified</Pill><Pill tone="n">{t.code}</Pill>{t.category&&<Pill tone="info">{t.category}</Pill>}{own&&<Pill tone="info">Pays temple directly</Pill>}</div>
       <h1 className="relative mt-24 text-3xl font-semibold md:text-5xl">{t.name}</h1><div className="ml relative mt-1 text-lg text-brown-100">{t.ml} · {t.place}, {t.district}</div>
       <div className="relative mt-4 flex flex-wrap gap-4 text-sm text-brown-100"><span className="flex items-center gap-1"><Clock size={14}/>{t.timings}</span><span className="flex items-center gap-1"><Star size={14} className="text-gold-300" fill="currentColor"/>{t.rating} · {t.reviews} reviews</span></div>
     </Photo>
@@ -287,7 +287,7 @@ export function TemplePage() {
         {tab===3 && <>
           <div className="card p-5"><div className="flex items-center gap-2"><Gift size={18} className="text-saffron-600"/><h3 className="font-semibold">Direct UPI donation</h3><Pill tone="ok">No charges</Pill></div><p className="mt-1 text-sm text-brown-500">Donate directly to the temple's own UPI ID — the temple receives 100%.</p>
             {t.upiId ? <div className="mt-4 grid items-center gap-4 sm:grid-cols-[128px_1fr]"><div className="mx-auto grid aspect-square w-32 place-items-center rounded-xl border-4 border-brown-900 bg-white p-2"><QRCodeSVG value={upiUri} size={104} level="M"/></div><div className="text-sm"><b className="text-base">{t.upiId}</b><p className="mt-1 text-brown-500">Scan with any UPI app, or tap below on a phone.</p><a href={upiUri} className="btn-g mt-2 inline-flex"><QrCode size={16}/>Pay via UPI app</a></div></div> : <p className="mt-3 text-sm text-brown-500">This temple hasn't published a direct UPI ID yet.</p>}</div>
-          <div className="card p-5"><div className="flex items-center gap-2"><ReceiptIcon size={18} className="text-saffron-600"/><h3 className="font-semibold">Donation with receipt</h3><Pill tone="info">2–5% fee</Pill></div><p className="mt-1 text-sm text-brown-500">Get an official numbered receipt{t.g80?' with an 80G tax certificate':''} and secure gateway payment support.</p>
+          <div className="card p-5"><div className="flex items-center gap-2"><ReceiptIcon size={18} className="text-saffron-600"/><h3 className="font-semibold">Donation with receipt</h3><Pill tone="info">2–5% fee</Pill></div><p className="mt-1 text-sm text-brown-500">Get an official numbered receipt and secure gateway payment support.</p>
             <div className="mt-3 flex flex-wrap gap-2">{['Razorpay','PayU','Stripe','UPI'].map(g=><Pill key={g}>{g}</Pill>)}</div>
             <Link to={`/donate/${t.slug}`} className="btn-p mt-4 w-full">Donate with receipt <ArrowRight size={16}/></Link></div>
           <form onSubmit={sendEnquiry} className="card space-y-3 p-5"><h3 className="font-semibold">Quick enquiry</h3><p className="text-sm text-brown-500">Send a simple enquiry to this listing with your name, mobile number and message.</p>
@@ -304,10 +304,10 @@ export function TemplePage() {
 
       </div>
       <aside className="space-y-4 lg:sticky lg:top-32 lg:self-start">
-        <div className="card p-5"><Link to={`/book/${t.slug}`} className="btn-p w-full !py-3 text-base">Book pooja</Link><Link to={`/donate/${t.slug}`} className="btn-s mt-2 w-full"><Gift size={16}/>Donate{t.g80?' · 80G receipt':''}</Link><Link to="/whatsapp" className="btn-wa mt-2 w-full"><MessageCircle size={16}/>Book on WhatsApp</Link><p className="mt-3 text-xs text-brown-500">Temple receives 100% of the pooja amount. The payment gateway shows its processing fee before you pay.</p></div>
+        <div className="card p-5"><Link to={`/book/${t.slug}`} className="btn-p w-full !py-3 text-base">Book pooja</Link><Link to={`/donate/${t.slug}`} className="btn-s mt-2 w-full"><Gift size={16}/>Donate</Link><Link to="/whatsapp" className="btn-wa mt-2 w-full"><MessageCircle size={16}/>Book on WhatsApp</Link><p className="mt-3 text-xs text-brown-500">Temple receives 100% of the pooja amount. The payment gateway shows its processing fee before you pay.</p></div>
 
         <div className="card p-5"><h3 className="font-semibold">Quick info</h3>
-          <div className="mt-2 flex flex-wrap gap-1.5">{t.bookable&&<Pill tone="ok">Booking open</Pill>}<Pill tone="info">Donation open</Pill>{t.g80&&<Pill tone="gold">80G</Pill>}</div>
+          <div className="mt-2 flex flex-wrap gap-1.5">{t.bookable&&<Pill tone="ok">Booking open</Pill>}<Pill tone="info">Donation open</Pill></div>
           <dl className="mt-3 space-y-3">
             <Fact l="Temple code" v={t.code}/><Fact l="Category" v={t.category||'Hindu Temple'}/><Fact l="Main deity" v={t.deity}/><Fact l="Location" v={`${t.place}, ${t.district}`}/><Fact l="Opening" v={t.timings}/>
           </dl></div>
