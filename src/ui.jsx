@@ -169,7 +169,7 @@ const kb = [
   [/timing|time|open/i, 'Kottur Sree Mahavishnu Temple is open 5:30–9:30 AM and 5:30–7:30 PM. Source: temple page.'],
   [/ganapathi|homam/i, 'Ganapathi Homam is ₹250, limited to 20 per day. 14 slots are left for tomorrow. Want me to start a booking?'],
   [/book|pooja/i, 'You can book on this site, on WhatsApp (+91 9495 041196) or in the app. Which temple?'],
-  [/80g|donation|donate/i, 'Kottur temple holds an 80G certificate — donations with your PAN get an 80G receipt along with the booking receipt.'],
+  [/donation|donate/i, 'You can donate through the temple page and receive a donation receipt. Which temple would you like to support?'],
   [/cancel|refund/i, 'Cancel or reschedule until the chart closes (8:00 PM the day before). Refunds go back to the same payment method in 5–7 days.'],
   [/santhana|child/i, 'Santhanagopala Pooja is the temple\'s speciality — ₹1,500, 3 per day, book at least a day ahead.'],
 ]
@@ -182,7 +182,7 @@ export function Chatbot() {
     {open && <div className="fixed bottom-20 right-5 z-40 flex h-[460px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-brown-200">
       <div className="flex items-center gap-2 bg-brown-900 px-4 py-3 text-white"><Sparkles size={16} className="text-gold-400"/><b className="text-sm">Temple assistant</b><span className="ml-auto text-[10px] text-brown-200">RAG on TempleAddress data</span></div>
       <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm">{msgs.map((m,i)=><div key={i} className={`max-w-[85%] rounded-2xl px-3 py-2 ${m.me?'ml-auto bg-saffron-500 text-white':'bg-brown-50'}`}>{m.t}</div>)}
-        <div className="flex flex-wrap gap-1 pt-1">{['Temple timings','Ganapathi Homam price','80G donation','Cancel a booking'].map(s=><button key={s} onClick={()=>ask(s)} className="rounded-full border border-brown-200 px-2.5 py-1 text-xs hover:bg-brown-50">{s}</button>)}</div></div>
+        <div className="flex flex-wrap gap-1 pt-1">{['Temple timings','Ganapathi Homam price','Cancel a booking'].map(s=><button key={s} onClick={()=>ask(s)} className="rounded-full border border-brown-200 px-2.5 py-1 text-xs hover:bg-brown-50">{s}</button>)}</div></div>
       <form onSubmit={e=>{e.preventDefault();ask()}} className="flex gap-2 border-t border-brown-100 p-2"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Ask anything…" className="input !py-2"/><button className="btn-p !px-3"><Send size={16}/></button></form>
     </div>}
   </>)
