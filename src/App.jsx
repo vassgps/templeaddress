@@ -10,8 +10,10 @@ import { StaffDirectory, StaffBookingsDirectory } from './pages/staffDirectory'
 import { PublicShell } from './ui'
 import { Booking, BookingReceipt } from './pages/booking'
 import { Policy } from './pages/policy'
+import ListingPreview from './pages/listingPreview.jsx'
 
 const routes = [
+  ['/preview/listing/:code', ListingPreview],
   ['/book/:slug', Booking], ['/receipt/:bookingCode', BookingReceipt], ['/policies/:kind', Policy], ['/listing/:slug', P.TemplePage],
   ['/staff/directory/bookings', StaffBookingsDirectory], ['/staff/directory/:kind', StaffDirectory],
   ['/', P.Home], ['/temples', P.Temples], ['/t/:slug', P.TemplePage], ['/claim/:slug', P.Claim], ['/submit-temple', P.SubmitTemple], ['/receipt', P.Receipt], ['/donate/:slug', P.Donate],
