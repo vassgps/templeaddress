@@ -227,6 +227,9 @@ export const festival = {
   ],
 }
 
+// Public festival directory; committee and review records remain separate.
+export const festivals = [festival]
+
 /* ---------- VENDOR TYPE 3 · SERVICE PROVIDER ----------
    A person or team (priest, astrologer, performer) selling time-slot appointments,
    optionally also listing Special poojas. No daily chart, no 80G — reviews and slots matter. */

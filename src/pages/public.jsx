@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { ListingQrPreview, useListingQr } from '../ListingQr.jsx'
 import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star, Gift, BadgeCheck, ArrowRight, Download, CalendarDays, Users, QrCode, Lock, Check, Sparkles, Landmark, Flame, PartyPopper, Music, HeartHandshake, Receipt as ReceiptIcon, RefreshCcw, SlidersHorizontal, Globe2, Smartphone, Zap, Handshake, Plus, X, PenLine, Eye, TrendingUp, Mail, UserRound } from 'lucide-react'
-import { temples, bySlug, specials, services, festival as festivalData, checkoutPlans, onlineGateways, manualMethods } from '../data'
+import { temples, bySlug, specials, services, festivals, checkoutPlans, onlineGateways, manualMethods } from '../data'
 import { PublicShell, Photo, Pill, Field, Input, Select, Toggle, Table, Section, Steps, Tabs, Money, useToast, GoogleIcon, TempleMark } from '../ui'
 import { FileField } from './checkout'
 
@@ -446,9 +446,18 @@ export function SpecialDetail() {
 }
 
 /* ---------------- FESTIVAL ---------------- */
+export function Festivals() {
+  return (<PublicShell><section className="bg-temple-grad text-white"><Wrap className="py-10"><h1 className="text-4xl font-semibold">Festivals</h1><p className="mt-2 text-brown-100">Explore temple festivals, view programmes and discover festival offerings.</p></Wrap></section>
+    <Wrap className="py-8"><p className="mb-5 text-sm text-brown-500">{festivals.length} {festivals.length===1?'festival':'festivals'}</p><div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{festivals.map(festival=><Link key={festival.code} to={`/festival/${festival.code}`} className="card-premium group overflow-hidden"><Photo hue="#8A3A1F" className="aspect-[16/9]" label={`Festival · ${festival.code}`}><span className="absolute bottom-3 left-3 pill bg-white/90 text-brown-900"><CalendarDays size={12}/>{festival.from} – {festival.to}</span></Photo><div className="p-5"><Pill tone="ok">{festival.status}</Pill><h2 className="mt-3 text-xl font-semibold">{festival.name}</h2><p className="ml mt-1 text-sm text-brown-500">{festival.ml}</p><p className="mt-3 text-sm font-semibold">{festival.temple}</p><p className="mt-1 flex items-center gap-1 text-sm text-brown-500"><MapPin size={14}/>{festival.place}</p><div className="mt-4 flex items-center justify-between border-t border-brown-100 pt-3 text-sm font-semibold text-saffron-600"><span>View festival</span><ArrowRight size={16}/></div></div></Link>)}</div></Wrap>
+  </PublicShell>)
+}
+
 export function Festival() {
+  const {code}=useParams()
+  const festivalData=festivals.find(festival=>festival.code===code)
   const [toast,el]=useToast(); const [pack,setPack]=useState('Day sponsor ₹35,000')
-  return (<PublicShell><Wrap className="py-6">{el}<Photo hue="#8A3A1F" className="rounded-3xl p-6 text-white md:p-10"><Pill tone="gold">Festival · {festivalData.code}</Pill><h1 className="relative mt-20 text-3xl font-semibold md:text-5xl">{festivalData.name}</h1><div className="ml relative mt-1 text-lg text-brown-100">{festivalData.ml} · {festivalData.from} – {festivalData.to} · {festivalData.temple}</div></Photo>
+  if(!festivalData)return <PublicShell><Wrap className="py-10"><h1 className="text-3xl font-semibold">Festival not found</h1><Link to="/festival" className="btn-g mt-4">Browse festivals</Link></Wrap></PublicShell>
+  return (<PublicShell><Wrap className="py-6">{el}<Link to="/festival" className="mb-4 inline-block text-sm font-semibold text-brown-500">← All festivals</Link><Photo hue="#8A3A1F" className="rounded-3xl p-6 text-white md:p-10"><Pill tone="gold">Festival · {festivalData.code}</Pill><h1 className="relative mt-20 text-3xl font-semibold md:text-5xl">{festivalData.name}</h1><div className="ml relative mt-1 text-lg text-brown-100">{festivalData.ml} · {festivalData.from} – {festivalData.to} · {festivalData.temple}</div></Photo>
     <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]"><div className="space-y-6">
       <div className="card p-5"><h2 className="text-xl font-semibold">About the festival</h2><p className="mt-2 text-sm text-brown-700">The festival page keeps the committee, venue, history, travel information and festival description as static listing content. Programme events below carry their own exact date and time and may change independently.</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-brown-50 p-3 text-sm"><span className="text-brown-500">Venue</span><b className="block">{festivalData.temple}</b><span>{festivalData.place}</span></div><div className="rounded-xl bg-brown-50 p-3 text-sm"><span className="text-brown-500">Festival dates</span><b className="block">{festivalData.from} – {festivalData.to}</b><span>{festivalData.committee}</span></div></div></div>
       <div className="card p-5"><div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">Programme</h2><Pill tone="info">Times shown in IST</Pill></div><Table head={['Date','Time','Event','Type','Status']} rows={festivalData.programme.map(([day,event,time,kind,,status])=>[<b>{day} 2026</b>,time,event,<Pill tone="n">{kind}</Pill>,<Pill tone={status==='Confirmed'?'ok':'warn'}>{status}</Pill>])}/></div>
