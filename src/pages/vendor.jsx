@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { CalendarCheck, ListOrdered, Gift, Landmark, Settings, Database, PenLine, Download, MessageCircle, Check, Plus, CreditCard, ArrowRightLeft, Percent, FileBadge, Globe, Users2, Crown, Power, Zap, Pencil, X } from 'lucide-react'
 import { temples, gateways, templeCharts, chartById, poojaCategories, bookingTypeOptions } from '../data'
@@ -81,10 +81,19 @@ export function VPoojas() {
   const [list,setList]=useState(t.poojas)
   const [editing,setEditing]=useState(null) // null | index | 'new'
   const [draft,setDraft]=useState(null)
+  const [error,setError]=useState('')
+  const dialogRef=useRef(null)
+  useEffect(()=>{
+    if(editing===null)return
+    const dialog=dialogRef.current,trigger=document.activeElement,overflow=document.body.style.overflow
+    dialog.showModal()
+    document.body.style.overflow='hidden'
+    return ()=>{dialog.close();document.body.style.overflow=overflow;trigger?.focus()}
+  },[editing])
   const setField = (k,v) => setDraft(d=>({...d,[k]:v}))
-  const openEdit = i => { setEditing(i); setDraft(i==='new'?{...blankPooja(t),code:`${t.code}-P${list.length+1}`}:{...list[i]}) }
+  const openEdit = i => { setError(''); setEditing(i); setDraft(i==='new'?{...blankPooja(t),code:`${t.code}-P${list.length+1}`}:{...list[i]}) }
   const save = () => {
-    if(!draft.name.trim()||!draft.code.trim()){ toast('Name and code are required'); return }
+    if(!draft.name.trim()||!draft.code.trim()){ setError('Name and code are required'); return }
     if(editing==='new') setList(l=>[...l,draft]); else setList(l=>l.map((p,i)=>i===editing?draft:p))
     toast(editing==='new'?`${draft.name} added`:`${draft.name} updated`); setEditing(null)
   }
@@ -101,15 +110,16 @@ export function VPoojas() {
       <span className="text-xs text-brown-600">{p.bookingType}</span>,
       <Toggle defaultChecked={p.live} onChange={()=>{toggleField(i,'live');toast(p.live?`${p.name}: live booking turned off`:`${p.name}: live booking enabled — bookable instantly, any time`)}}/>,
       <Toggle defaultChecked={p.bookable} onChange={()=>toggleField(i,'bookable')}/>,
-      <div className="flex gap-2"><button onClick={()=>openEdit(i)} className="text-xs font-semibold text-saffron-600"><Pencil size={12} className="mr-0.5 inline"/>Edit</button><button onClick={()=>remove(i)} className="text-xs text-red-600">Remove</button></div>,
+      <div className="flex gap-2"><button onClick={()=>openEdit(i)} onKeyDown={event=>event.stopPropagation()} className="text-xs font-semibold text-saffron-600"><Pencil size={12} className="mr-0.5 inline"/>Edit</button><button onClick={()=>remove(i)} className="text-xs text-red-600">Remove</button></div>,
     ])}/></div>
 
-    {editing!==null && draft && <div className="card mt-5 space-y-6 p-5">
-      <div className="flex items-center justify-between"><h3 className="text-lg font-semibold">{editing==='new'?'Add a pooja':`Edit · ${list[editing].name}`}</h3><button onClick={()=>setEditing(null)} aria-label="Close" className="text-brown-400 hover:text-brown-700"><X size={18}/></button></div>
+    {editing!==null && draft && <dialog ref={dialogRef} aria-labelledby="pooja-dialog-title" onCancel={()=>setEditing(null)} onClick={event=>{if(event.target===event.currentTarget)setEditing(null)}} className="m-auto max-h-[90vh] w-[calc(100%_-_2rem)] max-w-3xl overflow-y-auto rounded-2xl bg-white p-0 text-brown-900 shadow-2xl backdrop:bg-brown-950/60"><div className="space-y-6 p-5">
+      <div className="flex items-center justify-between"><h3 id="pooja-dialog-title" className="text-lg font-semibold">{editing==='new'?'Add a pooja':`Edit · ${list[editing].name}`}</h3><button onClick={()=>setEditing(null)} aria-label="Close" className="text-brown-400 hover:text-brown-700"><X size={18}/></button></div>
+      {error&&<p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       <div><h4 className="text-xs font-bold uppercase tracking-wide text-brown-500">Basic details</h4>
         <div className="mt-3 grid gap-4 md:grid-cols-2">
-          <Field label="Name (English)"><Input value={draft.name} onChange={e=>setField('name',e.target.value)}/></Field>
+          <Field label="Name (English)"><Input autoFocus value={draft.name} onChange={e=>setField('name',e.target.value)}/></Field>
           <Field label="Name (Malayalam)"><Input className="input ml" value={draft.ml} onChange={e=>setField('ml',e.target.value)}/></Field>
           <Field label="Code" hint="Unique per listing"><Input value={draft.code} onChange={e=>setField('code',e.target.value)}/></Field>
           <Field label="Category"><Select options={poojaCategories} value={draft.category} onChange={e=>setField('category',e.target.value)}/></Field>
@@ -129,7 +139,7 @@ export function VPoojas() {
         </div></div>
 
       <div className="flex gap-2 border-t border-brown-100 pt-4"><button onClick={save} className="btn-p"><Check size={16}/>Save pooja</button><button onClick={()=>setEditing(null)} className="btn-g">Cancel</button></div>
-    </div>}
+    </div></dialog>}
 
     <div className="card mt-5 grid gap-4 p-5 md:grid-cols-2"><Field label="Chart closes at" hint="Bookings after this move to the next day — live poojas are unaffected"><Select options={['6:00 PM','7:00 PM','8:00 PM','9:00 PM']} defaultValue="8:00 PM"/></Field><Field label="Bookings open up to"><Select options={['7 days ahead','15 days ahead','30 days ahead']} defaultValue="30 days ahead"/></Field></div></Shell>)
 }
