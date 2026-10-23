@@ -5,7 +5,7 @@ export default function robots() {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/vendor/', '/festival-admin/', '/service-admin/', '/partner/', '/dealer/', '/staff/', '/account/'],
+        disallow: ['/vendor', '/festival-admin', '/service-admin', '/partner', '/dealer', '/staff', '/account', '/login', '/receipt', '/preview'],
       },
     ],
     sitemap: 'https://templeaddress.com/sitemap.xml',

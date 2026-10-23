@@ -17,7 +17,7 @@ export function Account() {
   const [contact,setContact]=useState('')
   const [otp,setOtp]=useState('')
   const [notice,setNotice]=useState('')
-  const [billingActivations]=useState(()=>{try{return JSON.parse(localStorage.getItem('ta-billing-activations-v1')||'[]')}catch{return []}})
+  const [billingActivations]=useState(()=>{if(typeof window==='undefined')return [];try{return JSON.parse(window.localStorage.getItem('ta-billing-activations-v1')||'[]')}catch{return []}})
   const [partnerStatus,setPartnerStatus]=useState(()=>sessionStorage.getItem('ta-partner-status')||'none')
   const [partnerOpen,setPartnerOpen]=useState(false)
   const [partnerStep,setPartnerStep]=useState(0)
@@ -77,7 +77,7 @@ export function Account() {
 
 export function UserListings() {
   const listings = [[bySlug('kottur-sree-mahavishnu-temple'),'Published','ok'],[bySlug('vengamala-bhagavathi-temple'),'Pending staff review','warn']]
-  const [drafts]=useState(()=>{try{return JSON.parse(sessionStorage.getItem('ta-listing-drafts-v1')||'[]')}catch{return []}})
+  const [drafts]=useState(()=>{if(typeof window==='undefined')return [];try{return JSON.parse(window.sessionStorage.getItem('ta-listing-drafts-v1')||'[]')}catch{return []}})
   return (<PublicShell><Wrap className="py-8"><div className="flex flex-wrap items-end justify-between gap-3"><div><Link href="/account" className="text-sm font-semibold text-brown-500">← My account</Link><h1 className="mt-2 text-3xl font-semibold">My listings</h1><p className="text-sm text-brown-500">Listings created from your devotee profile.</p></div><Link href="/account/listings/new" className="btn-p"><PlusCircle size={16}/>Create listing</Link></div>
     {drafts.length>0&&<div className="mt-6 space-y-3"><h2 className="text-lg font-semibold">Saved drafts</h2>{drafts.map(draft=><article key={draft.id} className="rounded-2xl border border-blue-100 bg-blue-50 p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><b>{draft.listingName}</b><Pill tone="info">Draft · {draft.completedSections.length}/6 sections</Pill></div><p className="mt-1 text-xs text-blue-800">{draft.type} · Last saved {new Date(draft.updatedAt).toLocaleString('en-IN')}</p></div><Link href={draft.id.startsWith('DRAFT-')?'/account/listings/new':`/account/listings/${draft.id}/edit`} className="btn-p">Continue draft</Link></div></article>)}</div>}
     <div className="mt-6 space-y-4">{listings.map(([temple,status,tone])=><article key={temple.slug} className="card p-5"><div className="flex flex-col gap-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold">{temple.name}</h2><Pill tone={tone}>{status}</Pill></div><p className="text-sm text-brown-500">{temple.code} · {temple.place}, {temple.district}</p></div><div className="flex gap-2"><a href={`#/t/${temple.slug}`} target="_blank" rel="noopener noreferrer" className="btn-g"><ExternalLink size={16}/>View</a><Link href={`/account/listings/${temple.slug}/edit`} className="btn-s"><Pencil size={16}/>Edit</Link></div></div>{tone==='warn'&&<p className="mt-3 rounded-xl bg-saffron-50 p-3 text-xs text-saffron-800">Staff is reviewing this listing. You can still update the draft and resubmit it.</p>}</article>)}</div></Wrap></PublicShell>)

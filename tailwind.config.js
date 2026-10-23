@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+const config = {
   // Updated content paths for Next.js App Router + components
   content: [
     './app/**/*.{js,jsx,ts,tsx}',
@@ -32,3 +32,5 @@ export default {
   },
   plugins: [],
 }
+
+export default config

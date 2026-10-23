@@ -2501,7 +2501,7 @@ function TemplePage() {
         lineNumber: 231,
         columnNumber: 17
     }, this);
-    const pageUrl = `${window.location.origin}${window.location}#/t/${encodeURIComponent(t.slug)}`;
+    const pageUrl = `https://templeaddress.com/t/${encodeURIComponent(t.slug)}`;
     const mapQuery = t.latitude != null && t.longitude != null ? `${t.latitude},${t.longitude}` : `${t.name}, ${t.address}`;
     const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
     const own = t.gateway === 'omniware';
@@ -9382,16 +9382,20 @@ const templeAddressTax = {
 const billingActivationKey = 'ta-billing-activations-v1';
 const partnerWalletTransactionKey = 'ta-partner-wallet-transactions-v1';
 const readBillingActivations = ()=>{
+    if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+    ;
     try {
-        return JSON.parse(localStorage.getItem(billingActivationKey) || '[]');
+        return JSON.parse(window.localStorage.getItem(billingActivationKey) || '[]');
     } catch  {
         return [];
     }
 };
 const saveBillingActivations = (records)=>localStorage.setItem(billingActivationKey, JSON.stringify(records));
 const readPartnerWalletTransactions = ()=>{
+    if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+    ;
     try {
-        return JSON.parse(localStorage.getItem(partnerWalletTransactionKey) || '[]');
+        return JSON.parse(window.localStorage.getItem(partnerWalletTransactionKey) || '[]');
     } catch  {
         return [];
     }

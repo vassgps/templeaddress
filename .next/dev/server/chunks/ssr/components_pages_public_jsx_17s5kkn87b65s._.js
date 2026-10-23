@@ -2476,7 +2476,7 @@ function TemplePage() {
         lineNumber: 231,
         columnNumber: 17
     }, this);
-    const pageUrl = `${window.location.origin}${window.location}#/t/${encodeURIComponent(t.slug)}`;
+    const pageUrl = `https://templeaddress.com/t/${encodeURIComponent(t.slug)}`;
     const mapQuery = t.latitude != null && t.longitude != null ? `${t.latitude},${t.longitude}` : `${t.name}, ${t.address}`;
     const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
     const own = t.gateway === 'omniware';
@@ -9291,19 +9291,15 @@ const templeAddressTax = {
 const billingActivationKey = 'ta-billing-activations-v1';
 const partnerWalletTransactionKey = 'ta-partner-wallet-transactions-v1';
 const readBillingActivations = ()=>{
-    try {
-        return JSON.parse(localStorage.getItem(billingActivationKey) || '[]');
-    } catch  {
-        return [];
-    }
+    if ("TURBOPACK compile-time truthy", 1) return [];
+    //TURBOPACK unreachable
+    ;
 };
 const saveBillingActivations = (records)=>localStorage.setItem(billingActivationKey, JSON.stringify(records));
 const readPartnerWalletTransactions = ()=>{
-    try {
-        return JSON.parse(localStorage.getItem(partnerWalletTransactionKey) || '[]');
-    } catch  {
-        return [];
-    }
+    if ("TURBOPACK compile-time truthy", 1) return [];
+    //TURBOPACK unreachable
+    ;
 };
 function Sponsor() {
     const [toast, el] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useToast"])();

@@ -33,7 +33,7 @@ const transactionSeed = [
 ]
 const transactions=transactionSeed.map(([id,userId,type,status,templeIndex,amount,offering,gateway,gatewayId,bankId,bookingId,remarks,createdAt])=>({id,userId,type,status,listing:temples[templeIndex],amount,offering,gateway,gatewayId,bankId,bookingId,remarks,createdAt}))
 const rewardKey='ta-special-rewards-v1'
-const readRewards=()=>JSON.parse(localStorage.getItem(rewardKey)||'[]')
+const readRewards=()=>typeof window==='undefined'?[]:JSON.parse(window.localStorage.getItem(rewardKey)||'[]')
 const money=n=>'₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:2})
 const personById=id=>people.find(person=>person.id===id)
 const dateTime=value=>new Date(value).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})

@@ -1,22 +1,21 @@
 /**
  * /t/[slug] — Temple page
- * Rendering: SSG (generateStaticParams) + ISR (revalidate: 3600)
+ * Rendering: SSG via generateStaticParams, with a partially prerendered client UI.
  * SEO: generateMetadata with OpenGraph, JSON-LD structured data
  * Note: Next.js 16 — params is a Promise, must await.
  */
 import { notFound } from 'next/navigation'
-import { temples, bySlug } from '@/lib/data'
+import { temples } from '@/lib/data'
 import { TemplePage } from '@/components/pages/public'
 
 // ── Build-time: generate all temple pages statically ─────────────────────────
 export async function generateStaticParams() {
   return temples.map(t => ({ slug: t.slug }))
 }
-
 // ── Per-page SEO metadata ─────────────────────────────────────────────────────
 export async function generateMetadata({ params }) {
   const { slug } = await params          // Next.js 16: params is a Promise
-  const temple = bySlug(slug)
+  const temple = temples.find(t => t.slug === slug)
   if (!temple) return { title: 'Temple not found' }
 
   const title       = temple.name
@@ -33,17 +32,10 @@ export async function generateMetadata({ params }) {
       url:         `https://templeaddress.com/t/${slug}`,
       type:        'website',
       locale:      'en_IN',
-      images: [{
-        url:    `/og/temple/${slug}.png`,   // generate with next/og in production
-        width:  1200,
-        height: 630,
-        alt:    temple.name,
-      }],
     },
     twitter: { card: 'summary_large_image', title: `${temple.name} — Book vazhipadu`, description },
   }
 }
-
 // ── JSON-LD structured data (improves Google rich results) ───────────────────
 function JsonLd({ temple }) {
   const schema = {
@@ -69,13 +61,13 @@ function JsonLd({ temple }) {
       target:   `https://templeaddress.com/book/${temple.slug}`,
     },
   }
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }} />
 }
 
 // ── Page component ────────────────────────────────────────────────────────────
 export default async function TemplePageRoute({ params }) {
   const { slug } = await params
-  const temple = bySlug(slug)
+  const temple = temples.find(t => t.slug === slug)
   if (!temple) notFound()
   return (
     <>
@@ -85,6 +77,3 @@ export default async function TemplePageRoute({ params }) {
     </>
   )
 }
-
-// ISR: re-render at most every hour (for real backend — not needed for static mock data)
-export const revalidate = 3600

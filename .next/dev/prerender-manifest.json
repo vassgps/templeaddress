@@ -1,6 +1,1 @@
-{
-  "version": 4,
-  "routes": {},
-  "dynamicRoutes": {},
-  "notFoundRoutes": []
-}
+{"version":4,"routes":{"/t/[slug]":{},"/t/kottur-sree-mahavishnu-temple":{},"/t/bilathikulam-sree-shiva-temple":{},"/t/vengamala-bhagavathi-temple":{},"/t/thrikapaleshwaram-temple":{},"/t/sree-neelakeshi-mudippura-temple":{},"/book/[slug]":{},"/book/kottur-sree-mahavishnu-temple":{},"/book/bilathikulam-sree-shiva-temple":{},"/book/vengamala-bhagavathi-temple":{},"/book/thrikapaleshwaram-temple":{},"/book/sree-neelakeshi-mudippura-temple":{}},"dynamicRoutes":{"/t/[slug]":{"dataRoute":null,"dataRouteRegex":null,"fallback":"/t/[slug]/page","fallbackRevalidate":false,"fallbackRootParams":[],"fallbackRouteParams":[{"paramName":"slug","paramType":"dynamic"}],"fallbackSourceRoute":"/t/[slug]","routeRegex":"^\\/t\\/([^/]+?)(?:\\/)?$","allowHeader":[]},"/book/[slug]":{"dataRoute":null,"dataRouteRegex":null,"fallback":"/book/[slug]/page","fallbackRevalidate":false,"fallbackRootParams":[],"fallbackRouteParams":[{"paramName":"slug","paramType":"dynamic"}],"fallbackSourceRoute":"/book/[slug]","routeRegex":"^\\/book\\/([^/]+?)(?:\\/)?$","allowHeader":[]}},"notFoundRoutes":[]}

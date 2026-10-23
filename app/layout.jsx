@@ -41,11 +41,11 @@ export const metadata = {
     siteName: 'TempleAddress',
     locale: 'en_IN',
     type: 'website',
-    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'TempleAddress' }],
   },
   twitter: { card: 'summary_large_image', site: '@templeaddress' },
   alternates: { canonical: 'https://templeaddress.com' },
   robots: { index: true, follow: true },
+  category: 'travel',
 }
 
 export default function RootLayout({ children }) {

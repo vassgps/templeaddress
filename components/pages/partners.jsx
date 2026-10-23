@@ -1,12 +1,12 @@
 'use client'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useParams, useSearchParams } from 'next/navigation'
+import { redirect, useParams, useSearchParams } from 'next/navigation'
 import { Wallet, Share2, PlusCircle, ListChecks, Map, Users, BarChart3, Inbox, ShieldCheck, CalendarCheck, Sparkles, Landmark, Banknote, HandCoins, Database, Settings2, Table2, ArrowRightLeft, Download, Upload, Check, Copy, Smartphone, MessageCircle, Globe, TrendingUp, IdCard, UserRound, ExternalLink, Pencil, Building2, FileText, UserPlus, Power, Eye, RotateCcw, Search, CreditCard, Palette, Bell, Layers, Handshake, Plus, X, Calendar, Receipt, ChevronDown } from 'lucide-react'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { temples, bySlug, analytics, deityMasterData, listingIdPrefixes, poojaCategories } from '@/lib/data'
-import { getListingReview, listingPreviewPath, listingSubmissions } from '../staffListingReviews.js'
-import { migrateTempleBasics, templeTimingFields } from '../listingBasics.js'
+import { getListingReview, listingPreviewPath, listingSubmissions } from '@/lib/staffListingReviews'
+import { migrateTempleBasics, templeTimingFields } from '@/lib/listingBasics'
 import StaffListingReview from './staffListingReview.jsx'
 import { DashShell, Pill, Field, Input, Select, Toggle, Table, Stat, Tabs, Steps, useToast } from '@/components/ui'
 
@@ -26,12 +26,12 @@ const partnerItems=[{group:'Partner',collapsible:false,links:[['/partner','Walle
 const PartnerIdentity = () => <span className="inline-flex items-center gap-2"><span>Jinsha</span><b className="rounded-full bg-gold-300 px-2.5 py-1 text-[11px] text-brown-900">PARTNER ID · JIN-4471</b><b className="rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[11px] text-gold-300">DEALER · KOZHIKODE NORTH</b></span>
 const AShell = ({children}) => <DashShell role="Partner" user={<PartnerIdentity/>} items={partnerItems}>{children}</DashShell>
 const listingDraftKey='ta-listing-drafts-v1'
-const readListingDrafts=()=>{try{return JSON.parse(sessionStorage.getItem(listingDraftKey)||'[]')}catch{return []}}
+const readListingDrafts=()=>{if(typeof window==='undefined')return [];try{return JSON.parse(window.sessionStorage.getItem(listingDraftKey)||'[]')}catch{return []}}
 const writeListingDrafts=drafts=>sessionStorage.setItem(listingDraftKey,JSON.stringify(drafts))
 const partnerRewardKey='ta-special-rewards-v1'
-const readPartnerRewards=()=>{try{return JSON.parse(localStorage.getItem(partnerRewardKey)||'[]')}catch{return []}}
+const readPartnerRewards=()=>{if(typeof window==='undefined')return [];try{return JSON.parse(window.localStorage.getItem(partnerRewardKey)||'[]')}catch{return []}}
 const partnerWalletTransactionKey='ta-partner-wallet-transactions-v1'
-const readCheckoutWalletTransactions=()=>{try{return JSON.parse(localStorage.getItem(partnerWalletTransactionKey)||'[]')}catch{return []}}
+const readCheckoutWalletTransactions=()=>{if(typeof window==='undefined')return [];try{return JSON.parse(window.localStorage.getItem(partnerWalletTransactionKey)||'[]')}catch{return []}}
 const rewardTransactionId=record=>record.transactionId||`WLT-${String(record.id).slice(0,8).toUpperCase()}`
 const partnerWalletBase=[
   {date:'2026-09-12T12:18:00',id:'WLT-260912-4710',campaign:'—',description:'Kottur Sree Mahavishnu Temple → Temple Billing mini ERP',type:'Software sale 15%',amount:750,direction:'Credit',status:'Credited',product:'Temple Billing mini ERP',temple:'Kottur Sree Mahavishnu Temple',templeCode:'T1028',activationUuid:'876c61a7-087e-40c1-9da7-48b931cb42fe',customerName:'Kottur Sree Mahavishnu Temple Committee',customerPhone:'+91 94950 41196',invoiceNo:'TA/26-27/INV/000418',paymentReference:'PAY-260912-8841',paymentMethod:'Omniware / Federal Bank',taxableValue:5000,cgst:450,sgst:450,invoiceTotal:5900,commissionRate:'15% of taxable value',source:'Sponsorship checkout'},
@@ -78,7 +78,7 @@ const downloadPartnerId = () => {
 
 export function AWallet() {
   const [wd,setWd]=useState(false); const [toast,el]=useToast(); const [specialRewards]=useState(()=>readPartnerRewards().filter(record=>record.partnerId==='JIN-4471'))
-  const [billingActivations]=useState(()=>{try{return JSON.parse(localStorage.getItem('ta-billing-activations-v1')||'[]')}catch{return []}})
+  const [billingActivations]=useState(()=>{if(typeof window==='undefined')return [];try{return JSON.parse(window.localStorage.getItem('ta-billing-activations-v1')||'[]')}catch{return []}})
   const [checkoutTransactions]=useState(()=>readCheckoutWalletTransactions())
   const specialTransactions=specialRewards.map(record=>({date:record.date,id:rewardTransactionId(record),campaign:record.campaign,description:`Special payout from ${record.staffRole==='moderator'?'Moderator':'Staff'} · ${record.reason} · Listing ${record.listing} · ${record.staffName} (${record.staffId})`,type:'Special reward',amount:Number(record.amount),direction:'Credit',status:'Credited'}))
   const partnerTransactions=[...checkoutTransactions,...specialTransactions,...partnerWalletBase]
@@ -282,7 +282,7 @@ const useStaffRole = () => { const sp = useSearchParams(); return staffRoleLabel
 export const SShell = ({children}) => { const sp = useSearchParams(); const role = staffRoleLabel[sp.get('role')] ? sp.get('role') : 'admin'
   const names={moderator:'Anand · Moderator',accountant:'Deepa · Accountant',admin:'Anand · Portal admin'}
   return <DashShell role={staffRoleLabel[role]} user={names[role]} items={staffNav(role)} badge={role==='moderator'?'28':role==='accountant'?'7':'24'}>{children}</DashShell> }
-const Q = ({c,t,s,h,hot,role}) => { const activeRole=role||useStaffRole(); return <Link href={`${h}?role=${activeRole}`} className="card flex items-center gap-3 p-4 transition hover:shadow-soft"><span className={`grid h-11 w-11 place-items-center rounded-xl text-lg font-bold ${hot?'bg-saffron-50 text-saffron-600':'bg-brown-50 text-brown-800'}`}>{c}</span><span className="flex-1"><b className="block text-sm">{t}</b><span className="text-xs text-brown-500">{s}</span></span><span className="btn-g !py-1.5 text-xs">Open</span></Link> }
+const Q = ({c,t,s,h,hot,role}) => { const currentRole=useStaffRole(); const activeRole=role||currentRole; return <Link href={`${h}?role=${activeRole}`} className="card flex items-center gap-3 p-4 transition hover:shadow-soft"><span className={`grid h-11 w-11 place-items-center rounded-xl text-lg font-bold ${hot?'bg-saffron-50 text-saffron-600':'bg-brown-50 text-brown-800'}`}>{c}</span><span className="flex-1"><b className="block text-sm">{t}</b><span className="text-xs text-brown-500">{s}</span></span><span className="btn-g !py-1.5 text-xs">Open</span></Link> }
 
 const reviewPath = (queue,id,role='moderator') => `/staff/review/${queue}/${id}?role=${role}`
 const QueueTable = ({head,rows,searchKeys,filterKey,filterLabel='Status',filterOptions=[]}) => {
@@ -295,7 +295,7 @@ const ModeratorActions = ({queue,id,preview,toast}) => <div className="flex min-
 
 export function SQueues() {
   const role=useStaffRole()
-  if(role==='admin') return <Navigate to="/staff/analytics?role=admin" replace/>
+  if(role==='admin') redirect('/staff/analytics?role=admin')
   if(role==='moderator') return (<SShell><H t="Moderator work queues" s="Sat 12 Sept 2026 · Content, identity and operations reviews" right={<Pill tone="info">Moderator scope only</Pill>}/>
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><Stat v="12" l="listings pending" delta="oldest 4 days"/><Stat v="9" l="KYC + partner requests"/><Stat v="3" l="charts prepared today"/><Stat v="14" l="reviews + support tickets"/></div>
     <div className="mt-5 grid gap-3 md:grid-cols-2"><Q role={role} c={12} t="Pending listings" s="Preview, approve, revert or message creator" h="/staff/listing" hot/><Q role={role} c={9} t="KYC & partner onboarding" s="5 listing KYC · 4 partner / affiliate requests" h="/staff/kyc" hot/><Q role={role} c={3} t="Daily charts" s="Automatically prepared and sent · view by date and listing" h="/staff/charts" hot/><Q role={role} c={7} t="Special poojas" s="Review details and approve publication" h="/staff/special"/><Q role={role} c={4} t="Claims & transfers" s="Compare both user accounts before ownership change" h="/staff/ownership" hot/><Q role={role} c={10} t="Consolidated support tickets" s="Website · mobile app · WhatsApp chatbot" h="/staff/support" hot/></div>

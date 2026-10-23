@@ -68,8 +68,10 @@ function Account() {
     const [notice, setNotice] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [billingActivations] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         "Account.useState": ()=>{
+            if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+            ;
             try {
-                return JSON.parse(localStorage.getItem('ta-billing-activations-v1') || '[]');
+                return JSON.parse(window.localStorage.getItem('ta-billing-activations-v1') || '[]');
             } catch  {
                 return [];
             }
@@ -2024,7 +2026,7 @@ function Account() {
         columnNumber: 10
     }, this);
 }
-_s(Account, "ttwAcqQhdkafKnYQFnTq5jBNNK0=");
+_s(Account, "mkT7ODK+Papbe0GiVaf4IRrY730=");
 _c1 = Account;
 function UserListings() {
     _s1();
@@ -2042,8 +2044,10 @@ function UserListings() {
     ];
     const [drafts] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         "UserListings.useState": ()=>{
+            if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+            ;
             try {
-                return JSON.parse(sessionStorage.getItem('ta-listing-drafts-v1') || '[]');
+                return JSON.parse(window.sessionStorage.getItem('ta-listing-drafts-v1') || '[]');
             } catch  {
                 return [];
             }
@@ -2343,7 +2347,7 @@ function UserListings() {
         columnNumber: 11
     }, this);
 }
-_s1(UserListings, "FvZtuHFfOY3JUgR59Z5Fv1Q5fMY=");
+_s1(UserListings, "lfZ2WfJt5/uPSWsD414b7Bd5/lM=");
 _c2 = UserListings;
 function UserCreateListing() {
     _s2();

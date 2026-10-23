@@ -471,7 +471,7 @@ const temples = [
         poojas: []
     }
 ];
-const bySlug = (s)=>temples.find((t)=>t.slug === s) || temples[0];
+const bySlug = (s)=>temples.find((t)=>t.slug === s);
 const listingIdPrefixes = {
     temple: 'T',
     service: 'S',

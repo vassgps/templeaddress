@@ -6,6 +6,8 @@
  */
 import { temples } from '@/lib/data'
 import { Booking } from '@/components/pages/booking'
+import { Suspense } from 'react'
+import { notFound } from 'next/navigation'
 
 export async function generateStaticParams() {
   // Pre-render the booking shell for all temples (faster TTFB on first visit)
@@ -23,6 +25,8 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default function BookingPage() {
-  return <Booking />
+export default async function BookingPage({ params }) {
+  const { slug } = await params
+  if (!temples.some(t => t.slug === slug)) notFound()
+  return <Suspense fallback={<main className="min-h-screen bg-brown-50" />}><Booking /></Suspense>
 }

@@ -1,5 +1,5 @@
 /**
- * /festival/[code] — Festival page (SSG + ISR)
+ * /festival/[code] — statically generated festival page
  * Next.js 16: params is a Promise.
  */
 import { notFound } from 'next/navigation'
@@ -9,7 +9,6 @@ import { Festival } from '@/components/pages/public'
 export async function generateStaticParams() {
   return festivals.map(f => ({ code: f.code }))
 }
-
 export async function generateMetadata({ params }) {
   const { code } = await params
   const festival = festivals.find(f => f.code === code)
@@ -30,12 +29,9 @@ export async function generateMetadata({ params }) {
     },
   }
 }
-
 export default async function FestivalPageRoute({ params }) {
   const { code } = await params
   const festival = festivals.find(f => f.code === code)
   if (!festival) notFound()
   return <Festival />
 }
-
-export const revalidate = 3600

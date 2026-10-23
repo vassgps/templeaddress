@@ -139,16 +139,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/component/ResponsiveContainer.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$CartesianGrid$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/cartesian/CartesianGrid.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$data$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/data.js [app-client] (ecmascript)");
-(()=>{
-    const e = new Error("Cannot find module '../staffListingReviews.js'");
-    e.code = 'MODULE_NOT_FOUND';
-    throw e;
-})();
-(()=>{
-    const e = new Error("Cannot find module '../listingBasics.js'");
-    e.code = 'MODULE_NOT_FOUND';
-    throw e;
-})();
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$staffListingReviews$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/staffListingReviews.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$listingBasics$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/listingBasics.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$pages$2f$staffListingReview$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/pages/staffListingReview.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui.jsx [app-client] (ecmascript)");
 ;
@@ -471,8 +463,10 @@ const AShell = ({ children })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__
 _c2 = AShell;
 const listingDraftKey = 'ta-listing-drafts-v1';
 const readListingDrafts = ()=>{
+    if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+    ;
     try {
-        return JSON.parse(sessionStorage.getItem(listingDraftKey) || '[]');
+        return JSON.parse(window.sessionStorage.getItem(listingDraftKey) || '[]');
     } catch  {
         return [];
     }
@@ -480,16 +474,20 @@ const readListingDrafts = ()=>{
 const writeListingDrafts = (drafts)=>sessionStorage.setItem(listingDraftKey, JSON.stringify(drafts));
 const partnerRewardKey = 'ta-special-rewards-v1';
 const readPartnerRewards = ()=>{
+    if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+    ;
     try {
-        return JSON.parse(localStorage.getItem(partnerRewardKey) || '[]');
+        return JSON.parse(window.localStorage.getItem(partnerRewardKey) || '[]');
     } catch  {
         return [];
     }
 };
 const partnerWalletTransactionKey = 'ta-partner-wallet-transactions-v1';
 const readCheckoutWalletTransactions = ()=>{
+    if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+    ;
     try {
-        return JSON.parse(localStorage.getItem(partnerWalletTransactionKey) || '[]');
+        return JSON.parse(window.localStorage.getItem(partnerWalletTransactionKey) || '[]');
     } catch  {
         return [];
     }
@@ -1795,8 +1793,10 @@ function AWallet() {
     }["AWallet.useState"]);
     const [billingActivations] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         "AWallet.useState": ()=>{
+            if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+            ;
             try {
-                return JSON.parse(localStorage.getItem('ta-billing-activations-v1') || '[]');
+                return JSON.parse(window.localStorage.getItem('ta-billing-activations-v1') || '[]');
             } catch  {
                 return [];
             }
@@ -2200,7 +2200,7 @@ function AWallet() {
         columnNumber: 11
     }, this);
 }
-_s2(AWallet, "yx5qbx9a5N4cmjtQ/IjAXb8relc=", false, function() {
+_s2(AWallet, "FfFywWsP4HCTAxPzgX2OphqCGOE=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useToast"]
     ];
@@ -3113,7 +3113,7 @@ function ListingForm({ existing, onSubmit, cancelTo = '/partner/listings' }) {
     const [draftId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         "ListingForm.useState": ()=>existing?.slug || sessionStorage.getItem('ta-active-listing-draft') || `DRAFT-${Date.now().toString().slice(-8)}`
     }["ListingForm.useState"]);
-    const savedBasics = migrateTempleBasics(readListingDrafts().find((d)=>d.id === draftId)?.sections?.[0]);
+    const savedBasics = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$listingBasics$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["migrateTempleBasics"])(readListingDrafts().find((d)=>d.id === draftId)?.sections?.[0]);
     const savedOtherDeities = savedBasics?.find((field)=>field.name === 'otherDeities')?.values;
     const deityOptions = [
         ...new Set([
@@ -3122,7 +3122,7 @@ function ListingForm({ existing, onSubmit, cancelTo = '/partner/listings' }) {
             savedBasics?.[4]?.name === 'mainDeity' ? savedBasics[4].value : null
         ].filter(Boolean))
     ];
-    const timingFields = templeTimingFields(existing?.timings);
+    const timingFields = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$listingBasics$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["templeTimingFields"])(existing?.timings);
     const steps = [
         'Type & basics',
         'Location',
@@ -3205,7 +3205,7 @@ function ListingForm({ existing, onSubmit, cancelTo = '/partner/listings' }) {
             const section = readListingDrafts().find({
                 "ListingForm.useEffect": (d)=>d.id === draftId
             }["ListingForm.useEffect"])?.sections?.[step];
-            const saved = step === 0 ? migrateTempleBasics(section) : section;
+            const saved = step === 0 ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$listingBasics$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["migrateTempleBasics"])(section) : section;
             if (!saved) return;
             const frame = requestAnimationFrame({
                 "ListingForm.useEffect.frame": ()=>{
@@ -7829,7 +7829,8 @@ _s13(SShell, "ykwYSAlrlWFP3j1FXfKhdo1cilA=", false, function() {
 _c19 = SShell;
 const Q = ({ c, t, s, h, hot, role })=>{
     _s14();
-    const activeRole = role || useStaffRole();
+    const currentRole = useStaffRole();
+    const activeRole = role || currentRole;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
         href: `${h}?role=${activeRole}`,
         className: "card flex items-center gap-3 p-4 transition hover:shadow-soft",
@@ -7840,7 +7841,7 @@ const Q = ({ c, t, s, h, hot, role })=>{
             }, void 0, false, {
                 fileName: "[project]/components/pages/partners.jsx",
                 lineNumber: 285,
-                columnNumber: 196
+                columnNumber: 227
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                 className: "flex-1",
@@ -7851,7 +7852,7 @@ const Q = ({ c, t, s, h, hot, role })=>{
                     }, void 0, false, {
                         fileName: "[project]/components/pages/partners.jsx",
                         lineNumber: 285,
-                        columnNumber: 383
+                        columnNumber: 414
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "text-xs text-brown-500",
@@ -7859,13 +7860,13 @@ const Q = ({ c, t, s, h, hot, role })=>{
                     }, void 0, false, {
                         fileName: "[project]/components/pages/partners.jsx",
                         lineNumber: 285,
-                        columnNumber: 419
+                        columnNumber: 450
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/pages/partners.jsx",
                 lineNumber: 285,
-                columnNumber: 358
+                columnNumber: 389
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                 className: "btn-g !py-1.5 text-xs",
@@ -7873,16 +7874,16 @@ const Q = ({ c, t, s, h, hot, role })=>{
             }, void 0, false, {
                 fileName: "[project]/components/pages/partners.jsx",
                 lineNumber: 285,
-                columnNumber: 477
+                columnNumber: 508
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/components/pages/partners.jsx",
         lineNumber: 285,
-        columnNumber: 83
+        columnNumber: 114
     }, ("TURBOPACK compile-time value", void 0));
 };
-_s14(Q, "lNA5OnP2tVy2Y+L4hzDn4Wa2V3s=", false, function() {
+_s14(Q, "iK208k1hVpEE8jN67CA974yksCo=", false, function() {
     return [
         useStaffRole
     ];
@@ -8167,14 +8168,7 @@ _c22 = ModeratorActions;
 function SQueues() {
     _s16();
     const role = useStaffRole();
-    if (role === 'admin') return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Navigate, {
-        to: "/staff/analytics?role=admin",
-        replace: true
-    }, void 0, false, {
-        fileName: "[project]/components/pages/partners.jsx",
-        lineNumber: 298,
-        columnNumber: 29
-    }, this);
+    if (role === 'admin') (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["redirect"])('/staff/analytics?role=admin');
     if (role === 'moderator') return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SShell, {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(H, {
@@ -9519,7 +9513,7 @@ function SListing() {
     const role = useStaffRole();
     const [drafts] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(readListingDrafts);
     const [viewingDraft, setViewingDraft] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
-    const raw = listingSubmissions.map((listing)=>[
+    const raw = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$staffListingReviews$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["listingSubmissions"].map((listing)=>[
             listing.name,
             listing.type,
             listing.code,
@@ -9573,7 +9567,7 @@ function SListing() {
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ModeratorActions, {
                     queue: "listing",
                     id: r[2],
-                    preview: listingPreviewPath(r[2]),
+                    preview: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$staffListingReviews$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["listingPreviewPath"])(r[2]),
                     toast: toast
                 }, void 0, false, {
                     fileName: "[project]/components/pages/partners.jsx",
@@ -12950,7 +12944,7 @@ function SReviewDetail() {
         new: false
     });
     const [decision, setDecision] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(queue === 'support' ? 'Open' : queue === 'chart' ? chart?.status || 'Prepared' : 'Under review');
-    const listing = queue === 'listing' ? getListingReview(id) : null;
+    const listing = queue === 'listing' ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$staffListingReviews$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getListingReview"])(id) : null;
     const titles = {
         listing: 'Listing review',
         kyc: 'KYC verification',

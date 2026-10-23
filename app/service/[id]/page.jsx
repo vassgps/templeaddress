@@ -1,5 +1,5 @@
 /**
- * /service/[id] — Service professional profile (SSG + ISR)
+ * /service/[id] — statically generated service professional profile
  * Next.js 16: params is a Promise.
  */
 import { notFound } from 'next/navigation'
@@ -9,7 +9,6 @@ import { ServiceDetail } from '@/components/pages/public'
 export async function generateStaticParams() {
   return services.map(s => ({ id: s.id }))
 }
-
 export async function generateMetadata({ params }) {
   const { id } = await params
   const svc = services.find(s => s.id === id)
@@ -30,12 +29,9 @@ export async function generateMetadata({ params }) {
     },
   }
 }
-
 export default async function ServicePageRoute({ params }) {
   const { id } = await params
   const svc = services.find(s => s.id === id)
   if (!svc) notFound()
   return <ServiceDetail />
 }
-
-export const revalidate = 3600

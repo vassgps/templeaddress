@@ -1369,29 +1369,14 @@ function PublicShell({ children, tenant, hideChatbot = false, booking = false })
         columnNumber: 5
     }, this);
 }
-function DashShell({ role, user, items, children, badge }) {
+/* ── DASHBOARD SHELL ──
+   Sidebar groups are collapsible; pass collapsible:false to pin always-open.
+   defaultOpen:false starts a group collapsed. */ function DashShellContent({ role, user, items, children, badge }) {
     const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePathname"])();
     const [openGroups, setOpenGroups] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(()=>Object.fromEntries(items.map((g)=>[
                 g.group,
                 g.defaultOpen !== false
             ])));
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-        setOpenGroups((prev)=>{
-            const next = {
-                ...prev
-            };
-            let changed = false;
-            items.forEach((g)=>{
-                if (!(g.group in next)) {
-                    next[g.group] = g.defaultOpen !== false;
-                    changed = true;
-                }
-            });
-            return changed ? next : prev;
-        });
-    }, [
-        items
-    ]);
     const toggleGroup = (name)=>setOpenGroups((o)=>({
                 ...o,
                 [name]: !o[name]
@@ -1409,7 +1394,7 @@ function DashShell({ role, user, items, children, badge }) {
                             light: true
                         }, void 0, false, {
                             fileName: "[project]/components/ui.jsx",
-                            lineNumber: 287,
+                            lineNumber: 280,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Pill, {
@@ -1417,14 +1402,14 @@ function DashShell({ role, user, items, children, badge }) {
                             children: role
                         }, void 0, false, {
                             fileName: "[project]/components/ui.jsx",
-                            lineNumber: 287,
+                            lineNumber: 280,
                             columnNumber: 25
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "flex-1"
                         }, void 0, false, {
                             fileName: "[project]/components/ui.jsx",
-                            lineNumber: 288,
+                            lineNumber: 281,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1432,7 +1417,7 @@ function DashShell({ role, user, items, children, badge }) {
                             children: user
                         }, void 0, false, {
                             fileName: "[project]/components/ui.jsx",
-                            lineNumber: 289,
+                            lineNumber: 282,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1443,7 +1428,7 @@ function DashShell({ role, user, items, children, badge }) {
                                     size: 16
                                 }, void 0, false, {
                                     fileName: "[project]/components/ui.jsx",
-                                    lineNumber: 291,
+                                    lineNumber: 284,
                                     columnNumber: 13
                                 }, this),
                                 badge && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1451,13 +1436,13 @@ function DashShell({ role, user, items, children, badge }) {
                                     children: badge
                                 }, void 0, false, {
                                     fileName: "[project]/components/ui.jsx",
-                                    lineNumber: 292,
+                                    lineNumber: 285,
                                     columnNumber: 23
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/ui.jsx",
-                            lineNumber: 290,
+                            lineNumber: 283,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -1466,18 +1451,18 @@ function DashShell({ role, user, items, children, badge }) {
                             children: "Logout"
                         }, void 0, false, {
                             fileName: "[project]/components/ui.jsx",
-                            lineNumber: 294,
+                            lineNumber: 287,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/ui.jsx",
-                    lineNumber: 286,
+                    lineNumber: 279,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/components/ui.jsx",
-                lineNumber: 285,
+                lineNumber: 278,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1496,7 +1481,7 @@ function DashShell({ role, user, items, children, badge }) {
                                             children: g.group
                                         }, void 0, false, {
                                             fileName: "[project]/components/ui.jsx",
-                                            lineNumber: 305,
+                                            lineNumber: 298,
                                             columnNumber: 23
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             type: "button",
@@ -1510,7 +1495,7 @@ function DashShell({ role, user, items, children, badge }) {
                                                             size: 13
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/ui.jsx",
-                                                            lineNumber: 308,
+                                                            lineNumber: 301,
                                                             columnNumber: 38
                                                         }, this),
                                                         g.group,
@@ -1519,13 +1504,13 @@ function DashShell({ role, user, items, children, badge }) {
                                                             children: g.badge
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/ui.jsx",
-                                                            lineNumber: 309,
+                                                            lineNumber: 302,
                                                             columnNumber: 39
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/ui.jsx",
-                                                    lineNumber: 307,
+                                                    lineNumber: 300,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
@@ -1533,13 +1518,13 @@ function DashShell({ role, user, items, children, badge }) {
                                                     className: `shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/ui.jsx",
-                                                    lineNumber: 311,
+                                                    lineNumber: 304,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/ui.jsx",
-                                            lineNumber: 306,
+                                            lineNumber: 299,
                                             columnNumber: 23
                                         }, this),
                                         isOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1554,37 +1539,37 @@ function DashShell({ role, user, items, children, badge }) {
                                                             size: 16
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/ui.jsx",
-                                                            lineNumber: 319,
+                                                            lineNumber: 312,
                                                             columnNumber: 35
                                                         }, this),
                                                         label
                                                     ]
                                                 }, href, true, {
                                                     fileName: "[project]/components/ui.jsx",
-                                                    lineNumber: 318,
+                                                    lineNumber: 311,
                                                     columnNumber: 27
                                                 }, this);
                                             })
                                         }, void 0, false, {
                                             fileName: "[project]/components/ui.jsx",
-                                            lineNumber: 314,
+                                            lineNumber: 307,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, g.group, true, {
                                     fileName: "[project]/components/ui.jsx",
-                                    lineNumber: 303,
+                                    lineNumber: 296,
                                     columnNumber: 17
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/components/ui.jsx",
-                            lineNumber: 299,
+                            lineNumber: 292,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/components/ui.jsx",
-                        lineNumber: 298,
+                        lineNumber: 291,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -1592,13 +1577,13 @@ function DashShell({ role, user, items, children, badge }) {
                         children: children
                     }, void 0, false, {
                         fileName: "[project]/components/ui.jsx",
-                        lineNumber: 330,
+                        lineNumber: 323,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/ui.jsx",
-                lineNumber: 297,
+                lineNumber: 290,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -1613,27 +1598,49 @@ function DashShell({ role, user, items, children, badge }) {
                                 size: 18
                             }, void 0, false, {
                                 fileName: "[project]/components/ui.jsx",
-                                lineNumber: 338,
+                                lineNumber: 331,
                                 columnNumber: 21
                             }, this),
                             label
                         ]
                     }, href, true, {
                         fileName: "[project]/components/ui.jsx",
-                        lineNumber: 337,
+                        lineNumber: 330,
                         columnNumber: 13
                     }, this);
                 })
             }, void 0, false, {
                 fileName: "[project]/components/ui.jsx",
-                lineNumber: 333,
+                lineNumber: 326,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/ui.jsx",
-        lineNumber: 284,
+        lineNumber: 277,
         columnNumber: 5
+    }, this);
+}
+function DashShell(props) {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Suspense"], {
+        fallback: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "min-h-screen bg-brown-50"
+        }, void 0, false, {
+            fileName: "[project]/components/ui.jsx",
+            lineNumber: 341,
+            columnNumber: 30
+        }, this),
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(DashShellContent, {
+            ...props
+        }, void 0, false, {
+            fileName: "[project]/components/ui.jsx",
+            lineNumber: 341,
+            columnNumber: 76
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/components/ui.jsx",
+        lineNumber: 341,
+        columnNumber: 10
     }, this);
 }
 /* ── CHATBOT (RAG-style) ── */ const kb = [
@@ -1671,7 +1678,7 @@ function Chatbot() {
         }
     ]);
     const [q, setQ] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
-    const ask = (text)=>{
+    const ask = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])((text)=>{
         const t = text || q;
         if (!t) return;
         const a = (kb.find(([r])=>r.test(t)) || [
@@ -1690,7 +1697,9 @@ function Chatbot() {
                 }
             ]);
         setQ('');
-    };
+    }, [
+        q
+    ]);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         const h = (e)=>{
             setOpen(true);
@@ -1698,7 +1707,9 @@ function Chatbot() {
         };
         window.addEventListener('ta:ask', h);
         return ()=>window.removeEventListener('ta:ask', h);
-    }, []);
+    }, [
+        ask
+    ]);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1710,14 +1721,14 @@ function Chatbot() {
                         className: "text-gold-400"
                     }, void 0, false, {
                         fileName: "[project]/components/ui.jsx",
-                        lineNumber: 373,
+                        lineNumber: 370,
                         columnNumber: 9
                     }, this),
                     "Ask TempleAddress"
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/ui.jsx",
-                lineNumber: 372,
+                lineNumber: 369,
                 columnNumber: 7
             }, this),
             open && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1731,7 +1742,7 @@ function Chatbot() {
                                 className: "text-gold-400"
                             }, void 0, false, {
                                 fileName: "[project]/components/ui.jsx",
-                                lineNumber: 378,
+                                lineNumber: 375,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
@@ -1739,7 +1750,7 @@ function Chatbot() {
                                 children: "Temple assistant"
                             }, void 0, false, {
                                 fileName: "[project]/components/ui.jsx",
-                                lineNumber: 378,
+                                lineNumber: 375,
                                 columnNumber: 60
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1747,7 +1758,7 @@ function Chatbot() {
                                 children: "RAG on TempleAddress data"
                             }, void 0, false, {
                                 fileName: "[project]/components/ui.jsx",
-                                lineNumber: 379,
+                                lineNumber: 376,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1758,18 +1769,18 @@ function Chatbot() {
                                     size: 14
                                 }, void 0, false, {
                                     fileName: "[project]/components/ui.jsx",
-                                    lineNumber: 380,
+                                    lineNumber: 377,
                                     columnNumber: 125
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/ui.jsx",
-                                lineNumber: 380,
+                                lineNumber: 377,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/ui.jsx",
-                        lineNumber: 377,
+                        lineNumber: 374,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1780,7 +1791,7 @@ function Chatbot() {
                                     children: m.t
                                 }, i, false, {
                                     fileName: "[project]/components/ui.jsx",
-                                    lineNumber: 383,
+                                    lineNumber: 380,
                                     columnNumber: 33
                                 }, this)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1795,18 +1806,18 @@ function Chatbot() {
                                         children: s
                                     }, s, false, {
                                         fileName: "[project]/components/ui.jsx",
-                                        lineNumber: 386,
+                                        lineNumber: 383,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/components/ui.jsx",
-                                lineNumber: 384,
+                                lineNumber: 381,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/ui.jsx",
-                        lineNumber: 382,
+                        lineNumber: 379,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -1823,7 +1834,7 @@ function Chatbot() {
                                 className: "input !py-2"
                             }, void 0, false, {
                                 fileName: "[project]/components/ui.jsx",
-                                lineNumber: 390,
+                                lineNumber: 387,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1832,30 +1843,30 @@ function Chatbot() {
                                     size: 16
                                 }, void 0, false, {
                                     fileName: "[project]/components/ui.jsx",
-                                    lineNumber: 391,
+                                    lineNumber: 388,
                                     columnNumber: 45
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/ui.jsx",
-                                lineNumber: 391,
+                                lineNumber: 388,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/ui.jsx",
-                        lineNumber: 389,
+                        lineNumber: 386,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/ui.jsx",
-                lineNumber: 376,
+                lineNumber: 373,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/ui.jsx",
-        lineNumber: 371,
+        lineNumber: 368,
         columnNumber: 5
     }, this);
 }
@@ -1864,7 +1875,7 @@ const Arrow = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5
         className: "opacity-60"
     }, void 0, false, {
         fileName: "[project]/components/ui.jsx",
-        lineNumber: 399,
+        lineNumber: 396,
         columnNumber: 28
     }, ("TURBOPACK compile-time value", void 0));
 }),

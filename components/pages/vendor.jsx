@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useParams, useSearchParams } from 'next/navigation'
+import { redirect, useParams, useSearchParams } from 'next/navigation'
 import { CalendarCheck, ListOrdered, Gift, Landmark, Settings, Database, PenLine, Download, MessageCircle, Check, Plus, CreditCard, ArrowRightLeft, Percent, FileBadge, Globe, Users2, Crown, Power, Zap, Pencil, X } from 'lucide-react'
 import { temples, gateways, templeCharts, chartById, poojaCategories, bookingTypeOptions } from '@/lib/data'
 import ListingQr from '@/components/ListingQr'
@@ -12,11 +12,11 @@ import { DashShell, Pill, Field, Input, Select, Toggle, Table, Stat, Tabs, useTo
 //   festival committee → /festival-admin  (pages/vendorFestival.jsx — programme, sponsors, artists)
 //   service provider   → /service-admin   (pages/vendorService.jsx — appointment slots, enquiries, reviews)
 // Old ?type= links land here, so redirect them to the right dashboard.
-const items = [{ group:'Temple · T1028', links:[['/vendor','Today',CalendarCheck],['/vendor/charts','Previous charts',FileBadge],['/vendor/poojas','Poojas',ListOrdered],['/vendor/payouts','Payouts',Landmark],['/vendor/settings','Settings',Settings],['/vendor/page','Page editor',PenLine],['/vendor/donations','Donations',Gift],['/vendor/data','My data',Database]] }]
+const items = [{ group:'Temple · T1028', links:[['/vendor','Today',CalendarCheck],['/vendor/charts','Previous charts',FileBadge],['/vendor/poojas','Poojas',ListOrdered],['/vendor/payouts','Payouts',Landmark],['/vendor/settings','Settings',Settings],['/vendor/editor','Page editor',PenLine],['/vendor/donations','Donations',Gift],['/vendor/data','My data',Database]] }]
 const useVendorType = () => { const sp = useSearchParams(); const t=sp.get('type'); return t==='festival'||t==='service' ? t : 'temple' }
 const Shell = ({ children, temple }) => { const vt=useVendorType()
-  if (vt==='festival') return <Navigate to="/festival-admin" replace/>
-  if (vt==='service') return <Navigate to="/service-admin" replace/>
+  if (vt==='festival') redirect('/festival-admin')
+  if (vt==='service') redirect('/service-admin')
   return <DashShell role="Vendor · Temple" user={temple||'T1028 · Kottur Sree Mahavishnu Temple · Nishanth (Secretary)'} items={items} badge="2">{children}</DashShell> }
 const H = ({ t, s, right }) => <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">{t}</h1>{s&&<div className="text-sm text-brown-500">{s}</div>}</div>{right}</div>
 

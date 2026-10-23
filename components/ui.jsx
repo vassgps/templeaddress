@@ -8,7 +8,7 @@
  *   - usePathname from next/navigation (replaces useLocation)
  *   - LanguageControl from @/components/LanguageControl
  */
-import { useState, useEffect } from 'react'
+import { Suspense, useCallback, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import ActiveLink from './ActiveLink'
@@ -268,16 +268,9 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
 /* ── DASHBOARD SHELL ──
    Sidebar groups are collapsible; pass collapsible:false to pin always-open.
    defaultOpen:false starts a group collapsed. */
-export function DashShell({ role, user, items, children, badge }) {
+function DashShellContent({ role, user, items, children, badge }) {
   const pathname = usePathname()
   const [openGroups, setOpenGroups] = useState(() => Object.fromEntries(items.map(g => [g.group, g.defaultOpen !== false])))
-  useEffect(() => {
-    setOpenGroups(prev => {
-      const next = { ...prev }; let changed = false
-      items.forEach(g => { if (!(g.group in next)) { next[g.group] = g.defaultOpen !== false; changed = true } })
-      return changed ? next : prev
-    })
-  }, [items])
   const toggleGroup = name => setOpenGroups(o => ({ ...o, [name]: !o[name] }))
   const primaryLinks = (items.find(g => g.primary) || items[0]).links
   return (
@@ -344,6 +337,10 @@ export function DashShell({ role, user, items, children, badge }) {
   )
 }
 
+export function DashShell(props) {
+  return <Suspense fallback={<div className="min-h-screen bg-brown-50" />}><DashShellContent {...props} /></Suspense>
+}
+
 /* ── CHATBOT (RAG-style) ── */
 const kb = [
   [/timing|time|open/i,    'Kottur Sree Mahavishnu Temple is open 5:30–9:30 AM and 5:30–7:30 PM. Source: temple page.'],
@@ -358,15 +355,15 @@ export function Chatbot() {
   const [open, setOpen] = useState(false)
   const [msgs, setMsgs] = useState([{ me: false, t: 'Namaskaram 🙏 I can help with timings, poojas, booking and donations. Ask in English or Malayalam.' }])
   const [q, setQ] = useState('')
-  const ask = text => {
+  const ask = useCallback(text => {
     const t = text || q; if (!t) return
     const a = (kb.find(([r]) => r.test(t)) || [null, 'I don\'t have that yet — I\'ll pass this to devotee support on WhatsApp, or try asking about timings, poojas or donations.'])[1]
     setMsgs(m => [...m, { me: true, t }, { me: false, t: a }]); setQ('')
-  }
+  }, [q])
   useEffect(() => {
     const h = e => { setOpen(true); if (e.detail) setTimeout(() => ask(e.detail), 250) }
     window.addEventListener('ta:ask', h); return () => window.removeEventListener('ta:ask', h)
-  }, [])
+  }, [ask])
   return (
     <>
       <button onClick={() => setOpen(!open)} className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-brown-900 px-4 py-3 text-sm font-semibold text-white shadow-soft">

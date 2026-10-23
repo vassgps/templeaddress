@@ -229,7 +229,7 @@ export function TemplePage() {
   const [enquiry,setEnquiry] = useState({name:'',mobile:'',message:''})
   const { record: listingQr, error: qrError } = useListingQr(t)
   if(!t) return <PublicShell><Wrap className="py-10"><h1 className="text-3xl">Temple not found</h1><Link href="/temples" className="btn-p mt-4">Browse temples</Link></Wrap></PublicShell>
-  const pageUrl = `${window.location.origin}${window.location}#/t/${encodeURIComponent(t.slug)}`
+  const pageUrl = `https://templeaddress.com/t/${encodeURIComponent(t.slug)}`
   const mapQuery = t.latitude != null && t.longitude != null ? `${t.latitude},${t.longitude}` : `${t.name}, ${t.address}`
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`
   const own = t.gateway==='omniware'
@@ -512,9 +512,9 @@ const sponsorPayIcon = { omniware:ShieldCheck, razorpay:Zap, stripe:Globe2, upi:
 const templeAddressTax = {gstin:'32AACCT1234B1Z9',pan:'AACCT1234B',state:'Kerala',stateCode:'32',address:'Kozhikode, Kerala – 673001'}
 const billingActivationKey='ta-billing-activations-v1'
 const partnerWalletTransactionKey='ta-partner-wallet-transactions-v1'
-const readBillingActivations=()=>{try{return JSON.parse(localStorage.getItem(billingActivationKey)||'[]')}catch{return []}}
+const readBillingActivations=()=>{if(typeof window==='undefined')return [];try{return JSON.parse(window.localStorage.getItem(billingActivationKey)||'[]')}catch{return []}}
 const saveBillingActivations=records=>localStorage.setItem(billingActivationKey,JSON.stringify(records))
-const readPartnerWalletTransactions=()=>{try{return JSON.parse(localStorage.getItem(partnerWalletTransactionKey)||'[]')}catch{return []}}
+const readPartnerWalletTransactions=()=>{if(typeof window==='undefined')return [];try{return JSON.parse(window.localStorage.getItem(partnerWalletTransactionKey)||'[]')}catch{return []}}
 export function Sponsor() {
   const [toast,el] = useToast()
   const [sponsorType,setSponsorType] = useState('self')

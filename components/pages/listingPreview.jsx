@@ -3,7 +3,7 @@ import React from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Eye, MapPin } from 'lucide-react'
-import { getListingReview } from '../staffListingReviews.js'
+import { getListingReview } from '@/lib/staffListingReviews'
 import { Photo, Pill, PublicShell, Table } from '@/components/ui'
 
 export default function ListingPreview() {
