@@ -41,7 +41,7 @@ export function FOverview() {
     ['Upload KYC agreement for staff verification','todo','/festival-admin/settings'],
     ['Offerings & prices published','done','/festival-admin/offerings'],
   ]
-  return (<Shell>{el}<H t="Festival overview" s={`Listing ID ${F.code} · ${F.committee} · ${F.temple}`} right={<div className="flex gap-2"><Link to="/festival" className="btn-g"><Globe size={16}/>View public page</Link><button onClick={()=>toast('Update sent to 1,180 devotees on WhatsApp')} className="btn-p"><Megaphone size={16}/>Send update</button></div>}/>
+  return (<Shell>{el}<H t="Festival overview" s={`Listing ID ${F.code} · ${F.committee} · ${F.temple}`} right={<div className="flex gap-2"><Link to={`/festival/${F.code}`} className="btn-g"><Globe size={16}/>View public page</Link><button onClick={()=>toast('Update sent to 1,180 devotees on WhatsApp')} className="btn-p"><Megaphone size={16}/>Send update</button></div>}/>
 
     <div className="overflow-hidden rounded-2xl bg-temple-grad p-5 text-white md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -189,7 +189,7 @@ export function FSponsors() {
   const [toast,el]=useToast(); const [add,setAdd]=useState(false)
   const pct = Math.round(F.sponsorGot/F.sponsorTarget*100)
   return (<Shell>{el}<H t="Sponsors" s="Devotees and organisations can also sponsor directly from the public festival page — no login needed" right={<button onClick={()=>setAdd(!add)} className="btn-p"><Plus size={16}/>Record a sponsor</button>}/>
-    <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900 mb-5"><b>Public self-serve sponsorship</b> is live on <Link to="/festival" className="underline">the festival page</Link> — anyone can pick a package and pay online without an account. Use the form below only for sponsors who paid by bank transfer, cheque or cash to the committee.</div>
+    <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900 mb-5"><b>Public self-serve sponsorship</b> is live on <Link to={`/festival/${F.code}`} className="underline">the festival page</Link> — anyone can pick a package and pay online without an account. Use the form below only for sponsors who paid by bank transfer, cheque or cash to the committee.</div>
 
     <div className="card p-5"><div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-lg font-semibold">Sponsorship target</h3><p className="text-sm text-brown-500">{rs(F.sponsorGot)} raised of {rs(F.sponsorTarget)}</p></div><b className="font-display text-2xl">{pct}%</b></div>
       <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-brown-100"><div className="h-full rounded-full bg-saffron-500" style={{width:`${pct}%`}}/></div></div>
@@ -217,7 +217,7 @@ export function FSponsors() {
 export function FPage() {
   const [toast,el]=useToast(); const [tab,setTab]=useState(0)
   const done = [['Summary',1],['Event timings',1],['Travel & facilities',0],['Gallery & poster',0],['Contact persons',1]]
-  return (<Shell>{el}<H t="Festival profile" s="kottur-utsavam-2026.templeaddress.com · summary, timings, contacts and gallery devotees see" right={<div className="flex gap-2"><Link to="/festival" className="btn-g"><Globe size={16}/>Preview</Link><button onClick={()=>toast('Published')} className="btn-p">Publish</button></div>}/>
+  return (<Shell>{el}<H t="Festival profile" s="kottur-utsavam-2026.templeaddress.com · summary, timings, contacts and gallery devotees see" right={<div className="flex gap-2"><Link to={`/festival/${F.code}`} className="btn-g"><Globe size={16}/>Preview</Link><button onClick={()=>toast('Published')} className="btn-p">Publish</button></div>}/>
     <div className="mb-4 flex flex-wrap gap-2">{done.map(([n,ok])=><Pill key={n} tone={ok?'ok':'warn'}>{ok?<Check size={12}/>:'○'}{n}</Pill>)}</div>
     <Tabs tabs={['Summary','Event timings','Travel & facilities','Gallery & poster','Contact persons']} at={tab} set={setTab}/>
     {tab===0 && <div className="card grid gap-4 p-5 md:grid-cols-2"><Field label="Festival name (English)"><Input defaultValue={F.name}/></Field><Field label="Festival name (Malayalam)"><Input className="input ml" defaultValue={F.ml}/></Field>

@@ -92,20 +92,21 @@ export const Money = ({ v }) => <span className="tabular-nums">₹{Number(v).toL
 
 /* ---------- PUBLIC SHELL ---------- */
 const pubNav = [['/','Home'],['/temples','Temples'],['/special','Special poojas'],['/festival','Festivals'],['/services','Services']]
-export function PublicShell({ children, tenant, hideChatbot=false }) {
+export function PublicShell({ children, tenant, hideChatbot=false, booking=false }) {
   const [open,setOpen]=useState(false)
-  return (<div className={tenant?'tenant':''}>
-    <header className={`sticky top-0 z-30 ${tenant?'bg-white/90 text-brown-900':'bg-brown-900/95 text-white'} backdrop-blur border-b ${tenant?'border-gold-400':'border-saffron-500/60'}`}>
+  const lightHeader = tenant || booking
+  return (<div className={`${tenant?'tenant':''} ${booking?'booking-shell':''}`}>
+    <header className={`sticky top-0 z-30 ${tenant?'bg-white/90 text-brown-900':booking?'bg-white/95 text-brown-900':'bg-brown-900/95 text-white'} backdrop-blur border-b ${tenant?'border-gold-400':booking?'border-brown-100':'border-saffron-500/60'}`}>
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
-        {tenant ? <Link to="/t/kottur-sree-mahavishnu-temple" className="font-display text-lg font-semibold">{tenant}</Link> : <Logo light/>}
-        {!tenant && <nav className="ml-4 hidden gap-1 md:flex">{pubNav.map(([h,t])=><NavLink key={h} to={h} end={h==='/'} className={({isActive})=>`rounded-lg px-3 py-1.5 text-sm font-medium ${isActive?'bg-white/15 text-white':'text-brown-100 hover:bg-white/10'}`}>{t}</NavLink>)}</nav>}
+        {tenant ? <Link to="/t/kottur-sree-mahavishnu-temple" className="font-display text-lg font-semibold">{tenant}</Link> : <Logo light={!lightHeader}/>}
+        {!tenant && <nav className="ml-4 hidden gap-1 md:flex">{pubNav.map(([h,t])=><NavLink key={h} to={h} end={h==='/'} className={({isActive})=>`rounded-lg px-3 py-1.5 text-sm font-medium ${lightHeader ? (isActive?'bg-brown-50 text-brown-900':'text-brown-700 hover:bg-brown-50') : (isActive?'bg-white/15 text-white':'text-brown-100 hover:bg-white/10')}`}>{t}</NavLink>)}</nav>}
         <div className="flex-1"/>
         <LanguageControl/>
-        <Link to="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>
-        <Link to="/login" className={`btn !py-2 ${tenant?'bg-brown-900 text-white':'bg-white/15 text-white hover:bg-white/25'}`}>Login</Link>
-        <button className="md:hidden" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
+        {!booking && <Link to="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>}
+        <Link to="/login" className={`btn !py-2 ${tenant?'bg-brown-900 text-white':booking?'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50':'bg-white/15 text-white hover:bg-white/25'}`}>{booking ? 'Login / Register' : 'Login'}</Link>
+        <button className={`md:hidden ${lightHeader?'text-brown-800':''}`} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
       </div>
-      {open && <div className="border-t border-white/10 px-4 py-2 md:hidden">{pubNav.map(([h,t])=><Link key={h} to={h} onClick={()=>setOpen(false)} className="block rounded-lg px-3 py-2 text-sm">{t}</Link>)}<Link to="/whatsapp" className="block px-3 py-2 text-sm text-[#25D366]">Book on WhatsApp</Link></div>}
+      {open && <div className={`border-t px-4 py-2 md:hidden ${lightHeader?'border-brown-100':'border-white/10'}`}>{pubNav.map(([h,t])=><Link key={h} to={h} onClick={()=>setOpen(false)} className="block rounded-lg px-3 py-2 text-sm">{t}</Link>)}{!booking && <Link to="/whatsapp" className="block px-3 py-2 text-sm text-[#25D366]">Book on WhatsApp</Link>}</div>}
     </header>
     <main className="min-h-[70vh]">{children}</main>
     <footer className="mt-16 bg-brown-900 text-brown-100">
@@ -168,7 +169,7 @@ const kb = [
   [/timing|time|open/i, 'Kottur Sree Mahavishnu Temple is open 5:30–9:30 AM and 5:30–7:30 PM. Source: temple page.'],
   [/ganapathi|homam/i, 'Ganapathi Homam is ₹250, limited to 20 per day. 14 slots are left for tomorrow. Want me to start a booking?'],
   [/book|pooja/i, 'You can book on this site, on WhatsApp (+91 9495 041196) or in the app. Which temple?'],
-  [/80g|donation|donate/i, 'Kottur temple holds an 80G certificate — donations with your PAN get an 80G receipt along with the booking receipt.'],
+  [/donation|donate/i, 'You can donate through the temple page and receive a donation receipt. Which temple would you like to support?'],
   [/cancel|refund/i, 'Cancel or reschedule until the chart closes (8:00 PM the day before). Refunds go back to the same payment method in 5–7 days.'],
   [/santhana|child/i, 'Santhanagopala Pooja is the temple\'s speciality — ₹1,500, 3 per day, book at least a day ahead.'],
 ]
@@ -181,7 +182,7 @@ export function Chatbot() {
     {open && <div className="fixed bottom-20 right-5 z-40 flex h-[460px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-brown-200">
       <div className="flex items-center gap-2 bg-brown-900 px-4 py-3 text-white"><Sparkles size={16} className="text-gold-400"/><b className="text-sm">Temple assistant</b><span className="ml-auto text-[10px] text-brown-200">RAG on TempleAddress data</span></div>
       <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm">{msgs.map((m,i)=><div key={i} className={`max-w-[85%] rounded-2xl px-3 py-2 ${m.me?'ml-auto bg-saffron-500 text-white':'bg-brown-50'}`}>{m.t}</div>)}
-        <div className="flex flex-wrap gap-1 pt-1">{['Temple timings','Ganapathi Homam price','80G donation','Cancel a booking'].map(s=><button key={s} onClick={()=>ask(s)} className="rounded-full border border-brown-200 px-2.5 py-1 text-xs hover:bg-brown-50">{s}</button>)}</div></div>
+        <div className="flex flex-wrap gap-1 pt-1">{['Temple timings','Ganapathi Homam price','Cancel a booking'].map(s=><button key={s} onClick={()=>ask(s)} className="rounded-full border border-brown-200 px-2.5 py-1 text-xs hover:bg-brown-50">{s}</button>)}</div></div>
       <form onSubmit={e=>{e.preventDefault();ask()}} className="flex gap-2 border-t border-brown-100 p-2"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Ask anything…" className="input !py-2"/><button className="btn-p !px-3"><Send size={16}/></button></form>
     </div>}
   </>)

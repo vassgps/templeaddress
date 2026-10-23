@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
+import { ListingQrPreview, useListingQr } from '../ListingQr.jsx'
 import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star, Gift, BadgeCheck, ArrowRight, Download, CalendarDays, Users, QrCode, Lock, Check, Sparkles, Landmark, Flame, PartyPopper, Music, HeartHandshake, Receipt as ReceiptIcon, RefreshCcw, SlidersHorizontal, Globe2, Smartphone, Zap, Handshake, Plus, X, PenLine, Eye, TrendingUp, Mail, UserRound } from 'lucide-react'
-import { temples, bySlug, specials, services, festival as festivalData, checkoutPlans, onlineGateways, manualMethods } from '../data'
+import { temples, bySlug, specials, services, festivals, checkoutPlans, onlineGateways, manualMethods } from '../data'
 import { PublicShell, Photo, Pill, Field, Input, Select, Toggle, Table, Section, Steps, Tabs, Money, useToast, GoogleIcon, TempleMark } from '../ui'
 import { FileField } from './checkout'
 
@@ -122,7 +123,7 @@ export function Home() {
             <span className="pill glass"><Sparkles size={13} className="text-gold-400"/>New · Temple assistant</span>
             <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">Ask anything. <span className="gold-text">English or മലയാളം.</span></h2>
             <p className="mt-3 max-w-lg text-brown-100">Timings, pooja prices, nakshatra guidance, 80G rules — the assistant answers only from verified TempleAddress data, and hands over to a human on WhatsApp when needed.</p>
-            <div className="mt-5 flex flex-wrap gap-2">{['Ganapathi Homam price','Temple timings','80G donation','Cancel a booking'].map(s=><button key={s} onClick={()=>askAI(s)} className="rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-sm transition hover:bg-white/20">{s}</button>)}</div>
+            <div className="mt-5 flex flex-wrap gap-2">{['Ganapathi Homam price','Temple timings','Cancel a booking'].map(s=><button key={s} onClick={()=>askAI(s)} className="rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-sm transition hover:bg-white/20">{s}</button>)}</div>
           </div>
           <div className="glass relative rounded-2xl p-4 text-sm">
             <div className="flex items-center gap-2 text-xs text-brown-100"><Sparkles size={13} className="text-gold-400"/>Temple assistant · answers from verified data</div>
@@ -162,7 +163,7 @@ const TempleCard = ({ t }) => (
       <span className="absolute bottom-3 right-3 pill bg-white/90 text-brown-900"><Star size={12} className="text-gold-500" fill="currentColor"/>{t.rating}</span></Photo>
     <div className="p-4"><div className="flex items-start justify-between gap-2"><h3 className="font-semibold leading-tight">{t.name}</h3><Pill tone="n">{t.code}</Pill></div><div className="ml mt-0.5 text-sm text-brown-500">{t.ml}</div>
       <div className="mt-2 flex items-center gap-1 text-xs text-brown-500"><MapPin size={12}/>{t.place}, {t.district} · {t.deity}</div>
-      <div className="mt-3 flex items-center justify-between border-t border-brown-100 pt-3 text-sm"><span className="text-brown-500">From <b className="text-brown-900">₹{t.poojas[0].price}</b></span><span className="inline-flex items-center gap-1 font-semibold text-saffron-600 transition group-hover:gap-2">Book pooja <ArrowRight size={14}/></span></div></div></Link>
+      <div className="mt-3 flex items-center justify-between border-t border-brown-100 pt-3 text-sm"><span className="text-brown-500">{t.poojas.length?<>From <b className="text-brown-900">₹{t.poojas[0].price}</b></>:'Bookings unavailable'}</span><span className="inline-flex items-center gap-1 font-semibold text-saffron-600 transition group-hover:gap-2">{t.bookable?'Book pooja':'View temple'} <ArrowRight size={14}/></span></div></div></Link>
 )
 const SpecialCard = ({ s }) => (
   <Link to={`/special/${s.id}`} className="card-premium group overflow-hidden">
@@ -224,6 +225,7 @@ export function TemplePage() {
   const [tab,setTab] = useState(0)
   const [toast,el] = useToast()
   const [enquiry,setEnquiry] = useState({name:'',mobile:'',message:''})
+  const { record: listingQr, error: qrError } = useListingQr(t)
   if(!t) return <PublicShell><Wrap className="py-10"><h1 className="text-3xl">Temple not found</h1><Link to="/temples" className="btn-p mt-4">Browse temples</Link></Wrap></PublicShell>
   const pageUrl = `${window.location.origin}${window.location.pathname}#/t/${encodeURIComponent(t.slug)}`
   const mapQuery = t.latitude != null && t.longitude != null ? `${t.latitude},${t.longitude}` : `${t.name}, ${t.address}`
@@ -236,7 +238,7 @@ export function TemplePage() {
     {!wl && <div className="mb-4 flex items-center justify-between rounded-xl bg-blue-50 px-4 py-2 text-sm text-blue-800"><span>Preview this page as the temple's own site ({t.slug.split('-')[0]}.templeaddress.com)</span><Toggle label="White-label view" onChange={setWl}/></div>}
     {wl && <div className="mb-4 flex items-center justify-between rounded-xl bg-gold-300/30 px-4 py-2 text-sm"><span>Tenant view — no TempleAddress ads or nearby temples; only this temple's sponsor.</span><button onClick={()=>setWl(false)} className="font-semibold underline">Exit</button></div>}
     <Photo hue={t.hue} className="rounded-3xl p-6 text-white md:p-10">
-      <div className="relative flex flex-wrap gap-2"><Pill tone="ok"><BadgeCheck size={12}/>Verified</Pill><Pill tone="n">{t.code}</Pill>{t.category&&<Pill tone="info">{t.category}</Pill>}{t.g80&&<Pill tone="gold">80G certified</Pill>}{own&&<Pill tone="info">Pays temple directly</Pill>}</div>
+      <div className="relative flex flex-wrap gap-2"><Pill tone="ok"><BadgeCheck size={12}/>Verified</Pill><Pill tone="n">{t.code}</Pill>{t.category&&<Pill tone="info">{t.category}</Pill>}{own&&<Pill tone="info">Pays temple directly</Pill>}</div>
       <h1 className="relative mt-24 text-3xl font-semibold md:text-5xl">{t.name}</h1><div className="ml relative mt-1 text-lg text-brown-100">{t.ml} · {t.place}, {t.district}</div>
       <div className="relative mt-4 flex flex-wrap gap-4 text-sm text-brown-100"><span className="flex items-center gap-1"><Clock size={14}/>{t.timings}</span><span className="flex items-center gap-1"><Star size={14} className="text-gold-300" fill="currentColor"/>{t.rating} · {t.reviews} reviews</span></div>
     </Photo>
@@ -285,7 +287,7 @@ export function TemplePage() {
         {tab===3 && <>
           <div className="card p-5"><div className="flex items-center gap-2"><Gift size={18} className="text-saffron-600"/><h3 className="font-semibold">Direct UPI donation</h3><Pill tone="ok">No charges</Pill></div><p className="mt-1 text-sm text-brown-500">Donate directly to the temple's own UPI ID — the temple receives 100%.</p>
             {t.upiId ? <div className="mt-4 grid items-center gap-4 sm:grid-cols-[128px_1fr]"><div className="mx-auto grid aspect-square w-32 place-items-center rounded-xl border-4 border-brown-900 bg-white p-2"><QRCodeSVG value={upiUri} size={104} level="M"/></div><div className="text-sm"><b className="text-base">{t.upiId}</b><p className="mt-1 text-brown-500">Scan with any UPI app, or tap below on a phone.</p><a href={upiUri} className="btn-g mt-2 inline-flex"><QrCode size={16}/>Pay via UPI app</a></div></div> : <p className="mt-3 text-sm text-brown-500">This temple hasn't published a direct UPI ID yet.</p>}</div>
-          <div className="card p-5"><div className="flex items-center gap-2"><ReceiptIcon size={18} className="text-saffron-600"/><h3 className="font-semibold">Donation with receipt</h3><Pill tone="info">2–5% fee</Pill></div><p className="mt-1 text-sm text-brown-500">Get an official numbered receipt{t.g80?' with an 80G tax certificate':''} and secure gateway payment support.</p>
+          <div className="card p-5"><div className="flex items-center gap-2"><ReceiptIcon size={18} className="text-saffron-600"/><h3 className="font-semibold">Donation with receipt</h3><Pill tone="info">2–5% fee</Pill></div><p className="mt-1 text-sm text-brown-500">Get an official numbered receipt and secure gateway payment support.</p>
             <div className="mt-3 flex flex-wrap gap-2">{['Razorpay','PayU','Stripe','UPI'].map(g=><Pill key={g}>{g}</Pill>)}</div>
             <Link to={`/donate/${t.slug}`} className="btn-p mt-4 w-full">Donate with receipt <ArrowRight size={16}/></Link></div>
           <form onSubmit={sendEnquiry} className="card space-y-3 p-5"><h3 className="font-semibold">Quick enquiry</h3><p className="text-sm text-brown-500">Send a simple enquiry to this listing with your name, mobile number and message.</p>
@@ -302,10 +304,10 @@ export function TemplePage() {
 
       </div>
       <aside className="space-y-4 lg:sticky lg:top-32 lg:self-start">
-        <div className="card p-5"><Link to={`/book/${t.slug}`} className="btn-p w-full !py-3 text-base">Book pooja</Link><Link to={`/donate/${t.slug}`} className="btn-s mt-2 w-full"><Gift size={16}/>Donate{t.g80?' · 80G receipt':''}</Link><Link to="/whatsapp" className="btn-wa mt-2 w-full"><MessageCircle size={16}/>Book on WhatsApp</Link><p className="mt-3 text-xs text-brown-500">Temple receives 100% of the pooja amount. The payment gateway shows its processing fee before you pay.</p></div>
+        <div className="card p-5"><Link to={`/book/${t.slug}`} className="btn-p w-full !py-3 text-base">Book pooja</Link><Link to={`/donate/${t.slug}`} className="btn-s mt-2 w-full"><Gift size={16}/>Donate</Link><Link to="/whatsapp" className="btn-wa mt-2 w-full"><MessageCircle size={16}/>Book on WhatsApp</Link><p className="mt-3 text-xs text-brown-500">Temple receives 100% of the pooja amount. The payment gateway shows its processing fee before you pay.</p></div>
 
         <div className="card p-5"><h3 className="font-semibold">Quick info</h3>
-          <div className="mt-2 flex flex-wrap gap-1.5">{t.bookable&&<Pill tone="ok">Booking open</Pill>}<Pill tone="info">Donation open</Pill>{t.g80&&<Pill tone="gold">80G</Pill>}</div>
+          <div className="mt-2 flex flex-wrap gap-1.5">{t.bookable&&<Pill tone="ok">Booking open</Pill>}<Pill tone="info">Donation open</Pill></div>
           <dl className="mt-3 space-y-3">
             <Fact l="Temple code" v={t.code}/><Fact l="Category" v={t.category||'Hindu Temple'}/><Fact l="Main deity" v={t.deity}/><Fact l="Location" v={`${t.place}, ${t.district}`}/><Fact l="Opening" v={t.timings}/>
           </dl></div>
@@ -316,7 +318,7 @@ export function TemplePage() {
         {t.events?.length>0&&<div className="card p-5"><h3 className="font-semibold">Upcoming</h3>{t.events.filter(event=>event.date>=new Date().toISOString().slice(0,10)).map(event=><p key={event.date+event.name}>{event.name} · {event.date}</p>)}</div>}
         {!t.sponsor && !wl && <Link to="/sponsor" className="block rounded-2xl border-2 border-dashed border-brown-200 p-4 text-sm hover:bg-white"><b>Sponsor slot available</b><div className="text-brown-500">Put your name on this temple's page, receipts and QR board.</div></Link>}
         {t.sponsorAd&&<div className="card p-4"><p className="mb-2 text-xs text-brown-500">Sponsored advertisement · {t.sponsor}</p>{t.sponsorAd.banner&&<img src={t.sponsorAd.banner} alt={t.sponsorAd.text||'Sponsor advertisement'} className="w-full rounded-xl"/>}{t.sponsorAd.text&&<p className="mt-2">{t.sponsorAd.text}</p>}{/^https?:\/\//.test(t.sponsorAd.url||'')&&<a href={t.sponsorAd.url} rel="sponsored noopener noreferrer" target="_blank" className="underline">Visit sponsor</a>}</div>}
-        <div className="card p-3"><div className="flex items-center gap-3"><QRCodeSVG value={pageUrl} size={64} marginSize={2}/><div className="min-w-0"><div className="flex items-center gap-1.5 text-sm font-semibold"><QrCode size={14}/>Temple QR code</div><p className="mt-0.5 truncate text-xs text-brown-500">Scan to open {t.name}</p></div></div></div>
+        <div className="card p-3">{qrError?<p className="text-xs text-brown-500">Temple QR is temporarily unavailable.</p>:<div className="flex items-center gap-3"><ListingQrPreview value={listingQr?.targetUrl||pageUrl} size={64}/><div className="min-w-0"><div className="flex items-center gap-1.5 text-sm font-semibold"><QrCode size={14}/>Temple QR code</div><p className="mt-0.5 truncate text-xs text-brown-500">Scan to open {t.name}</p></div></div>}</div>
         <div className="card p-5 text-sm"><b>Are you the temple committee?</b><p className="mt-1 text-brown-500">Claim this page to manage poojas, prices and the daily chart.</p><Link to={`/claim/${t.slug}`} className="btn-g mt-2 w-full"><Lock size={14}/>Claim this temple</Link></div>
       </aside>
     </div>
@@ -444,9 +446,18 @@ export function SpecialDetail() {
 }
 
 /* ---------------- FESTIVAL ---------------- */
+export function Festivals() {
+  return (<PublicShell><section className="bg-temple-grad text-white"><Wrap className="py-10"><h1 className="text-4xl font-semibold">Festivals</h1><p className="mt-2 text-brown-100">Explore temple festivals, view programmes and discover festival offerings.</p></Wrap></section>
+    <Wrap className="py-8"><p className="mb-5 text-sm text-brown-500">{festivals.length} {festivals.length===1?'festival':'festivals'}</p><div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{festivals.map(festival=><Link key={festival.code} to={`/festival/${festival.code}`} className="card-premium group overflow-hidden"><Photo hue="#8A3A1F" className="aspect-[16/9]" label={`Festival · ${festival.code}`}><span className="absolute bottom-3 left-3 pill bg-white/90 text-brown-900"><CalendarDays size={12}/>{festival.from} – {festival.to}</span></Photo><div className="p-5"><Pill tone="ok">{festival.status}</Pill><h2 className="mt-3 text-xl font-semibold">{festival.name}</h2><p className="ml mt-1 text-sm text-brown-500">{festival.ml}</p><p className="mt-3 text-sm font-semibold">{festival.temple}</p><p className="mt-1 flex items-center gap-1 text-sm text-brown-500"><MapPin size={14}/>{festival.place}</p><div className="mt-4 flex items-center justify-between border-t border-brown-100 pt-3 text-sm font-semibold text-saffron-600"><span>View festival</span><ArrowRight size={16}/></div></div></Link>)}</div></Wrap>
+  </PublicShell>)
+}
+
 export function Festival() {
+  const {code}=useParams()
+  const festivalData=festivals.find(festival=>festival.code===code)
   const [toast,el]=useToast(); const [pack,setPack]=useState('Day sponsor ₹35,000')
-  return (<PublicShell><Wrap className="py-6">{el}<Photo hue="#8A3A1F" className="rounded-3xl p-6 text-white md:p-10"><Pill tone="gold">Festival · {festivalData.code}</Pill><h1 className="relative mt-20 text-3xl font-semibold md:text-5xl">{festivalData.name}</h1><div className="ml relative mt-1 text-lg text-brown-100">{festivalData.ml} · {festivalData.from} – {festivalData.to} · {festivalData.temple}</div></Photo>
+  if(!festivalData)return <PublicShell><Wrap className="py-10"><h1 className="text-3xl font-semibold">Festival not found</h1><Link to="/festival" className="btn-g mt-4">Browse festivals</Link></Wrap></PublicShell>
+  return (<PublicShell><Wrap className="py-6">{el}<Link to="/festival" className="mb-4 inline-block text-sm font-semibold text-brown-500">← All festivals</Link><Photo hue="#8A3A1F" className="rounded-3xl p-6 text-white md:p-10"><Pill tone="gold">Festival · {festivalData.code}</Pill><h1 className="relative mt-20 text-3xl font-semibold md:text-5xl">{festivalData.name}</h1><div className="ml relative mt-1 text-lg text-brown-100">{festivalData.ml} · {festivalData.from} – {festivalData.to} · {festivalData.temple}</div></Photo>
     <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]"><div className="space-y-6">
       <div className="card p-5"><h2 className="text-xl font-semibold">About the festival</h2><p className="mt-2 text-sm text-brown-700">The festival page keeps the committee, venue, history, travel information and festival description as static listing content. Programme events below carry their own exact date and time and may change independently.</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-brown-50 p-3 text-sm"><span className="text-brown-500">Venue</span><b className="block">{festivalData.temple}</b><span>{festivalData.place}</span></div><div className="rounded-xl bg-brown-50 p-3 text-sm"><span className="text-brown-500">Festival dates</span><b className="block">{festivalData.from} – {festivalData.to}</b><span>{festivalData.committee}</span></div></div></div>
       <div className="card p-5"><div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">Programme</h2><Pill tone="info">Times shown in IST</Pill></div><Table head={['Date','Time','Event','Type','Status']} rows={festivalData.programme.map(([day,event,time,kind,,status])=>[<b>{day} 2026</b>,time,event,<Pill tone="n">{kind}</Pill>,<Pill tone={status==='Confirmed'?'ok':'warn'}>{status}</Pill>])}/></div>
