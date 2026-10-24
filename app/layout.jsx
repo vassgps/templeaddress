@@ -31,12 +31,12 @@ export const metadata = {
     default: 'TempleAddress — Digital address for every temple',
   },
   description:
-    'Discover verified temples, book vazhipadu, donate with 80G receipts and follow festivals — from anywhere in the world. Zero platform fee on bookings and donations.',
-  keywords: ['temple', 'vazhipadu', 'pooja booking', 'Kerala temple', 'festival', '80G donation', 'templeaddress'],
+    'Discover verified temples, book vazhipadu, donate and follow festivals — from anywhere in the world. Zero platform fee on bookings and donations.',
+  keywords: ['temple', 'vazhipadu', 'pooja booking', 'Kerala temple', 'festival', 'temple donation', 'templeaddress'],
   authors: [{ name: 'TempleAddress', url: 'https://templeaddress.com' }],
   openGraph: {
     title: 'TempleAddress — Digital address for every temple',
-    description: 'Verified temples · Book vazhipadu · 80G donations · Festivals',
+    description: 'Verified temples · Book vazhipadu · Donations · Festivals',
     url: 'https://templeaddress.com',
     siteName: 'TempleAddress',
     locale: 'en_IN',
