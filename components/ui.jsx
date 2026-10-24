@@ -247,7 +247,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
         <div className="border-t border-white/10">
           <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-xs text-brown-200">Payments by <b className="text-brown-100">Razorpay · PayU · Stripe · Omniware</b> — TempleAddress never stores card details.</span>
+              <span className="text-xs text-brown-200">Payments by <b className="text-brown-100">Razorpay</b> — TempleAddress never stores card details.</span>
               <TrustBadges />
             </div>
             <div className="flex flex-col gap-1 text-xs text-brown-300 sm:flex-row sm:items-center sm:justify-between">
