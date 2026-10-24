@@ -1,0 +1,39 @@
+import Link from 'next/link'
+import { CalendarDays, Gift, Landmark, MapPin, ShieldCheck } from 'lucide-react'
+import { PublicShell } from '@/components/ui'
+
+const Wrap = ({ children }) => <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
+
+export function Phase1Home({ listings = [], events = [] }) {
+  return <PublicShell><Wrap>
+    <section className="rounded-3xl bg-temple-grad px-6 py-14 text-white md:px-12"><p className="text-sm font-semibold uppercase tracking-wider text-gold-300">TempleAddress Phase 1</p><h1 className="mt-3 max-w-3xl text-4xl font-semibold md:text-5xl">Discover verified temples, book poojas and support approved causes.</h1><p className="mt-4 max-w-2xl text-brown-100">Server-rendered from the Django catalogue, with OTP accounts, Razorpay booking, receipts, daily charts and traceable payouts.</p><div className="mt-6 flex flex-wrap gap-3"><Link className="btn bg-white text-brown-900" href="/temples">Browse temples</Link><Link className="btn border border-white/30 text-white" href="/services">Find services</Link></div></section>
+    <section className="mt-10"><div className="flex items-end justify-between"><div><p className="text-sm text-saffron-600">Published by staff</p><h2 className="text-3xl font-semibold">Featured listings</h2></div><Link href="/temples" className="text-sm font-semibold text-saffron-700">View directory →</Link></div><div className="mt-5 grid gap-4 md:grid-cols-3">{listings.slice(0, 6).map(row => <Link className="card-premium p-5" href={`/t/${row.slug}`} key={row.uuid}><span className="pill bg-emerald-50 text-emerald-700">{row.listing_type}</span><h3 className="mt-3 text-xl font-semibold">{row.name_en}</h3><p className="mt-2 text-sm text-brown-500">{row.address}</p></Link>)}</div></section>
+    {!!events.length && <section className="mt-10"><h2 className="text-3xl font-semibold">Upcoming events</h2><div className="mt-5 grid gap-4 md:grid-cols-3">{events.slice(0, 6).map(row => <div className="card p-5" key={row.uuid}><b>{row.name_en}</b><p className="mt-1 text-sm text-brown-500">{row.host_listing?.name_en}</p><p className="mt-3 text-xs text-blue-700">{row.registration_mode === 'free_registration' ? 'Free registration' : 'Priced special pooja'}</p></div>)}</div></section>}
+  </Wrap></PublicShell>
+}
+
+export function ListingDirectory({ title = 'TempleAddress listings', listings = [], type }) {
+  return <PublicShell><Wrap>
+    <div className="mb-8"><p className="text-sm font-semibold uppercase tracking-wide text-saffron-600">Verified directory</p><h1 className="mt-2 text-4xl font-semibold">{title}</h1><p className="mt-2 text-brown-500">Published Phase 1 profiles from the Django catalogue. Sensitive contacts are never included in this page data.</p></div>
+    {!listings.length && <div className="card p-8">No published {type || ''} listings yet.</div>}
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{listings.map(item => <Link key={item.uuid} href={`/t/${item.slug}`} className="card-premium p-5">
+      <div className="flex items-start justify-between gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-saffron-50 text-saffron-700"><Landmark size={21}/></span><span className="pill bg-emerald-50 text-emerald-700"><ShieldCheck size={12}/>Published</span></div>
+      <h2 className="mt-4 text-xl font-semibold">{item.name_en}</h2>{item.name_ml && <p className="ml text-sm text-brown-500">{item.name_ml}</p>}
+      <p className="mt-3 flex items-start gap-2 text-sm text-brown-500"><MapPin size={15} className="mt-0.5 shrink-0"/>{item.address || 'Location available on detail page'}</p>
+      <div className="mt-4 flex gap-2">{item.booking_enabled && <span className="pill bg-saffron-50 text-saffron-700">Pooja booking</span>}{item.donation_enabled && <span className="pill bg-blue-50 text-blue-700">Donations</span>}{item.listing_type === 'service' && <span className="pill bg-brown-100">Enquiry only</span>}</div>
+    </Link>)}</div>
+  </Wrap></PublicShell>
+}
+
+export function ListingDetail({ listing }) {
+  return <PublicShell><Wrap>
+    <div className="rounded-3xl bg-temple-grad p-8 text-white"><div className="flex flex-wrap items-center gap-2"><span className="pill glass"><ShieldCheck size={13}/>Staff approved</span><span className="pill glass">{listing.code}</span></div><h1 className="mt-5 text-4xl font-semibold">{listing.name_en}</h1>{listing.name_ml && <p className="ml mt-1 text-xl text-brown-100">{listing.name_ml}</p>}<p className="mt-4 max-w-3xl text-brown-100">{listing.description_en || listing.short_description_en}</p><p className="mt-4 flex gap-2 text-sm"><MapPin size={16}/>{listing.address}</p></div>
+
+    <div className="mt-7 grid gap-7 lg:grid-cols-[1fr_300px]"><div className="space-y-7">
+      {listing.poojas?.length > 0 && <section><h2 className="text-2xl font-semibold">Online poojas</h2><div className="mt-3 grid gap-3">{listing.poojas.map(item => <div className="card flex flex-wrap items-center justify-between gap-4 p-4" key={item.uuid}><div><b>{item.name_en}</b><p className="text-sm text-brown-500">Book at least {item.lead_time_hours} hours ahead · capacity {item.daily_capacity}</p></div><div className="flex items-center gap-3"><b>₹{item.price}</b><Link className="btn-p" href={`/book/${listing.slug}?pooja=${item.uuid}`}>Book</Link></div></div>)}</div></section>}
+      {listing.donation_purposes?.length > 0 && <section><h2 className="text-2xl font-semibold">Donation purposes</h2><div className="mt-3 grid gap-3">{listing.donation_purposes.map(item => <div className="card flex items-center justify-between p-4" key={item.uuid}><span><b>{item.name_en}</b><span className="block text-sm text-brown-500">Payment receipt; no 80G claim</span></span><Link className="btn-p" href={`/donate/${listing.slug}?purpose=${item.uuid}`}><Gift size={16}/>Donate</Link></div>)}</div></section>}
+      {listing.service_offerings?.length > 0 && <section><h2 className="text-2xl font-semibold">Services</h2><div className="mt-3 grid gap-3">{listing.service_offerings.map((item, index) => <div className="card p-4" key={index}><b>{item.name_en}</b><p className="mt-1 text-sm text-brown-500">{item.description_en}</p><p className="mt-2 text-sm">{item.indicative_price_text} · {item.duration_text} · {item.availability_text}</p><p className="mt-2 text-xs text-blue-700">Enquiry/appointment only. No online service payment in Phase 1.</p></div>)}</div></section>}
+      {listing.events?.length > 0 && <section><h2 className="text-2xl font-semibold">Events and special poojas</h2><div className="mt-3 grid gap-3">{listing.events.map(event => <div className="card p-4" key={event.uuid}><div className="flex justify-between gap-3"><div><b>{event.name_en}</b><p className="text-sm text-brown-500">{event.kind === 'special_pooja' ? 'Paid special pooja' : 'Free event registration'}</p></div>{event.price !== '0.00' && <b>₹{event.price}</b>}</div>{event.occurrences?.map(occ => <div key={occ.uuid} className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm"><p className="flex gap-2"><CalendarDays size={15}/>{occ.date} · {occ.start_time} · capacity {occ.capacity}</p>{event.registration_mode === 'paid_booking' && <Link className="btn-p" href={`/book/${listing.slug}?event=${occ.uuid}`}>Book</Link>}</div>)}</div>)}</div></section>}
+    </div><aside className="space-y-4"><div className="card p-5"><h2 className="font-semibold">Official contact</h2><p className="mt-2 text-sm text-brown-500">Sign in with verified OTP or Google to reveal the approved phone, WhatsApp or email. Bank and UPI details are never exposed.</p><Link href={`/login?next=/t/${listing.slug}`} className="btn-g mt-3 w-full">Login to reveal</Link></div>{listing.website && <a href={listing.website} rel="noreferrer" target="_blank" className="btn-g w-full">Official website</a>}</aside></div>
+  </Wrap></PublicShell>
+}
