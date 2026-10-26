@@ -1,3 +1,5 @@
+import { apiRoot } from './lib/api-url.js'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -11,7 +13,7 @@ const nextConfig = {
   transpilePackages: ['recharts'],
   async rewrites() {
     const backend = process.env.TEMPLEADDRESS_API_URL || 'http://127.0.0.1:8000'
-    return [{ source: '/api/backend/:path*', destination: `${backend}/api/v1/:path*` }]
+    return [{ source: '/api/backend/:path*', destination: `${apiRoot(backend)}/:path*` }]
   },
 }
 
