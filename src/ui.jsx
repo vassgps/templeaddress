@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import LanguageControl from './LanguageControl'
+import { apiEnabled } from './api'
+import { SessionLink } from './apiAuth'
 import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2 } from 'lucide-react'
 
 /* ---------- BRAND MARK ---------- */
@@ -103,7 +105,7 @@ export function PublicShell({ children, tenant, hideChatbot=false, booking=false
         <div className="flex-1"/>
         <LanguageControl/>
         {!booking && <Link to="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>}
-        <Link to="/login" className={`btn !py-2 ${tenant?'bg-brown-900 text-white':booking?'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50':'bg-white/15 text-white hover:bg-white/25'}`}>{booking ? 'Login / Register' : 'Login'}</Link>
+        {apiEnabled ? <SessionLink/> : <Link to="/login" className={`btn !py-2 ${tenant?'bg-brown-900 text-white':booking?'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50':'bg-white/15 text-white hover:bg-white/25'}`}>{booking ? 'Login / Register' : 'Login'}</Link>}
         <button className={`md:hidden ${lightHeader?'text-brown-800':''}`} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
       </div>
       {open && <div className={`border-t px-4 py-2 md:hidden ${lightHeader?'border-brown-100':'border-white/10'}`}>{pubNav.map(([h,t])=><Link key={h} to={h} onClick={()=>setOpen(false)} className="block rounded-lg px-3 py-2 text-sm">{t}</Link>)}{!booking && <Link to="/whatsapp" className="block px-3 py-2 text-sm text-[#25D366]">Book on WhatsApp</Link>}</div>}

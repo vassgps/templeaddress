@@ -11,12 +11,17 @@ import { PublicShell } from './ui'
 import { Booking, BookingReceipt } from './pages/booking'
 import { Policy } from './pages/policy'
 import ListingPreview from './pages/listingPreview.jsx'
+import { apiEnabled } from './api'
+import { ApiCatalogue } from './apiCatalogue'
+import { ApiLogin, RequireSession } from './apiAuth'
+import { ApiBookingReceipt } from './apiBooking'
+import { ApiDonate } from './apiPublicActions'
 
 const routes = [
   ['/preview/listing/:code', ListingPreview],
-  ['/book/:slug', Booking], ['/receipt/:bookingCode', BookingReceipt], ['/policies/:kind', Policy], ['/listing/:slug', P.TemplePage],
+  ['/book/:slug', Booking], ['/receipt/:bookingCode', apiEnabled ? ApiBookingReceipt : BookingReceipt], ['/policies/:kind', Policy], ['/listing/:slug', P.TemplePage],
   ['/staff/directory/bookings', StaffBookingsDirectory], ['/staff/directory/:kind', StaffDirectory],
-  ['/', P.Home], ['/temples', P.Temples], ['/t/:slug', P.TemplePage], ['/claim/:slug', P.Claim], ['/submit-temple', P.SubmitTemple], ['/receipt', P.Receipt], ['/donate/:slug', P.Donate],
+  ['/', P.Home], ['/temples', P.Temples], ['/t/:slug', P.TemplePage], ['/claim/:slug', P.Claim], ['/submit-temple', P.SubmitTemple], ['/receipt', P.Receipt], ['/donate/:slug', apiEnabled ? ApiDonate : P.Donate],
   ['/special', P.Special], ['/special/:id', P.SpecialDetail], ['/festival', P.Festivals], ['/festival/:code', P.Festival], ['/services', P.Services], ['/service/:id', P.ServiceDetail], ['/sponsor', P.Sponsor], ['/login', P.Login], ['/account', A.Account], ['/account/listings', A.UserListings], ['/account/listings/new', A.UserCreateListing], ['/account/listings/:slug/edit', A.UserEditListing], ['/account/partner-application', A.PartnerApplication], ['/whatsapp', P.WhatsApp],
   ['/vendor', V.VToday], ['/vendor/bookings', V.VBookings], ['/vendor/charts', V.VCharts], ['/vendor/charts/:chartId', V.VChartDetail], ['/vendor/poojas', V.VPoojas], ['/vendor/donations', V.VDonations], ['/vendor/payouts', V.VPayouts], ['/vendor/settings', V.VSettings], ['/vendor/page', V.VPage], ['/vendor/data', V.VData],
   ['/festival-admin', FC.FOverview], ['/festival-admin/programme', FC.FProgramme], ['/festival-admin/offerings', FC.FOfferings], ['/festival-admin/bookings', FC.FBookings], ['/festival-admin/sponsors', FC.FSponsors], ['/festival-admin/profile', FC.FPage], ['/festival-admin/settings', FC.FSettings],
@@ -38,4 +43,4 @@ const groups = [
 ]
 function SiteMap(){ return (<PublicShell><div className="mx-auto max-w-6xl px-4 py-10"><h1 className="text-3xl font-semibold">Prototype site map</h1><p className="text-brown-500">Every route in the MVP. Business rules: custom-gateway listings show no payouts · bank-only listings are paid by manual NEFT sheet · 80G receipt generated with the booking receipt · gateways: Razorpay, PayU, Stripe (platform) and Omniware (temple's own).</p>
   <div className="mt-6 grid gap-4 md:grid-cols-2">{groups.map(([g,rs])=><div key={g} className="card p-5"><h3 className="font-semibold">{g}</h3><div className="mt-2 grid gap-1">{rs.map(r=><Link key={r} to={r} className="rounded-lg px-2 py-1 text-sm hover:bg-brown-50">{r}</Link>)}</div></div>)}</div></div></PublicShell>) }
-export default function App(){ return (<HashRouter><Routes>{routes.map(([p,C])=><Route key={p} path={p} element={<C/>}/>)}<Route path="/map" element={<SiteMap/>}/><Route path="*" element={<SiteMap/>}/></Routes></HashRouter>) }
+export default function App(){ return (<HashRouter><ApiCatalogue><Routes>{routes.map(([p,C])=><Route key={p} path={p} element={p==='/login'&&apiEnabled?<ApiLogin/>:p.startsWith('/account')||p.startsWith('/receipt/')?<RequireSession><C/></RequireSession>:<C/>}/>)}<Route path="/map" element={<SiteMap/>}/><Route path="*" element={<SiteMap/>}/></Routes></ApiCatalogue></HashRouter>) }

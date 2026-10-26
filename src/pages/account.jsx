@@ -1,13 +1,23 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { BadgeCheck, Check, Download, ExternalLink, Lock, Pencil, PlusCircle, ShieldCheck } from 'lucide-react'
 import { PublicShell, Pill, Field, Input, Select, Table, Toggle, Steps, GoogleIcon } from '../ui'
 import { bySlug } from '../data'
 import { ListingForm } from './partners'
+import { api, apiEnabled } from '../api'
+import { useApiResource } from '../apiBooking'
+import { LogoutButton } from '../apiAuth'
+import { ApiAccountBookings } from './apiAccount'
 
 const Wrap = ({children,className=''}) => <div className={`mx-auto max-w-6xl px-4 ${className}`}>{children}</div>
 
 export function Account() {
+  const remote = useApiResource(apiEnabled ? '/me' : null)
+  useEffect(() => {
+    if (!remote.data) return
+    const user = remote.data, ritual = user.default_ritual_details || {}, address = user.default_address || {}
+    setProfile({name:user.name,star:ritual.star||'',gothra:ritual.gothra||'',rashi:ritual.rashi||'',language:user.preferred_language==='ml'?'??????':'English',address:address.line1||address.address||'',mobile:user.mobile_e164||'',email:user.email||''})
+  }, [remote.data])
   const [editing,setEditing]=useState(false)
   const [profile,setProfile]=useState({name:'Anand',star:'Rohini',gothra:'Bharadwaja',rashi:'Vrishabham (Taurus)',language:'English',address:'Kozhikode, Kerala, India',mobile:'+91 94966 86256',email:'anand@example.com'})
   const [draft,setDraft]=useState(profile)
@@ -15,17 +25,22 @@ export function Account() {
   const [contact,setContact]=useState('')
   const [otp,setOtp]=useState('')
   const [notice,setNotice]=useState('')
-  const [billingActivations]=useState(()=>{try{return JSON.parse(localStorage.getItem('ta-billing-activations-v1')||'[]')}catch{return []}})
+  const [billingActivations]=useState(()=>{if(apiEnabled)return [];try{return JSON.parse(localStorage.getItem('ta-billing-activations-v1')||'[]')}catch{return []}})
   const [partnerStatus,setPartnerStatus]=useState(()=>sessionStorage.getItem('ta-partner-status')||'none')
   const [partnerOpen,setPartnerOpen]=useState(false)
   const [partnerStep,setPartnerStep]=useState(0)
   const [partner,setPartner]=useState({legalName:'Anand',address:'Kozhikode, Kerala, India',bankAccount:'',ifsc:'',bankName:'',upi:'',pan:'',aadhaar:''})
   const [docs,setDocs]=useState({photo:'',aadhaar:'',pan:'',bank:''})
   const [consent,setConsent]=useState(false)
-  const googleLinked = true
+  const googleLinked = apiEnabled ? !!remote.data?.google_verified_at : true
   const flash = text => { setNotice(text); setTimeout(()=>setNotice(''),2200) }
-  const saveProfile = () => { setProfile({...draft,mobile:profile.mobile,email:profile.email}); setEditing(false); flash('Profile details saved') }
-  const startVerification = field => { setVerify({field,stage:'contact'}); setContact(profile[field]); setOtp('') }
+  const saveProfile = async () => {
+    try {
+      if(apiEnabled) await api('/me', {method:'PATCH',body:{name:draft.name,preferred_language:draft.language==='??????'?'ml':'en',default_address:{...remote.data.default_address,line1:draft.address},default_ritual_details:{...remote.data.default_ritual_details,star:draft.star,gothra:draft.gothra,rashi:draft.rashi}}})
+      setProfile({...draft,mobile:profile.mobile,email:profile.email});setEditing(false);flash('Profile details saved')
+    } catch(error) { flash(error.message) }
+  }
+  const startVerification = field => { if(apiEnabled) { flash('Contact changes require a verified backend workflow. Please contact support.');return } setVerify({field,stage:'contact'});setContact(profile[field]);setOtp('') }
   const sendOtp = () => { if(contact.trim()) { setVerify(v=>({...v,stage:'otp'})); flash(`Verification code sent to ${contact}`) } }
   const confirmContact = () => { if(otp.length<4) return; setProfile(p=>({...p,[verify.field]:contact})); setDraft(p=>({...p,[verify.field]:contact})); setVerify(null); flash('Contact verified and updated') }
   const beginPartner = () => { setPartnerStatus('draft'); setPartnerOpen(true); setPartnerStep(0) }
@@ -41,7 +56,9 @@ export function Account() {
   const kycReady = partner.legalName&&partner.address&&partner.bankAccount&&partner.ifsc&&partner.bankName&&partner.pan&&partner.aadhaar&&consent
   const updateStatus = next => { setPartnerStatus(next); sessionStorage.setItem('ta-partner-status',next); if(next==='review') setPartnerOpen(false); flash(next==='review'?'Partner application submitted for staff review':`Application status: ${partnerMeta[next][0]}`) }
 
+  if(apiEnabled && !remote.data) return <PublicShell><Wrap className="py-8"><p role={remote.error?'alert':'status'}>{remote.error?.message||'Loading profile?'}</p><button className="btn-g" onClick={remote.reload}>Retry</button></Wrap></PublicShell>
   return <PublicShell><Wrap className="py-8">
+    {apiEnabled && <div className="mb-4 flex justify-end"><LogoutButton/></div>}
     {notice&&<div className="fixed left-1/2 top-20 z-50 -translate-x-1/2 rounded-xl bg-brown-900 px-4 py-2 text-sm text-white shadow-soft">{notice}</div>}
     <div className="flex flex-wrap items-end justify-between gap-4"><div><div className="flex flex-wrap items-center gap-2"><h1 className="text-3xl font-semibold">{profile.name}</h1><Pill tone="ok"><ShieldCheck size={12}/>Verified devotee</Pill></div><div className="mt-1 text-sm text-brown-500">{profile.mobile} · {profile.email} · {profile.language}</div></div><button onClick={()=>{setDraft(profile);setEditing(v=>!v)}} className="btn-g">{editing?'Close editor':'Edit profile'}</button></div>
 
@@ -56,8 +73,8 @@ export function Account() {
 
     {verify&&<div className="fixed inset-0 z-50 grid place-items-center bg-brown-900/50 p-4" role="dialog" aria-modal="true"><div className="card w-full max-w-md p-6"><div className="flex gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-saffron-50 text-saffron-600"><Lock size={18}/></span><div><h2 className="text-xl font-semibold">Verify new {verify.field==='mobile'?'mobile number':'email'}</h2><p className="text-sm text-brown-500">The existing contact stays active until verification succeeds.</p></div></div>{verify.stage==='contact'?<div className="mt-5 space-y-4"><Field label={verify.field==='mobile'?'New mobile number':'New email address'}><Input type={verify.field==='email'?'email':'tel'} value={contact} onChange={e=>setContact(e.target.value)}/></Field><button onClick={sendOtp} className="btn-p w-full">Send OTP</button></div>:<div className="mt-5 space-y-4"><div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">Code sent to <b>{contact}</b>.</div><Field label="6-digit OTP"><Input inputMode="numeric" maxLength={6} value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,''))} placeholder="••••••"/></Field><button onClick={confirmContact} className="btn-p w-full">Verify & update</button><button onClick={sendOtp} className="w-full text-sm font-semibold text-saffron-600">Resend code</button></div>}<button onClick={()=>setVerify(null)} className="btn-g mt-2 w-full">Cancel</button></div></div>}
 
-    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]"><div className="space-y-6"><div className="card p-5"><h2 className="text-xl font-semibold">Upcoming</h2><div className="divide-y divide-brown-100">{[['Ganapathi Homam','Kottur Sree Mahavishnu Temple · Sat 13 Sept · Anand · Rohini','ok','Confirmed'],['Ashta Dravya Maha Ganapathi Homam','Special pooja · 14 Sept · proof pending','warn','Booked']].map(([a,b,t,s])=><div key={a} className="flex items-center gap-3 py-3"><div className="flex-1"><b>{a}</b><div className="text-sm text-brown-500">{b}</div></div><Pill tone={t}>{s}</Pill><Link to="/receipt" className="btn-g !py-1.5">Receipt</Link></div>)}</div><p className="mt-2 text-xs text-brown-500">Cancel or reschedule until the chart closes (12 Sept, 8:00 PM).</p></div><div className="card p-5"><h2 className="text-xl font-semibold">Past receipts</h2><Table head={['Date','Temple','Item','Amount','']} rows={[["31 Jul","Perayattil Subrahmanya Temple","Pushpanjali × 2","₹40",<Link to="/receipt" className="text-saffron-600">PDF</Link>],["5 Jun","Kottur Sree Mahavishnu Temple","Donation (80G)","₹1,000",<Link to="/receipt" className="text-saffron-600">PDF · 80G</Link>]]}/></div></div>
-      <aside className="space-y-4"><div className="card p-5"><h3 className="font-semibold">Quick book</h3><Link to="/book/kottur-sree-mahavishnu-temple" className="btn-p mt-2 w-full">Kottur Mahavishnu Temple</Link><Link to="/temples" className="btn-s mt-2 w-full">Another temple</Link></div><div className="card p-5 text-sm"><h3 className="font-semibold">Family members</h3><div className="mt-2 space-y-1"><div>{profile.name} · {profile.star}</div><div>Devi · Makayiram</div><div>Aarav · Thiruvathira</div></div><button className="text-saffron-600">+ Add</button></div><div className="card space-y-2 p-5"><h3 className="font-semibold">Notifications</h3><Toggle label="WhatsApp" defaultChecked/><Toggle label="Email" defaultChecked/></div></aside></div>
+    {apiEnabled ? <ApiAccountBookings/> : <>    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]"><div className="space-y-6"><div className="card p-5"><h2 className="text-xl font-semibold">Upcoming</h2><div className="divide-y divide-brown-100">{[['Ganapathi Homam','Kottur Sree Mahavishnu Temple · Sat 13 Sept · Anand · Rohini','ok','Confirmed'],['Ashta Dravya Maha Ganapathi Homam','Special pooja · 14 Sept · proof pending','warn','Booked']].map(([a,b,t,s])=><div key={a} className="flex items-center gap-3 py-3"><div className="flex-1"><b>{a}</b><div className="text-sm text-brown-500">{b}</div></div><Pill tone={t}>{s}</Pill><Link to="/receipt" className="btn-g !py-1.5">Receipt</Link></div>)}</div><p className="mt-2 text-xs text-brown-500">Cancel or reschedule until the chart closes (12 Sept, 8:00 PM).</p></div><div className="card p-5"><h2 className="text-xl font-semibold">Past receipts</h2><Table head={['Date','Temple','Item','Amount','']} rows={[["31 Jul","Perayattil Subrahmanya Temple","Pushpanjali × 2","₹40",<Link to="/receipt" className="text-saffron-600">PDF</Link>],["5 Jun","Kottur Sree Mahavishnu Temple","Donation (80G)","₹1,000",<Link to="/receipt" className="text-saffron-600">PDF · 80G</Link>]]}/></div></div>
+      <aside className="space-y-4"><div className="card p-5"><h3 className="font-semibold">Quick book</h3><Link to="/book/kottur-sree-mahavishnu-temple" className="btn-p mt-2 w-full">Kottur Mahavishnu Temple</Link><Link to="/temples" className="btn-s mt-2 w-full">Another temple</Link></div><div className="card p-5 text-sm"><h3 className="font-semibold">Family members</h3><div className="mt-2 space-y-1"><div>{profile.name} · {profile.star}</div><div>Devi · Makayiram</div><div>Aarav · Thiruvathira</div></div><button className="text-saffron-600">+ Add</button></div><div className="card space-y-2 p-5"><h3 className="font-semibold">Notifications</h3><Toggle label="WhatsApp" defaultChecked/><Toggle label="Email" defaultChecked/></div></aside></div></>}
 
     <div className="card mt-6 p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-semibold">My listings</h2><p className="text-sm text-brown-500">Create listings, track staff review and submit edits.</p></div><div className="flex gap-2"><Link to="/account/listings" className="btn-g">View listings</Link><Link to="/account/listings/new" className="btn-p"><PlusCircle size={16}/>Create listing</Link></div></div></div>
 

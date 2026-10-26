@@ -6,6 +6,9 @@ import { Search, MapPin, ShieldCheck, Clock, Share2, Phone, MessageCircle, Star,
 import { temples, bySlug, specials, services, festivals, checkoutPlans, onlineGateways, manualMethods } from '../data'
 import { PublicShell, Photo, Pill, Field, Input, Select, Toggle, Table, Section, Steps, Tabs, Money, useToast, GoogleIcon, TempleMark } from '../ui'
 import { FileField } from './checkout'
+import { api, apiEnabled, resource } from '../api'
+import { useCatalogue } from '../apiCatalogue'
+import { ContactReveal, EnquiryForm, SpecialCheckout } from '../apiPublicActions'
 
 const Wrap = ({ children, className='' }) => <div className={`mx-auto max-w-6xl px-4 ${className}`}>{children}</div>
 
@@ -20,6 +23,7 @@ const liveFeed = [
 ]
 const askAI = q => window.dispatchEvent(new CustomEvent('ta:ask',{detail:q}))
 export function Home() {
+  const { temples, specials, services } = useCatalogue()
   const nav = useNavigate(); const [q,setQ]=useState('')
   const go = e=>{e.preventDefault(); nav(q.trim()?`/temples?q=${encodeURIComponent(q.trim())}`:'/temples')}
   return (<PublicShell>
@@ -174,8 +178,9 @@ const SpecialCard = ({ s }) => (
 
 /* ---------------- TEMPLES DIRECTORY · ADVANCED SEARCH ---------------- */
 export function Temples() {
+  const { temples } = useCatalogue()
   const [sp] = useSearchParams()
-  const all = useMemo(()=>[...temples, ...temples.map(t=>({...t, slug:t.slug, name:t.name.replace('Temple','Kshethram')}))],[])
+  const all = useMemo(()=>apiEnabled?temples:[...temples, ...temples.map(t=>({...t, slug:t.slug, name:t.name.replace('Temple','Kshethram')}))],[temples])
   const [q,setQ]=useState(sp.get('q')||''); const [district,setDistrict]=useState('All districts'); const [deity,setDeity]=useState('All deities'); const [cat,setCat]=useState('All categories'); const [bookable,setBookable]=useState(false); const [g80,setG80]=useState(false); const [sort,setSort]=useState('Top rated')
   const districts = ['All districts',...new Set(temples.map(t=>t.district))]
   const deities = ['All deities',...new Set(temples.map(t=>t.deity))]
@@ -221,6 +226,7 @@ const Fact = ({ l, v }) => <div><dt className="text-xs font-semibold uppercase t
 const StatBox = ({ icon:Icon, v, l }) => <div className="rounded-xl bg-brown-50 p-3"><div className="flex items-center gap-1.5 text-brown-400"><Icon size={13}/><span className="text-[11px] font-semibold uppercase tracking-wide">{l}</span></div><div className="mt-1 text-lg font-bold text-brown-900">{v}</div></div>
 
 export function TemplePage() {
+  const { temples } = useCatalogue()
   const { slug } = useParams(); const t = temples.find(item=>item.slug===slug); const [wl,setWl]=useState(false); const [more,setMore]=useState(false)
   const [tab,setTab] = useState(0)
   const [toast,el] = useToast()
@@ -233,7 +239,11 @@ export function TemplePage() {
   const own = t.gateway==='omniware'
   const analytics = { views: t.reviews*17+140, shares: Math.round(t.reviews*0.6)+3, contacts: Math.round(t.reviews*0.12)+2, enquiries: Math.round(t.reviews*0.05)+1, poojasBooked: t.poojas.length*14+t.reviews, liveCrowd: t.poojas.some(p=>p.live)?Math.round(t.reviews/25):0 }
   const upiUri = t.upiId ? `upi://pay?pa=${t.upiId}&pn=${encodeURIComponent(t.name)}&cu=INR` : ''
-  const sendEnquiry = e => { e.preventDefault(); if(!enquiry.name.trim()||!enquiry.mobile.trim()) return; toast('Enquiry sent — the committee will reply on WhatsApp'); setEnquiry({name:'',mobile:'',message:''}) }
+  const sendEnquiry = async e => {
+    e.preventDefault(); if(!enquiry.name.trim()||!enquiry.mobile.trim()) return
+    try { if(apiEnabled) await api(`/listings/${resource(t.slug)}/enquiries`, {method:'POST',auth:false,body:enquiry}); toast('Enquiry sent'); setEnquiry({name:'',mobile:'',message:''}) }
+    catch(error) { toast(error.message) }
+  }
   return (<PublicShell tenant={wl?t.name:null}><Wrap className="py-6">{el}
     {!wl && <div className="mb-4 flex items-center justify-between rounded-xl bg-blue-50 px-4 py-2 text-sm text-blue-800"><span>Preview this page as the temple's own site ({t.slug.split('-')[0]}.templeaddress.com)</span><Toggle label="White-label view" onChange={setWl}/></div>}
     {wl && <div className="mb-4 flex items-center justify-between rounded-xl bg-gold-300/30 px-4 py-2 text-sm"><span>Tenant view — no TempleAddress ads or nearby temples; only this temple's sponsor.</span><button onClick={()=>setWl(false)} className="font-semibold underline">Exit</button></div>}
@@ -277,7 +287,7 @@ export function TemplePage() {
         </div>}
 
         {tab===2 && <>
-          <div className="card p-5"><h2 className="text-xl font-semibold">Contact & directions</h2><p className="mt-1 text-sm text-brown-700">{t.address}</p>
+          <div className="card p-5"><h2 className="text-xl font-semibold">Contact & directions</h2>{apiEnabled&&<ContactReveal listing={t}/>}<p className="mt-1 text-sm text-brown-700">{t.address}</p>
             <div className="mt-3 flex flex-wrap gap-2">{t.publicPhone&&<a href={`tel:${t.publicPhone}`} className="btn-g"><Phone size={16}/>Call office</a>}{t.publicPhone&&<a href={`https://wa.me/${t.publicPhone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="btn-wa"><MessageCircle size={16}/>WhatsApp</a>}{t.publicEmail&&<a href={`mailto:${t.publicEmail}`} className="btn-g"><Mail size={16}/>Email office</a>}<a href={mapUrl} target="_blank" rel="noopener noreferrer" className="btn-g"><MapPin size={16}/>Open in Maps</a><a href={`https://wa.me/?text=${encodeURIComponent(`${t.name} ${pageUrl}`)}`} target="_blank" rel="noopener noreferrer" className="btn-g"><Share2 size={16}/>Share</a></div>
             {(t.publicPhone||t.publicEmail)&&<div className="mt-3 grid gap-4 sm:grid-cols-2 rounded-xl bg-brown-50 p-3">{t.publicPhone&&<Fact l="Office contact" v={t.publicPhone}/>}{t.publicEmail&&<Fact l="Office email" v={t.publicEmail}/>}</div>}
             <iframe title={`Map of ${t.name}`} loading="lazy" referrerPolicy="no-referrer" src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`} className="mt-4 h-64 w-full rounded-xl border-0"/><p className="mt-2 text-xs text-brown-500">{t.latitude == null ? 'Map searches the listing address; verify directions before travel.' : 'Map uses the listing coordinates.'}</p></div>
@@ -332,10 +342,13 @@ export function SubmitTemple() {
   const [form,setForm] = useState({listingName:'',type:'Hindu temple',location:'',address:'',listingContact:'',contactPerson:'',submitterName:'',submitterContact:''})
   const [error,setError] = useState('')
   const set = (key,value) => { setForm(f=>({...f,[key]:value})); setError('') }
-  const submit = e => {
+  const submit = async e => {
     e.preventDefault()
     if(!form.listingName.trim()||!form.location.trim()||!form.address.trim()||!form.listingContact.trim()||!form.contactPerson.trim()) { setError('Please complete the listing name, location, address and contact details.'); return }
-    setSubmitted(true)
+    try {
+      if(apiEnabled) await api('/public-submissions', {method:'POST',auth:false,body:{listing_type:form.type==='Festival'?'festival':form.type==='Service provider'?'service':'temple',name:form.listingName,district_text:form.location,contact_name:form.contactPerson,contact_mobile:form.listingContact,notes:JSON.stringify({category:form.type,address:form.address,submitter_name:form.submitterName,submitter_contact:form.submitterContact})}})
+      setSubmitted(true)
+    } catch(error) { setError(error.message) }
   }
   if(submitted) return (<PublicShell><Wrap className="max-w-2xl py-12"><div className="card p-8 text-center"><Check size={42} className="mx-auto text-emerald-600"/><Pill tone="ok">Submission received</Pill><h1 className="mt-3 text-3xl font-semibold">Thank you for submitting this listing</h1><p className="mt-2 text-brown-500">Our team will review the basic information and contact the organisation if clarification is needed. No account was created.</p><div className="mt-5 flex flex-wrap justify-center gap-2"><Link to="/" className="btn-p">Back to home</Link><button onClick={()=>{setSubmitted(false);setForm({listingName:'',type:'Hindu temple',location:'',address:'',listingContact:'',contactPerson:'',submitterName:'',submitterContact:''})}} className="btn-g">Submit another listing</button></div></div></Wrap></PublicShell>)
   return (<PublicShell><Wrap className="max-w-2xl py-10"><div><Pill tone="gold">No login required</Pill><h1 className="mt-3 text-3xl font-semibold">Submit a listing</h1><p className="mt-2 text-brown-500">Share basic details for a temple, holy place, festival or service. TempleAddress staff will review them before creating a public listing.</p></div>
@@ -411,6 +424,7 @@ export function Receipt() {
 
 /* ---------------- DONATE ---------------- */
 export function Donate() {
+  const { temples } = useCatalogue()
   const { slug } = useParams(); const t = bySlug(slug); const [g80,setG80]=useState(t.g80)
   return (<PublicShell><Wrap className="max-w-xl py-8"><Link to={`/t/${t.slug}`} className="text-sm text-brown-500">← {t.name}</Link><h1 className="mt-1 text-3xl font-semibold">Donate</h1>
     <div className="card mt-4 space-y-5 p-6">
@@ -424,13 +438,15 @@ export function Donate() {
 
 /* ---------------- SPECIAL POOJAS ---------------- */
 export function Special() {
+  const { specials } = useCatalogue()
   const [tag,setTag]=useState('All')
   return (<PublicShell><section className="bg-temple-grad text-white"><Wrap className="py-12"><span className="pill glass"><Star size={12} className="text-gold-300" fill="currentColor"/>Organised by TempleAddress with partner temples</span><h1 className="mt-3 text-4xl font-semibold">Special poojas</h1><p className="mt-2 max-w-2xl text-brown-100">Performed in your name and nakshatra by the temple priest on the chosen day. Photo or video proof on WhatsApp; prasadam by post where offered.</p></Wrap></section>
     <Wrap className="py-8"><div className="mb-5 flex flex-wrap gap-2">{['All','Health','Ancestors','Obstacles','Family','Protection','Festival'].map(x=><button key={x} onClick={()=>setTag(x)} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tag===x?'bg-brown-900 text-white':'bg-white shadow-ring'}`}>{x}</button>)}</div>
       <div className="grid gap-4 md:grid-cols-3">{specials.filter(s=>tag==='All'||s.tag===tag).map(s=><SpecialCard key={s.id} s={s}/>)}</div></Wrap></PublicShell>)
 }
 export function SpecialDetail() {
-  const { id } = useParams(); const s = specials.find(x=>x.id===id)||specials[0]; const fee=Math.round(s.price*0.02); const gst=Math.round(fee*0.18*100)/100
+  const { specials } = useCatalogue()
+  const { id } = useParams(); const s = specials.find(x=>x.id===id); const fee=Math.round(s.price*0.02); const gst=Math.round(fee*0.18*100)/100
   return (<PublicShell><Wrap className="py-8"><Link to="/special" className="text-sm text-brown-500">← Special poojas</Link>
     <div className="mt-2 grid gap-8 lg:grid-cols-[1fr_380px]"><div className="space-y-5">
       <Photo hue={s.hue} className="aspect-[16/7] rounded-3xl" label={s.tag}/>
@@ -439,22 +455,24 @@ export function SpecialDetail() {
       <div className="grid gap-4 sm:grid-cols-3">{[['Sankalpam in your name','Read by the priest at the ritual'],[`${s.proof} proof`,'Sent to your WhatsApp the same day'],['Prasadam by post','India Post within 5 days']].map(([h,p])=><div key={h} className="card p-4"><b className="text-sm">{h}</b><div className="text-xs text-brown-500">{p}</div></div>)}</div>
       <div className="card p-5"><h3 className="font-semibold">How it works</h3><Steps items={['Book','We confirm with the temple','Pooja performed','Proof & prasadam']} at={3}/></div>
     </div>
-    <aside className="card space-y-4 p-6 lg:sticky lg:top-20 lg:self-start"><div className="flex items-baseline justify-between"><b className="text-3xl">₹{s.price.toLocaleString('en-IN')}</b><span className="text-sm text-brown-500">{s.left} of {s.seats} seats left</span></div>
+    <aside className="card space-y-4 p-6 lg:sticky lg:top-20 lg:self-start">{apiEnabled ? <SpecialCheckout event={s}/> : <><div className="flex items-baseline justify-between"><b className="text-3xl">₹{s.price.toLocaleString('en-IN')}</b><span className="text-sm text-brown-500">{s.left} of {s.seats} seats left</span></div>
       <Field label="Sankalpam for"><Select options={['Anand · Rohini','Whole family (up to 5 names)','Someone else']}/></Field><Field label="Family names"><textarea className="input" rows={2} placeholder="Devi · Makayiram, Aarav · Thiruvathira"/></Field><Field label="Prasadam address"><textarea className="input" rows={2} defaultValue="12/44 Ulliyeri, Kozhikode 673614"/></Field>
       <div className="divide-y divide-brown-100 rounded-xl bg-brown-50 px-4"><Row l="Pooja" v={s.price}/><Row l={<>Convenience fee <span className="text-xs text-brown-500">2% + GST</span></>} v={fee+gst}/><Row l="Total" v={s.price+fee+gst} big/></div>
-      <Link to="/receipt" className="btn-p w-full !py-3">Book seat</Link><p className="text-xs text-brown-500">Full refund if the temple cancels. No refund after the pooja day.</p></aside></div></Wrap></PublicShell>)
+      <Link to="/receipt" className="btn-p w-full !py-3">Book seat</Link><p className="text-xs text-brown-500">Full refund if the temple cancels. No refund after the pooja day.</p></>}</aside></div></Wrap></PublicShell>)
 }
 
 /* ---------------- FESTIVAL ---------------- */
 export function Festivals() {
+  const { festivals } = useCatalogue()
   return (<PublicShell><section className="bg-temple-grad text-white"><Wrap className="py-10"><h1 className="text-4xl font-semibold">Festivals</h1><p className="mt-2 text-brown-100">Explore temple festivals, view programmes and discover festival offerings.</p></Wrap></section>
     <Wrap className="py-8"><p className="mb-5 text-sm text-brown-500">{festivals.length} {festivals.length===1?'festival':'festivals'}</p><div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{festivals.map(festival=><Link key={festival.code} to={`/festival/${festival.code}`} className="card-premium group overflow-hidden"><Photo hue="#8A3A1F" className="aspect-[16/9]" label={`Festival · ${festival.code}`}><span className="absolute bottom-3 left-3 pill bg-white/90 text-brown-900"><CalendarDays size={12}/>{festival.from} – {festival.to}</span></Photo><div className="p-5"><Pill tone="ok">{festival.status}</Pill><h2 className="mt-3 text-xl font-semibold">{festival.name}</h2><p className="ml mt-1 text-sm text-brown-500">{festival.ml}</p><p className="mt-3 text-sm font-semibold">{festival.temple}</p><p className="mt-1 flex items-center gap-1 text-sm text-brown-500"><MapPin size={14}/>{festival.place}</p><div className="mt-4 flex items-center justify-between border-t border-brown-100 pt-3 text-sm font-semibold text-saffron-600"><span>View festival</span><ArrowRight size={16}/></div></div></Link>)}</div></Wrap>
   </PublicShell>)
 }
 
 export function Festival() {
+  const { festivals } = useCatalogue()
   const {code}=useParams()
-  const festivalData=festivals.find(festival=>festival.code===code)
+  const festivalData=festivals.find(festival=>festival.code===code||festival.slug===code)
   const [toast,el]=useToast(); const [pack,setPack]=useState('Day sponsor ₹35,000')
   if(!festivalData)return <PublicShell><Wrap className="py-10"><h1 className="text-3xl font-semibold">Festival not found</h1><Link to="/festival" className="btn-g mt-4">Browse festivals</Link></Wrap></PublicShell>
   return (<PublicShell><Wrap className="py-6">{el}<Link to="/festival" className="mb-4 inline-block text-sm font-semibold text-brown-500">← All festivals</Link><Photo hue="#8A3A1F" className="rounded-3xl p-6 text-white md:p-10"><Pill tone="gold">Festival · {festivalData.code}</Pill><h1 className="relative mt-20 text-3xl font-semibold md:text-5xl">{festivalData.name}</h1><div className="ml relative mt-1 text-lg text-brown-100">{festivalData.ml} · {festivalData.from} – {festivalData.to} · {festivalData.temple}</div></Photo>
@@ -473,6 +491,7 @@ export function Festival() {
 
 /* ---------------- SERVICES ---------------- */
 export function Services() {
+  const { services } = useCatalogue()
   const [category,setCategory]=useState('All')
   const categories=['All','Astrologer','Poojari / Pandit','Artist','Kazhakam']
   const shown=category==='All'?services:services.filter(s=>s.type===category)
@@ -481,7 +500,8 @@ export function Services() {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{shown.map(s=><Link key={s.id} to={`/service/${s.id}`} className="card overflow-hidden transition hover:-translate-y-0.5 hover:shadow-soft"><Photo hue={s.hue} className="aspect-square"><span className="absolute left-3 top-3 pill bg-white/90 text-brown-900">Default photo</span></Photo><div className="p-4"><div className="flex items-center justify-between"><b>{s.name}</b><Pill tone="ok"><BadgeCheck size={12}/>{s.code}</Pill></div><div className="ml text-sm text-brown-500">{s.ml}</div><div className="mt-1 text-xs text-brown-500">{s.type} · {s.district} · {s.exp} yrs</div><div className="mt-2 flex items-center justify-between text-sm"><span>From <b>₹{s.from.toLocaleString('en-IN')}</b></span><span className="text-gold-500">★ {s.rating}</span></div></div></Link>)}</div></Wrap></PublicShell>)
 }
 export function ServiceDetail() {
-  const { id } = useParams(); const s = services.find(x=>x.id===id)||services[0]; const [toast,el]=useToast(); const [slot,setSlot]=useState(s.slots[0])
+  const { services } = useCatalogue()
+  const { id } = useParams(); const s = services.find(x=>x.id===id); const [toast,el]=useToast(); const [slot,setSlot]=useState(s?.slots[0] || '')
   const shareLink=`templeaddress.com/service/${s.code}?ref=${s.code}`
   return (<PublicShell><Wrap className="py-8"><Link to="/services" className="text-sm text-brown-500">← Services</Link>
     {el}<div className="mt-2 flex flex-wrap items-start justify-between gap-4"><div className="flex gap-4"><Photo hue={s.hue} className="h-28 w-28 rounded-2xl"><span className="absolute bottom-2 left-2 pill bg-white/90 text-brown-900">Default</span></Photo><div><h1 className="text-3xl font-semibold">{s.name}</h1><div className="ml text-brown-500">{s.ml}</div><div className="mt-1 flex flex-wrap gap-2"><Pill tone="ok"><BadgeCheck size={12}/>Verified</Pill><Pill tone="info">{s.code}</Pill><Pill>{s.type} · {s.district} · {s.exp} years</Pill><Pill tone="gold"><Star size={12} fill="currentColor"/>{s.rating} · {s.reviewCount} reviews</Pill></div></div></div>
@@ -490,11 +510,11 @@ export function ServiceDetail() {
       <div className="card p-5"><h2 className="text-xl font-semibold">Gallery</h2><div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">{[1,2,3,4].map(i=><Photo key={i} hue={s.hue} className="aspect-square rounded-xl">{i===s.defaultPhoto&&<span className="absolute bottom-2 left-2 pill bg-white/90 text-brown-900">Default photo</span>}</Photo>)}</div></div>
       <div className="card p-5"><h2 className="text-xl font-semibold">About</h2><p className="mt-2 text-sm text-brown-700">{s.about}</p><h3 className="mt-5 font-semibold">History & experience</h3><p className="mt-1 text-sm text-brown-700">{s.history}</p><h3 className="mt-5 font-semibold">Remarks</h3><p className="mt-1 text-sm text-brown-700">{s.remarks}</p></div>
       <div className="card p-5"><h2 className="text-xl font-semibold">Timings & availability</h2><div className="mt-3 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-brown-50 p-3 text-sm"><Clock size={16}/><b className="mt-1 block">{s.timings}</b><span className="text-brown-500">{s.availabilityDays}</span></div><div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"><CalendarDays size={16}/><b className="mt-1 block">{s.slots.length} slots shown</b><span>Live availability is confirmed at booking</span></div></div><div className="mt-3 flex flex-wrap gap-2">{s.slots.map(x=><button key={x} onClick={()=>setSlot(x)} className={`rounded-lg px-3 py-2 text-sm font-semibold ${slot===x?'bg-brown-900 text-white':'border border-brown-200 bg-white'}`}>{x}</button>)}</div></div>
-      <div className="card p-5"><h2 className="text-xl font-semibold">Services</h2><div className="divide-y divide-brown-100">{s.offerings.map(([n,p,x])=><div key={n} className="flex items-center gap-3 py-3"><div className="flex-1"><b>{n}</b><div className="text-sm text-brown-500">{x}</div></div><b className="text-lg">₹{p.toLocaleString('en-IN')}</b><Link to="/receipt" className="btn-p !py-2">Book</Link></div>)}</div></div>
+      <div className="card p-5"><h2 className="text-xl font-semibold">Services</h2><div className="divide-y divide-brown-100">{s.offerings.map(([n,p,x])=><div key={n} className="flex items-center gap-3 py-3"><div className="flex-1"><b>{n}</b><div className="text-sm text-brown-500">{x}</div></div><b className="text-lg">₹{p.toLocaleString('en-IN')}</b>{!apiEnabled&&<Link to="/receipt" className="btn-p !py-2">Book</Link>}</div>)}</div></div>
       <div className="card p-5"><h2 className="text-xl font-semibold">Special services & poojas</h2>{s.specials.length?<div className="divide-y divide-brown-100">{s.specials.map(([n,date,p])=><div key={n} className="flex flex-wrap items-center gap-3 py-3"><div className="flex-1"><b>{n}</b><div className="text-sm text-brown-500">{date} · Limited booking</div></div><b>₹{p.toLocaleString('en-IN')}</b><Link to="/receipt" className="btn-s !py-2">Book pooja</Link></div>)}</div>:<p className="mt-2 text-sm text-brown-500">No special poojas are currently listed.</p>}</div>
       <div className="card p-5"><h2 className="text-xl font-semibold">Reviews & ratings</h2><div className="mt-1 text-sm text-brown-500">{s.rating} out of 5 · {s.reviewCount} verified bookings</div><div className="mt-3 space-y-3">{s.feedback.map(([who,stars,tag,text])=><div key={who} className="rounded-xl bg-brown-50 p-3"><div className="flex items-center justify-between"><b>{who}</b><span className="text-gold-500">{'★'.repeat(stars)}</span></div><div className="text-xs text-saffron-600">{tag}</div><p className="mt-1 text-sm text-brown-700">{text}</p></div>)}</div></div></div>
-      <aside className="space-y-5 lg:sticky lg:top-20 lg:self-start"><div className="card space-y-4 p-6"><h3 className="text-lg font-semibold">Book an appointment</h3><Field label="Service"><Select options={s.offerings.map(o=>o[0])}/></Field><div className="grid grid-cols-2 gap-3"><Field label="Date"><Input type="date" defaultValue="2026-09-15"/></Field><Field label="Slot"><Select options={s.slots} value={slot} onChange={e=>setSlot(e.target.value)}/></Field></div><Field label="Mode"><Select options={['In person','Phone call','Online video','At home / temple']}/></Field><div className="flex justify-between text-lg font-bold"><span>Total</span><span>₹{s.offerings[0][1].toLocaleString('en-IN')}</span></div><Link to="/receipt" className="btn-p w-full !py-3">Confirm & pay</Link><p className="text-xs text-brown-500">The provider confirms within 4 hours on WhatsApp.</p></div>
-        <div className="card space-y-3 p-5"><h3 className="font-semibold">Contact / quick enquiry</h3><Field label="Your name"><Input placeholder="Name"/></Field><Field label="Mobile / WhatsApp"><Input placeholder="+91"/></Field><Field label="Message"><textarea className="input" rows={3} placeholder="What would you like to ask?"/></Field><button onClick={()=>toast('Enquiry sent · the provider will reply on WhatsApp')} className="btn-wa w-full"><MessageCircle size={16}/>Send enquiry</button><button className="btn-g w-full"><Phone size={16}/>Request a call</button><p className="text-xs text-brown-500">Usually replies within 2 hours.</p></div></aside></div></Wrap></PublicShell>)
+      <aside className="space-y-5 lg:sticky lg:top-20 lg:self-start">{!apiEnabled&&<div className="card space-y-4 p-6"><h3 className="text-lg font-semibold">Book an appointment</h3><Field label="Service"><Select options={s.offerings.map(o=>o[0])}/></Field><div className="grid grid-cols-2 gap-3"><Field label="Date"><Input type="date" defaultValue="2026-09-15"/></Field><Field label="Slot"><Select options={s.slots} value={slot} onChange={e=>setSlot(e.target.value)}/></Field></div><Field label="Mode"><Select options={['In person','Phone call','Online video','At home / temple']}/></Field><div className="flex justify-between text-lg font-bold"><span>Total</span><span>₹{s.offerings[0][1].toLocaleString('en-IN')}</span></div><Link to="/receipt" className="btn-p w-full !py-3">Confirm & pay</Link><p className="text-xs text-brown-500">The provider confirms within 4 hours on WhatsApp.</p></div>}
+        {apiEnabled ? <><p className="card p-4 text-sm">Contact this provider to enquire about services. Online service payments are unavailable.</p><EnquiryForm listing={s}/></> : <div className="card space-y-3 p-5"><h3 className="font-semibold">Contact / quick enquiry</h3><Field label="Your name"><Input placeholder="Name"/></Field><Field label="Mobile / WhatsApp"><Input placeholder="+91"/></Field><Field label="Message"><textarea className="input" rows={3} placeholder="What would you like to ask?"/></Field><button onClick={()=>toast('Enquiry sent · the provider will reply on WhatsApp')} className="btn-wa w-full"><MessageCircle size={16}/>Send enquiry</button><button className="btn-g w-full"><Phone size={16}/>Request a call</button><p className="text-xs text-brown-500">Usually replies within 2 hours.</p></div>}</aside></div></Wrap></PublicShell>)
 }
 
 /* ---------------- SPONSOR ---------------- */
