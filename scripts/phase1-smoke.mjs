@@ -12,10 +12,19 @@ async function api(path, { token, method = 'GET', body, headers = {} } = {}) {
   return payload?.data ?? payload
 }
 
-async function login(mobile, name) {
-  const challenge = await api('auth/otp/request', { method: 'POST', body: { mobile_e164: mobile, purpose: 'login' } })
+async function login(mobile, name, password = '') {
+  let challenge
+  try {
+    challenge = await api('users/login/', { method: 'POST', body: { identifier: mobile } })
+  } catch (error) {
+    challenge = await api('users/register/', { method: 'POST', body: { name, country_code: mobile.slice(0, 3), mobile_number: mobile.slice(3) } })
+  }
+  if (challenge.password_required) {
+    if (!password) throw new Error('SMOKE_STAFF_PASSWORD is required for the seeded staff account.')
+    challenge = await api('users/login/', { method: 'POST', body: { identifier: mobile, password, login_challenge_token: challenge.login_challenge_token } })
+  }
   if (!challenge.debug_otp) throw new Error('Local debug OTP is disabled.')
-  return api('auth/otp/verify', { method: 'POST', body: { challenge_uuid: challenge.challenge_uuid, code: challenge.debug_otp, mobile_e164: mobile, name } })
+  return api('users/login/verify-otp/', { method: 'POST', body: { challenge_uuid: challenge.challenge_uuid, otp: challenge.debug_otp, identifier: challenge.identifier || mobile } })
 }
 
 async function approveListing(staff, user, listing) {
@@ -29,7 +38,7 @@ async function approveListing(staff, user, listing) {
 
 const stamp = `${Date.now()}`.slice(-9)
 const devotee = await login(`+919${stamp}`, `Smoke Devotee ${stamp}`)
-const staff = await login('+919999999998', 'Demo Staff')
+const staff = await login('+919999999998', 'Demo Staff', process.env.SMOKE_STAFF_PASSWORD || '')
 if (!staff.user.is_staff) throw new Error('Seeded staff account is not staff.')
 
 const templeCreated = await api('me/listings', { token: devotee.access, method: 'POST', body: { listing_type: 'temple', name_en: `Smoke Temple ${stamp}`, address: 'Phase 1 Test Road, Kerala', pincode: '695001', payout_email: `accounts-${stamp}@example.com`, sections_completed: ['basics', 'contact'] } })
