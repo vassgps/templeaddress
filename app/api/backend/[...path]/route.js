@@ -5,7 +5,8 @@ const backend = process.env.TEMPLEADDRESS_API_URL || 'http://127.0.0.1:8000'
 async function proxy(request, { params }) {
   const { path } = await params
   const incoming = new URL(request.url)
-  const target = new URL(`/api/v1/${path.join('/')}${incoming.search}`, backend)
+  const trailingSlash = incoming.pathname.endsWith('/') ? '/' : ''
+  const target = new URL(`/api/v1/${path.join('/')}${trailingSlash}${incoming.search}`, backend)
   const headers = new Headers()
   for (const name of ['accept', 'authorization', 'content-type', 'idempotency-key', 'x-client']) {
     const value = request.headers.get(name)
