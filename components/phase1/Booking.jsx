@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Field, Input, PublicShell } from '@/components/ui'
-import { clientApi, requireAuth } from '@/lib/client-api'
+import { API_ORIGIN } from '@/lib/api'
+import { clientApi, readAuth, requireAuth } from '@/lib/client-api'
 
 const Wrap = ({ children }) => <main className="mx-auto max-w-2xl px-4 py-10">{children}</main>
 
@@ -35,6 +36,8 @@ function loadRazorpay() {
 
 async function openPayment({ booking, config, user, mode }) {
   if (!booking.payment_order?.uuid) throw new Error('Razorpay order was not created.')
+  const remainingSeconds = Math.floor((new Date(booking.payment_deadline_at).getTime() - Date.now()) / 1000)
+  if (remainingSeconds <= 0) throw new Error('This booking hold has expired. Create a new booking.')
   if (config?.payment_mode === 'mock') {
     return clientApi(`dev/payment-orders/${booking.payment_order.uuid}/authorize`, { method: 'POST', body: { method: 'upi' } })
   }
@@ -46,6 +49,7 @@ async function openPayment({ booking, config, user, mode }) {
       order_id: booking.payment_order.provider_order_id,
       amount: Math.round(Number(booking.amount_total) * 100),
       currency: booking.currency,
+      timeout: remainingSeconds,
       name: 'TempleAddress',
       description: `${mode === 'donation' ? 'Donation' : 'Pooja booking'} ${booking.code}`,
       prefill: { name: user?.name || booking.contact_name, email: user?.email || booking.contact_email, contact: user?.mobile_e164 || booking.contact_mobile },
@@ -109,6 +113,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
   }, [slug, mode, requested, resumeCode])
 
   async function pay(booking) {
+    if (new Date(booking.payment_deadline_at) <= new Date()) throw new Error('This booking hold has expired. Create a new booking.')
     let payable = booking
     if (booking.payment_order?.status !== 'open' || new Date(booking.payment_order.expires_at) <= new Date()) {
       payable = await clientApi(`me/bookings/${booking.code}/payment-orders`, { method: 'POST', headers: { 'Idempotency-Key': crypto.randomUUID() } })
@@ -174,6 +179,15 @@ export function Phase1Receipt() {
   const [booking, setBooking] = useState(null)
   const [receipt, setReceipt] = useState(null)
   const [error, setError] = useState('')
+  async function downloadPdf() {
+    try {
+      const response = await fetch(`${API_ORIGIN}/me/receipts/${receipt.number}/pdf`, { headers: { Authorization: `Bearer ${readAuth()?.access}` } })
+      if (!response.ok) throw new Error('Could not download the receipt PDF.')
+      const url = URL.createObjectURL(await response.blob())
+      const anchor = document.createElement('a'); anchor.href = url; anchor.download = `${receipt.number}.pdf`; anchor.click()
+      URL.revokeObjectURL(url)
+    } catch (err) { setError(err.message) }
+  }
   useEffect(() => {
     if (!requireAuth(router, `/receipt/${bookingCode}`)) return
     let cancelled = false; let timer
@@ -196,6 +210,7 @@ export function Phase1Receipt() {
     {error && <p className="mt-4 rounded-xl bg-amber-50 p-3 text-amber-800">{error}</p>}
     {!receipt && !error && <p className="mt-5">Waiting for Razorpay confirmation…</p>}
     {receipt && <div className="card mt-6 p-6"><div className="grid gap-3 text-sm sm:grid-cols-2"><p><span className="text-brown-500">Booking</span><br/><b>{receipt.snapshot.booking_code}</b></p><p><span className="text-brown-500">Status</span><br/><b>{booking?.status}</b></p><p><span className="text-brown-500">Paid</span><br/><b>₹{receipt.snapshot.amount}</b></p><p><span className="text-brown-500">Issued</span><br/><b>{new Date(receipt.issued_at).toLocaleString()}</b></p></div><div className="mt-5 border-t pt-4">{receipt.snapshot.items?.map(row => <div key={row.code} className="flex justify-between py-2"><span>{row.name} × {row.quantity}</span><b>₹{row.amount}</b></div>)}</div><p className="mt-4 text-xs text-brown-500">Payment receipt only; this is not an 80G certificate.</p></div>}
+    {receipt && <button className="btn-p mt-5" onClick={downloadPdf}>Download PDF</button>}
     <Link href="/account" className="btn-g mt-5">Back to account</Link>
   </Wrap></PublicShell>
 }
