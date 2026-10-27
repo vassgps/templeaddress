@@ -272,7 +272,7 @@ export function FSettings() {
       <div className="mt-4 rounded-xl bg-saffron-50 p-3 text-sm text-saffron-800">The temple's own listing and this festival listing are separate. The temple secretary sees the day sheets here but cannot change the temple's poojas from this dashboard, and vice versa.</div></div>}
     {tab===2 && <div className="space-y-5">
       <div className="card p-5"><h3 className="font-semibold">How the committee receives money</h3>
-        <div className="mt-3 grid gap-3 md:grid-cols-3">{[['ta','Through TempleAddress','Razorpay / PayU / Stripe collect; settled to the committee account'],['own','Committee\'s own gateway','Settles directly; TempleAddress shows no settlement'],['manual','No gateway — bank only','TempleAddress collects; accountant pays by NEFT']].map(([k,h,p])=>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">{[['ta','Through TempleAddress','Razorpay collect; settled to the committee account'],['own','Committee\'s own gateway','Settles directly; TempleAddress shows no settlement'],['manual','No gateway — bank only','TempleAddress collects; accountant pays by NEFT']].map(([k,h,p])=>
           <button key={k} onClick={()=>setMode(k)} className={`rounded-2xl border p-4 text-left ${mode===k?'border-saffron-500 bg-saffron-50':'border-brown-200 bg-white'}`}><b className="text-sm">{h}</b><div className="mt-1 text-xs text-brown-500">{p}</div></button>)}</div></div>
       <div className="card grid gap-4 p-5 md:grid-cols-2"><h3 className="font-semibold md:col-span-2">Settlement account</h3>
         <Field label="Account holder" hint="Must match the committee's registration"><Input defaultValue="Kottur Utsava Committee"/></Field><Field label="Account number"><Input defaultValue="XXXXXXXX7781"/></Field>

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Clock3, Landmark, MapPin, Search, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 import { filterListings, listingFacets } from '@/lib/listing-search'
+import { listingPath } from '@/lib/catalogue'
 
 export default function ListingDirectoryClient({ listings = [], type, initialQuery = '' }) {
   const [query, setQuery] = useState(initialQuery)
@@ -45,7 +46,7 @@ export default function ListingDirectoryClient({ listings = [], type, initialQue
 
     <div className="mb-4 flex items-end justify-between gap-3"><div><h2 className="text-xl font-semibold">Search results</h2><p className="text-sm text-brown-500">{results.length} {results.length === 1 ? 'listing' : 'listings'}{query && <> for “{query}”</>}</p></div></div>
     {!results.length && <div className="card p-8 text-center"><Search size={28} className="mx-auto text-brown-300"/><h3 className="mt-3 font-semibold">No listings match these filters</h3><p className="mt-1 text-sm text-brown-500">Try another name, place or filter.</p>{filtered && <button type="button" onClick={reset} className="btn-g mt-4">Clear filters</button>}</div>}
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{results.map(item => <Link key={item.uuid} href={`/t/${item.slug}`} className="card-premium group overflow-hidden">
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{results.map(item => <Link key={item.uuid} href={listingPath(item)} className="card-premium group overflow-hidden">
       <div className="relative aspect-[16/10] bg-brown-100">
         {item.cover ? <Image src={item.cover} alt={item.name_en} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition duration-300 group-hover:scale-105"/> : <span className="grid h-full place-items-center text-saffron-700"><Landmark size={38}/></span>}
         <span className="pill absolute right-3 top-3 bg-white/95 text-emerald-700 shadow-sm"><ShieldCheck size={12}/>Verified</span>

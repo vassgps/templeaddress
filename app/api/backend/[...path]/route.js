@@ -9,7 +9,7 @@ async function proxy(request, { params }) {
   const trailingSlash = incoming.pathname.endsWith('/') ? '/' : ''
   const target = new URL(`${apiUrl(backend, `${path.join('/')}${trailingSlash}`)}${incoming.search}`)
   const headers = new Headers()
-  for (const name of ['accept', 'authorization', 'content-type', 'idempotency-key', 'x-client']) {
+  for (const name of ['accept', 'authorization', 'content-type', 'idempotency-key', 'x-client', 'x-device-id', 'x-request-id', 'x-forwarded-for']) {
     const value = request.headers.get(name)
     if (value) headers.set(name, value)
   }
@@ -17,7 +17,7 @@ async function proxy(request, { params }) {
   try {
     const response = await fetch(target, { method: request.method, headers, body, cache: 'no-store' })
     const outgoing = new Headers()
-    for (const name of ['content-type', 'content-disposition']) {
+    for (const name of ['content-type', 'content-disposition', 'cache-control', 'x-request-id']) {
       const value = response.headers.get(name)
       if (value) outgoing.set(name, value)
     }

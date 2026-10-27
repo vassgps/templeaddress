@@ -15,16 +15,16 @@ async function api(path, { token, method = 'GET', body, headers = {} } = {}) {
 async function login(mobile, name, password = '') {
   let challenge
   try {
-    challenge = await api('users/login/', { method: 'POST', body: { identifier: mobile } })
+    challenge = await api('auth/otp/request', { method: 'POST', body: { identifier: mobile } })
   } catch (error) {
-    challenge = await api('users/register/', { method: 'POST', body: { name, country_code: mobile.slice(0, 3), mobile_number: mobile.slice(3) } })
+    challenge = await api('auth/register', { method: 'POST', body: { name, country_code: mobile.slice(0, 3), mobile_number: mobile.slice(3) } })
   }
   if (challenge.password_required) {
     if (!password) throw new Error('SMOKE_STAFF_PASSWORD is required for the seeded staff account.')
-    challenge = await api('users/login/', { method: 'POST', body: { identifier: mobile, password, login_challenge_token: challenge.login_challenge_token } })
+    challenge = await api('auth/otp/request', { method: 'POST', body: { identifier: mobile, password, login_challenge_token: challenge.login_challenge_token } })
   }
   if (!challenge.debug_otp) throw new Error('Local debug OTP is disabled.')
-  return api('users/login/verify-otp/', { method: 'POST', body: { challenge_uuid: challenge.challenge_uuid, otp: challenge.debug_otp, identifier: challenge.identifier || mobile } })
+  return api('auth/otp/verify', { method: 'POST', body: { challenge_uuid: challenge.challenge_uuid, otp: challenge.debug_otp, identifier: challenge.identifier || mobile } })
 }
 
 async function approveListing(staff, user, listing) {
@@ -34,6 +34,46 @@ async function approveListing(staff, user, listing) {
   if (!revision) throw new Error(`Submitted revision not found for ${listing.code}`)
   await api(`staff/listing-revisions/${revision.uuid}/approve`, { token: staff.access, method: 'POST', body: {} })
   await api(`staff/listings/${listing.uuid}/memberships`, { token: staff.access, method: 'POST', body: { user_uuid: user.user.uuid, role: 'owner' } })
+}
+
+if (process.env.SMOKE_SESSION_FILE) {
+  const { readFile } = await import('node:fs/promises')
+  const assert = (condition, label) => { if (!condition) throw new Error(label) }
+  const session = JSON.parse(await readFile(process.env.SMOKE_SESSION_FILE, 'utf8'))
+  const token = session.access
+  const me = await api('me', { token })
+  assert(me.roles.includes('portal admin'), 'Synthetic Portal Admin role is required')
+  const member = await api('me/family-members/', { token, method: 'POST', body: { name: 'QA Family Member', relation: 'Family', star_kind: 'nakshatra', star_value: 'aswathi' } })
+  await api(`me/family-members/${member.uuid}/`, { token, method: 'PATCH', body: { name: 'QA Family Corrected' } })
+  const family = await api('me/family-members/', { token })
+  assert(family.results.some(row => row.name === 'QA Family Corrected'), 'Family changes were not saved')
+  await api('me', { token, method: 'PATCH', body: { notification_preferences: { email: false, whatsapp: false, sms: false } } })
+  await api('me', { token, method: 'PATCH', body: { notification_preferences: me.notification_preferences } })
+  const bookings = await api('me/bookings', { token })
+  const booking = bookings.results.find(row => row.items.some(item => item.status === 'confirmed'))
+  assert(booking, 'An unallocated synthetic booking is required')
+  const item = booking.items.find(row => row.status === 'confirmed')
+  await api(`me/bookings/${booking.code}/items/${item.uuid}`, { token, method: 'PATCH', body: { devotee_name: `QA Correction ${Date.now()}`, reason: 'Synthetic workflow verification' } })
+  assert((await api('me/receipts', { token })).count > 0, 'Receipts list is empty')
+  assert((await api('master-values/star')).some(row => row.code === 'aswathi'), 'Star catalogue missing')
+  for (const path of ['staff/users', 'staff/bookings', 'staff/payment-attempts', 'staff/listings']) {
+    const data = await api(`${path}?page_size=1&ordering=${path.endsWith('users') ? '-date_joined' : '-created_at'}`, { token })
+    assert(data.results.length === 1 && data.count > 0, `Directory failed: ${path}`)
+  }
+  const exports = await api('finance/payout-exports', { token })
+  const workbook = await fetch(`${apiOrigin}/finance/payout-exports/${exports[0].code}/file`, { headers: { Authorization: `Bearer ${token}` } })
+  assert(workbook.ok, 'Workbook download failed')
+  const form = new FormData(); form.append('file', await workbook.blob(), 'qa-bank-result.xlsx')
+  const response = await fetch(`${apiOrigin}/finance/payout-exports/${exports[0].code}/imports`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form })
+  const uploaded = (await response.json()).data
+  assert(response.ok && uploaded.uuid, 'Workbook upload failed')
+  const preview = await api(`finance/payout-imports/${uploaded.uuid}`, { token })
+  assert(preview.rows[0].result_message, 'Blank bank rows need a visible reason')
+  const applied = await api(`finance/payout-imports/${uploaded.uuid}/apply`, { token, method: 'POST', headers: { 'Idempotency-Key': crypto.randomUUID() }, body: {} })
+  assert(applied.applied === 0 && applied.not_applied.length > 0, 'Unapplied rows were not returned')
+  await api(`me/family-members/${member.uuid}/`, { token, method: 'DELETE' })
+  console.log('PASS: family create/edit/archive, preferences, audited booking correction, receipts, stars, 4 paginated staff directories, workbook download/upload/preview/apply and unapplied reasons through the Next.js proxy.')
+  process.exit(0)
 }
 
 const stamp = `${Date.now()}`.slice(-9)

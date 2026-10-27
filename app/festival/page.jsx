@@ -1,4 +1,6 @@
-import { Suspense } from 'react'
-import { Festivals } from '@/components/pages/public'
-export const metadata = { title: 'Temple Festivals', description: 'Explore Kerala temple festivals, programmes, offerings and sponsorship opportunities.', alternates: { canonical: '/festival' } }
-export default function Page(props) { return <Suspense fallback={null}><Festivals {...props}/></Suspense> }
+import { ListingDirectory } from '@/components/phase1/Public'
+import { apiCollection } from '@/lib/catalogue'
+export const metadata = { title: 'Temple Festivals', alternates: { canonical: '/festival' } }
+export default async function Page() {
+  return <ListingDirectory title="Published festivals" type="festival" listings={await apiCollection('listings?type=festival')}/>
+}
