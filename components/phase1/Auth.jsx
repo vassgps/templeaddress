@@ -155,8 +155,10 @@ export default function Phase1Login({ initialMode = 'login' }) {
     if (seconds) return
     setBusy(true); setError('')
     try {
-      const result = await clientApi('users/login/', { method: 'POST', auth: false, body: { identifier: activeIdentifier, country_code: countryCode, recaptcha_token: recaptchaToken } })
-      setOtpChallenge(result); setCode(result.debug_otp || ''); setSeconds(30)
+      const result = await clientApi('users/login/', { method: 'POST', auth: false, body: { identifier: loginChallenge ? mobileIdentifier(countryCode, identifier) : activeIdentifier, country_code: countryCode, password: loginChallenge ? password : undefined, login_challenge_token: loginChallenge || undefined, recaptcha_token: recaptchaToken } })
+      if (result.recaptcha_required) { setRecaptchaRequired(true); setNotice('Complete reCAPTCHA, then continue.'); return }
+      if (result.password_required) { setLoginChallenge(result.login_challenge_token); setStep('password'); return }
+      setActiveIdentifier(result.identifier || activeIdentifier); setOtpChallenge(result); setCode(result.debug_otp || ''); setSeconds(30)
     } catch (err) { setError(err.message) } finally { setBusy(false) }
   }
 
