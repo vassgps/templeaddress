@@ -8,19 +8,24 @@ import { clientApi, logout, requireAuth } from '@/lib/client-api'
 import ListingRevisionEditor from './ListingRevisionEditor'
 import EventEditor from './EventEditor'
 import PoojaCatalogue from './PoojaCatalogue'
+import AccountFeatures from './AccountFeatures'
+import BookingCorrection from './BookingCorrection'
+import { apiCollection } from '@/lib/catalogue'
 
 const Wrap = ({ children }) => <main className="mx-auto max-w-5xl px-4 py-9">{children}</main>
 const ErrorBox = ({ value }) => value ? <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{value}</p> : null
 
 export function Phase1Account() {
   const router = useRouter(); const [me, setMe] = useState(null); const [bookings, setBookings] = useState([]); const [error, setError] = useState(''); const [loggingOut, setLoggingOut] = useState(false)
+  const reloadBookings = () => apiCollection('me/bookings', clientApi).then(setBookings)
   useEffect(() => {
     if (!requireAuth(router, '/account')) return
-    Promise.all([clientApi('me'), clientApi('me/bookings')]).then(([user, rows]) => { setMe(user); setBookings(rows.results || rows) }).catch(err => setError(err.message))
+    Promise.all([clientApi('me'), apiCollection('me/bookings', clientApi)]).then(([user, rows]) => { setMe(user); setBookings(rows) }).catch(err => setError(err.message))
   }, [router])
   async function signOut() { setLoggingOut(true); try { await logout() } finally { router.replace('/login'); router.refresh() } }
   return <PublicShell><Wrap><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm text-saffron-600">Verified devotee account</p><h1 className="text-3xl font-semibold">{me?.name || 'My account'}</h1><p className="text-sm text-brown-500">{me?.mobile_e164}</p></div><div className="flex gap-2"><Link href="/account/listings" className="btn-g">My listings</Link><button className="btn-g" disabled={loggingOut} onClick={signOut}>{loggingOut ? 'Signing out…' : 'Logout'}</button></div></div><ErrorBox value={error}/>
-    <section className="mt-7"><h2 className="text-2xl font-semibold">Bookings and donations</h2><div className="mt-3 space-y-3">{!bookings.length && <div className="card p-5">No bookings yet. <Link className="text-saffron-600" href="/temples">Browse temples</Link></div>}{bookings.map(row => { const payable = row.status === 'payment_pending' && new Date(row.payment_deadline_at) > new Date(); const donation = row.items.every(item => item.item_type === 'donation'); return <div className="card flex flex-wrap items-center justify-between gap-4 p-4" key={row.uuid}><div><b>{row.code}</b><p className="text-sm text-brown-500">{row.listing.name_en} · {row.items.map(i => i.item_name_en).join(', ')}</p><p className="text-xs text-brown-500">{row.status.replaceAll('_', ' ')} · ₹{row.amount_total}</p></div>{row.receipt_number ? <Link className="btn-p" href={`/receipt/${row.code}`}>Receipt</Link> : payable ? <Link className="btn-p" href={`/${donation ? 'donate' : 'book'}/${row.listing.slug}?resume=${row.code}`}>Continue payment</Link> : <span className="pill bg-stone-100 text-stone-600">No receipt</span>}</div> })}</div></section>
+    <section className="mt-7"><h2 className="text-2xl font-semibold">Bookings and donations</h2><div className="mt-3 space-y-3">{!bookings.length && <div className="card p-5">No bookings yet. <Link className="text-saffron-600" href="/temples">Browse temples</Link></div>}{bookings.map(row => { const payable = row.status === 'payment_pending' && new Date(row.payment_deadline_at) > new Date(); const donation = row.items.every(item => item.item_type === 'donation'); return <div className="card flex flex-wrap items-center justify-between gap-4 p-4" key={row.uuid}><div><b>{row.code}</b><p className="text-sm text-brown-500">{row.listing.name_en} · {row.items.map(i => i.item_name_en).join(', ')}</p><p className="text-xs text-brown-500">{row.status.replaceAll('_', ' ')} · ₹{row.amount_total}</p></div>{row.receipt_number ? <Link className="btn-p" href={`/receipt/${row.code}`}>Receipt</Link> : payable ? <Link className="btn-p" href={`/${donation ? 'donate' : 'book'}/${row.listing.slug}?resume=${row.code}`}>Continue payment</Link> : <span className="pill bg-stone-100 text-stone-600">No receipt</span>}<BookingCorrection booking={row} onSaved={reloadBookings}/></div> })}</div></section>
+    {me && <AccountFeatures me={me}/>}
   </Wrap></PublicShell>
 }
 

@@ -95,7 +95,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
         callback: async ({ credential }) => {
           setBusy(true); setError('')
           try {
-            const result = await clientApi('users/social-login/', { method: 'POST', auth: false, body: { provider: 'google', credential } })
+            const result = await clientApi('auth/google', { method: 'POST', auth: false, body: { provider: 'google', credential } })
             if (result.profile_completion_required) {
               setGoogleSignup(result); setName(result.google_profile?.name || ''); setEmail(result.google_profile?.email || ''); setIdentifier(''); setStep('google_profile')
             } else finish(result)
@@ -119,13 +119,13 @@ export default function Phase1Login({ initialMode = 'login' }) {
     try {
       if (mode === 'register' && step === 'identify') {
         const normalized = mobileIdentifier(countryCode, identifier)
-        const result = await clientApi('users/register/', { method: 'POST', auth: false, body: { name, email, country_code: countryCode, mobile_number: identifier, recaptcha_token: recaptchaToken } })
+        const result = await clientApi('auth/register', { method: 'POST', auth: false, body: { name, email, country_code: countryCode, mobile_number: identifier, recaptcha_token: recaptchaToken } })
         if (result.recaptcha_required) { setRecaptchaRequired(true); setNotice('Complete reCAPTCHA, then continue.'); return }
         setActiveIdentifier(result.identifier || normalized); setOtpChallenge(result); setCode(result.debug_otp || ''); setStep('otp'); setSeconds(30)
         return
       }
       const normalized = activeIdentifier || mobileIdentifier(countryCode, identifier)
-      const result = await clientApi('users/login/', {
+      const result = await clientApi('auth/otp/request', {
         method: 'POST', auth: false,
         body: { identifier: normalized, country_code: countryCode, password: staffPassword, login_challenge_token: loginChallenge, recaptcha_token: recaptchaToken },
       })
@@ -138,7 +138,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
   async function verify(event) {
     event.preventDefault(); setBusy(true); setError('')
     try {
-      const result = await clientApi('users/login/verify-otp/', { method: 'POST', auth: false, body: { identifier: activeIdentifier, otp: code, challenge_uuid: otpChallenge?.challenge_uuid, country_code: countryCode } })
+      const result = await clientApi('auth/otp/verify', { method: 'POST', auth: false, body: { identifier: activeIdentifier, otp: code, challenge_uuid: otpChallenge?.challenge_uuid, country_code: countryCode } })
       finish(result)
     } catch (err) { setError(err.message) } finally { setBusy(false) }
   }
@@ -146,7 +146,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
   async function completeGoogle(event) {
     event.preventDefault(); setBusy(true); setError('')
     try {
-      const result = await clientApi('users/social-login/', { method: 'POST', auth: false, body: { provider: 'google', signup_token: googleSignup.signup_token, country_code: countryCode, mobile_number: identifier } })
+      const result = await clientApi('auth/google', { method: 'POST', auth: false, body: { provider: 'google', signup_token: googleSignup.signup_token, country_code: countryCode, mobile_number: identifier } })
       finish(result)
     } catch (err) { setError(err.message) } finally { setBusy(false) }
   }
@@ -155,7 +155,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
     if (seconds) return
     setBusy(true); setError('')
     try {
-      const result = await clientApi('users/login/', { method: 'POST', auth: false, body: { identifier: loginChallenge ? mobileIdentifier(countryCode, identifier) : activeIdentifier, country_code: countryCode, password: loginChallenge ? password : undefined, login_challenge_token: loginChallenge || undefined, recaptcha_token: recaptchaToken } })
+      const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: loginChallenge ? mobileIdentifier(countryCode, identifier) : activeIdentifier, country_code: countryCode, password: loginChallenge ? password : undefined, login_challenge_token: loginChallenge || undefined, recaptcha_token: recaptchaToken } })
       if (result.recaptcha_required) { setRecaptchaRequired(true); setNotice('Complete reCAPTCHA, then continue.'); return }
       if (result.password_required) { setLoginChallenge(result.login_challenge_token); setStep('password'); return }
       setActiveIdentifier(result.identifier || activeIdentifier); setOtpChallenge(result); setCode(result.debug_otp || ''); setSeconds(30)

@@ -507,7 +507,7 @@ const sponsorPacks = [
   ['Temple Billing mini ERP',checkoutPlans.billing.price,'Offline billing, receipts and member management for the temple',false,'one time'],
 ]
 const sponsorPartners = { 'TA-AG-00124':'Jinsha', 'JIN-4471':'Jinsha' }
-const sponsorGateways = [...onlineGateways.map(g=>g.key==='omniware'?{...g,name:'Omniware / Federal Bank'}:g),{key:'stripe',name:'Stripe',note:'Secure international card payment.'}]
+const sponsorGateways = onlineGateways.filter(gateway => gateway.key === 'razorpay')
 const sponsorPayIcon = { omniware:ShieldCheck, razorpay:Zap, stripe:Globe2, upi:QrCode, bank:Landmark, cheque:PenLine }
 const templeAddressTax = {gstin:'32AACCT1234B1Z9',pan:'AACCT1234B',state:'Kerala',stateCode:'32',address:'Kozhikode, Kerala – 673001'}
 const billingActivationKey='ta-billing-activations-v1'

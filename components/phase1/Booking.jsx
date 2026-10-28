@@ -80,6 +80,8 @@ export function Phase1Checkout({ mode = 'booking' }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [star, setStar] = useState('')
+  const [stars, setStars] = useState([])
+  const [family, setFamily] = useState([])
   const [quantity, setQuantity] = useState(1)
   const [quote, setQuote] = useState(null)
   const [error, setError] = useState('')
@@ -92,6 +94,11 @@ export function Phase1Checkout({ mode = 'booking' }) {
     return [...poojas, ...specials]
   }, [listing, mode])
   const item = options.find(row => row.uuid === selected)
+
+  useEffect(() => {
+    clientApi('master-values/star', { auth: false }).then(setStars).catch(error => setError(error.message))
+    if (readAuth()?.access) clientApi('me/family-members').then(data => setFamily(data.results || data)).catch(error => setError(error.message))
+  }, [])
 
   useEffect(() => {
     Promise.all([
@@ -161,8 +168,9 @@ export function Phase1Checkout({ mode = 'booking' }) {
       {mode === 'donation' ? <Field label="Amount ₹"><Input type="number" min="1" step="0.01" value={amount} onChange={event => setAmount(event.target.value)} required/></Field> : <>
         {item?.item_type === 'special_pooja' ? <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-700">Scheduled for {item.occurrence.date} at {item.occurrence.start_time}. Capacity {item.occurrence.capacity}.</p> : <Field label="Service date" hint={item?.is_live ? 'Live pooja is bookable today until its end time.' : `Minimum lead time: ${item?.lead_time_hours || 0} hours. Final availability is checked by the server.`}><Input type="date" min={earliestDate(item)} value={serviceDate} onChange={event => setServiceDate(event.target.value)} required/></Field>}
         <Field label="Quantity"><Input type="number" min="1" max="100" value={quantity} onChange={event => setQuantity(event.target.value)} required/></Field>
+        <Field label="Family member"><select className="input" defaultValue="" onChange={event => { const member = family.find(row => row.uuid === event.target.value); if (member) { setName(member.name); setStar(member.star_value) } }}><option value="">Enter devotee details</option>{family.map(row => <option key={row.uuid} value={row.uuid}>{row.name}</option>)}</select></Field>
         <Field label="Devotee name"><Input value={name} onChange={event => setName(event.target.value)} required/></Field>
-        <Field label="Birth star"><Input value={star} onChange={event => setStar(event.target.value)} placeholder="Optional where the pooja permits it"/></Field>
+        <Field label="Birth star"><select className="input" value={star} onChange={event => setStar(event.target.value)}><option value="">Not specified</option>{stars.map(row => <option value={row.code} key={row.code}>{row.name_en}</option>)}</select></Field>
       </>}
       {mode === 'donation' && <Field label="Donor name"><Input value={name} onChange={event => setName(event.target.value)} required/></Field>}
       <Field label="Receipt email" hint="Optional"><Input type="email" value={email} onChange={event => setEmail(event.target.value)}/></Field>
@@ -209,7 +217,7 @@ export function Phase1Receipt() {
     <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Payment receipt</p><h1 className="mt-2 text-3xl font-semibold">{receipt?.number || bookingCode}</h1>
     {error && <p className="mt-4 rounded-xl bg-amber-50 p-3 text-amber-800">{error}</p>}
     {!receipt && !error && <p className="mt-5">Waiting for Razorpay confirmation…</p>}
-    {receipt && <div className="card mt-6 p-6"><div className="grid gap-3 text-sm sm:grid-cols-2"><p><span className="text-brown-500">Booking</span><br/><b>{receipt.snapshot.booking_code}</b></p><p><span className="text-brown-500">Status</span><br/><b>{booking?.status}</b></p><p><span className="text-brown-500">Paid</span><br/><b>₹{receipt.snapshot.amount}</b></p><p><span className="text-brown-500">Issued</span><br/><b>{new Date(receipt.issued_at).toLocaleString()}</b></p></div><div className="mt-5 border-t pt-4">{receipt.snapshot.items?.map(row => <div key={row.code} className="flex justify-between py-2"><span>{row.name} × {row.quantity}</span><b>₹{row.amount}</b></div>)}</div><p className="mt-4 text-xs text-brown-500">Payment receipt only; this is not an 80G certificate.</p></div>}
+    {receipt && <div className="card mt-6 p-6"><div className="grid gap-3 text-sm sm:grid-cols-2"><p><span className="text-brown-500">Booking</span><br/><b>{receipt.snapshot.booking_code}</b></p><p><span className="text-brown-500">Status</span><br/><b>{booking?.status}</b></p><p><span className="text-brown-500">Paid</span><br/><b>₹{receipt.snapshot.amount}</b></p><p><span className="text-brown-500">Issued</span><br/><b>{new Date(receipt.issued_at).toLocaleString()}</b></p></div><div className="mt-5 border-t pt-4">{receipt.snapshot.items?.map(row => <div key={row.code} className="flex justify-between py-2"><span>{row.name} × {row.quantity}</span><b>₹{row.amount}</b></div>)}</div><p className="mt-4 text-xs text-brown-500">Official payment receipt.</p></div>}
     {receipt && <button className="btn-p mt-5" onClick={downloadPdf}>Download PDF</button>}
     <Link href="/account" className="btn-g mt-5">Back to account</Link>
   </Wrap></PublicShell>
