@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import { PublicShell } from '@/components/ui'
 import { apiCollection } from '@/lib/catalogue'
+
+// Render on request; lib/api retains its 300-second fetch cache.
+export const revalidate = 0
+
 export const metadata = { title: 'Special Poojas', alternates: { canonical: '/special' } }
 export default async function Page() {
   const events = (await apiCollection('events')).filter(row => row.kind === 'special_pooja')
