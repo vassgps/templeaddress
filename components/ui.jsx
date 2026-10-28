@@ -8,11 +8,12 @@
  *   - usePathname from next/navigation (replaces useLocation)
  *   - LanguageControl from @/components/LanguageControl
  */
-import { Suspense, useCallback, useState, useEffect } from 'react'
+import { Suspense, useCallback, useState, useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import ActiveLink from './ActiveLink'
 import LanguageControl from './LanguageControl'
+import { hasAuthSession, subscribeAuth } from '@/lib/client-api'
 import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2 } from 'lucide-react'
 
 /* ── BRAND MARK ── */
@@ -174,6 +175,7 @@ const pubNav = [['/', 'Home'], ['/temples', 'Temples'], ['/special', 'Special po
 
 export function PublicShell({ children, tenant, hideChatbot = false, booking = false }) {
   const [open, setOpen] = useState(false)
+  const signedIn = useSyncExternalStore(subscribeAuth, hasAuthSession, () => false)
   const lightHeader = tenant || booking
   return (
     <div className={`${tenant ? 'tenant' : ''} ${booking ? 'booking-shell' : ''}`}>
@@ -197,8 +199,8 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
           <div className="flex-1" />
           <LanguageControl />
           {!booking && <Link href="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>}
-          <Link href="/login" className={`btn !py-2 ${tenant ? 'bg-brown-900 text-white' : booking ? 'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-            {booking ? 'Login / Register' : 'Login'}
+          <Link href={signedIn ? '/account' : '/login'} className={`btn !py-2 ${tenant ? 'bg-brown-900 text-white' : booking ? 'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50' : 'bg-white/15 text-white hover:bg-white/25'}`}>
+            {signedIn ? 'Profile' : booking ? 'Login / Register' : 'Login'}
           </Link>
           <button className={`md:hidden ${lightHeader ? 'text-brown-800' : ''}`} onClick={() => setOpen(!open)}>
             {open ? <X /> : <Menu />}

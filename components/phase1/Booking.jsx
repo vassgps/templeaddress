@@ -132,9 +132,8 @@ export function Phase1Checkout({ mode = 'booking' }) {
   async function submit(event) {
     event.preventDefault()
     const next = `/${mode === 'donation' ? 'donate' : 'book'}/${slug}${selected ? `?${mode === 'donation' ? 'purpose' : 'pooja'}=${selected}` : ''}`
-    const auth = requireAuth(router, next)
+    const auth = requireAuth(router, next, { verifiedMobile: true })
     if (!auth) return
-    if (!auth.user?.mobile_verified_at && !auth.user?.google_verified_at) { router.push(`/login?next=${encodeURIComponent(next)}`); return }
     setBusy(true); setError(''); setQuote(null)
     const raw = mode === 'donation'
       ? { item_type: 'donation', target_uuid: selected, amount }

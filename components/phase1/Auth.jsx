@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { PublicShell, Field, Input, TempleMark } from '@/components/ui'
-import { clientApi, readAuth, safeNextPath, saveAuth } from '@/lib/client-api'
+import { clientApi, needsMobileVerification, readAuth, safeNextPath, saveAuth } from '@/lib/client-api'
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
@@ -34,6 +34,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
   const [loginChallenge, setLoginChallenge] = useState('')
   const [otpChallenge, setOtpChallenge] = useState(null)
   const [code, setCode] = useState('')
+  const [channel, setChannel] = useState('')
   const [googleSignup, setGoogleSignup] = useState(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -42,9 +43,18 @@ export default function Phase1Login({ initialMode = 'login' }) {
   const [recaptchaRequired, setRecaptchaRequired] = useState(false)
   const [recaptchaToken, setRecaptchaToken] = useState('')
   const destination = safeNextPath(params.get('next') || params.get('redirect'), '/account')
+  const linkingMobile = step === 'google_mobile' || step === 'google_mobile_otp'
+  const verifyingOtp = step === 'otp' || step === 'google_mobile_otp'
 
   const finish = useCallback(result => {
     saveAuth(result)
+    if (needsMobileVerification(result.user)) {
+      setName(result.user.name || ''); setEmail(result.user.email || '')
+      setIdentifier(result.user.mobile_e164 || ''); setActiveIdentifier('')
+      setOtpChallenge(null); setCode(''); setStep('google_mobile')
+      setRecaptchaRequired(false); setRecaptchaToken(''); setNotice('')
+      return
+    }
     router.replace(result.user?.is_staff ? '/staff' : destination)
     router.refresh()
   }, [destination, router])
@@ -57,8 +67,8 @@ export default function Phase1Login({ initialMode = 'login' }) {
 
   useEffect(() => {
     const session = readAuth()
-    if (session?.access) router.replace(session.user?.is_staff ? '/staff' : destination)
-  }, [destination, router])
+    if (session?.access) finish(session)
+  }, [finish])
 
   useEffect(() => {
     if (!seconds) return
@@ -119,7 +129,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
     try {
       if (mode === 'register' && step === 'identify') {
         const normalized = mobileIdentifier(countryCode, identifier)
-        const result = await clientApi('auth/register', { method: 'POST', auth: false, body: { name, email, country_code: countryCode, mobile_number: identifier, recaptcha_token: recaptchaToken } })
+        const result = await clientApi('auth/register', { method: 'POST', auth: false, body: { name, email, country_code: countryCode, mobile_number: identifier, recaptcha_token: recaptchaToken, channel } })
         if (result.recaptcha_required) { setRecaptchaRequired(true); setNotice('Complete reCAPTCHA, then continue.'); return }
         setActiveIdentifier(result.identifier || normalized); setOtpChallenge(result); setCode(result.debug_otp || ''); setStep('otp'); setSeconds(30)
         return
@@ -127,7 +137,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
       const normalized = activeIdentifier || mobileIdentifier(countryCode, identifier)
       const result = await clientApi('auth/otp/request', {
         method: 'POST', auth: false,
-        body: { identifier: normalized, country_code: countryCode, password: staffPassword, login_challenge_token: loginChallenge, recaptcha_token: recaptchaToken },
+        body: { identifier: normalized, country_code: countryCode, password: staffPassword, login_challenge_token: loginChallenge, recaptcha_token: recaptchaToken, channel },
       })
       if (result.recaptcha_required) { setRecaptchaRequired(true); setNotice('Complete reCAPTCHA, then continue.'); return }
       if (result.password_required) { setActiveIdentifier(normalized); setLoginChallenge(result.login_challenge_token); setStep('password'); return }
@@ -138,8 +148,26 @@ export default function Phase1Login({ initialMode = 'login' }) {
   async function verify(event) {
     event.preventDefault(); setBusy(true); setError('')
     try {
-      const result = await clientApi('auth/otp/verify', { method: 'POST', auth: false, body: { identifier: activeIdentifier, otp: code, challenge_uuid: otpChallenge?.challenge_uuid, country_code: countryCode } })
-      finish(result)
+      const result = await clientApi(linkingMobile ? 'auth/mobile-link/verify' : 'auth/otp/verify', {
+        method: 'POST', auth: linkingMobile,
+        body: { identifier: activeIdentifier, otp: code, challenge_uuid: otpChallenge?.challenge_uuid, country_code: countryCode },
+      })
+      if (linkingMobile) {
+        const session = readAuth()
+        if (!session?.access || session.user?.uuid !== result.uuid) throw new Error('Your session changed. Please sign in again.')
+        finish({ ...session, user: result })
+      } else finish(result)
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
+
+  async function requestMobile(event) {
+    event?.preventDefault(); setBusy(true); setError(''); setNotice('')
+    try {
+      const result = await clientApi('auth/mobile-link/request', {
+        method: 'POST', body: { mobile_number: identifier, country_code: countryCode, channel },
+      })
+      setActiveIdentifier(result.identifier); setOtpChallenge(result); setCode(result.debug_otp || '')
+      setStep('google_mobile_otp'); setSeconds(30)
     } catch (err) { setError(err.message) } finally { setBusy(false) }
   }
 
@@ -153,9 +181,10 @@ export default function Phase1Login({ initialMode = 'login' }) {
 
   async function resend() {
     if (seconds) return
+    if (linkingMobile) return requestMobile()
     setBusy(true); setError('')
     try {
-      const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: loginChallenge ? mobileIdentifier(countryCode, identifier) : activeIdentifier, country_code: countryCode, password: loginChallenge ? password : undefined, login_challenge_token: loginChallenge || undefined, recaptcha_token: recaptchaToken } })
+      const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: loginChallenge ? mobileIdentifier(countryCode, identifier) : activeIdentifier, country_code: countryCode, password: loginChallenge ? password : undefined, login_challenge_token: loginChallenge || undefined, recaptcha_token: recaptchaToken, channel } })
       if (result.recaptcha_required) { setRecaptchaRequired(true); setNotice('Complete reCAPTCHA, then continue.'); return }
       if (result.password_required) { setLoginChallenge(result.login_challenge_token); setStep('password'); return }
       setActiveIdentifier(result.identifier || activeIdentifier); setOtpChallenge(result); setCode(result.debug_otp || ''); setSeconds(30)
@@ -163,20 +192,22 @@ export default function Phase1Login({ initialMode = 'login' }) {
   }
 
   return <PublicShell><main className="mx-auto max-w-md px-4 py-12">
-    <div className="text-center"><TempleMark size={46} className="mx-auto"/><h1 className="mt-4 text-3xl font-semibold">{step === 'google_profile' ? 'Complete Google registration' : mode === 'register' ? 'Create your account' : 'Welcome back'}</h1><p className="mt-2 text-sm text-brown-500">Secure OTP and Google authentication for devotees, listing members and staff.</p></div>
+    <div className="text-center"><TempleMark size={46} className="mx-auto"/><h1 className="mt-4 text-3xl font-semibold">{linkingMobile ? 'Verify your mobile' : step === 'google_profile' ? 'Complete Google registration' : mode === 'register' ? 'Create your account' : 'Welcome back'}</h1><p className="mt-2 text-sm text-brown-500">Secure OTP and Google authentication for devotees, listing members and staff.</p></div>
     {step === 'identify' && <div className="mt-7 grid grid-cols-2 rounded-xl bg-brown-50 p-1"><button type="button" onClick={() => reset('login')} className={`rounded-lg px-3 py-2 text-sm ${mode === 'login' ? 'bg-white font-semibold shadow-sm' : ''}`}>Login</button><button type="button" onClick={() => reset('register')} className={`rounded-lg px-3 py-2 text-sm ${mode === 'register' ? 'bg-white font-semibold shadow-sm' : ''}`}>Register</button></div>}
     {step === 'identify' && GOOGLE_CLIENT_ID && <><div className="card mt-4 flex justify-center p-5"><div ref={googleButton}/></div><div className="my-4 flex items-center gap-3 text-xs text-brown-400"><span className="h-px flex-1 bg-brown-100"/>or continue with OTP<span className="h-px flex-1 bg-brown-100"/></div></>}
-    <form onSubmit={step === 'otp' ? verify : step === 'google_profile' ? completeGoogle : event => begin(event, step === 'password' ? password : '')} className={`card ${step !== 'identify' || !GOOGLE_CLIENT_ID ? 'mt-7' : ''} space-y-4 p-6`}>
+    <form onSubmit={verifyingOtp ? verify : step === 'google_mobile' ? requestMobile : step === 'google_profile' ? completeGoogle : event => begin(event, step === 'password' ? password : '')} className={`card ${step !== 'identify' || !GOOGLE_CLIENT_ID ? 'mt-7' : ''} space-y-4 p-6`}>
       {step === 'identify' && mode === 'register' && <><Field label="Full name"><Input value={name} onChange={event => setName(event.target.value)} minLength={2} maxLength={160} required/></Field><Field label="Email" hint="Optional"><Input type="email" value={email} onChange={event => setEmail(event.target.value)}/></Field></>}
-      {(step === 'identify' || step === 'google_profile') && <div className="grid grid-cols-[105px_1fr] gap-3"><Field label="Country"><select className="input" value={countryCode} onChange={event => setCountryCode(event.target.value)}>{countryOptions.map(code => <option key={code}>{code}</option>)}</select></Field><Field label={mode === 'login' && step === 'identify' ? 'Email or mobile' : 'Mobile number'}><Input value={identifier} onChange={event => setIdentifier(event.target.value)} inputMode="tel" placeholder={mode === 'login' ? '9876543210 or email' : '9876543210'} required/></Field></div>}
+      {(step === 'identify' || step === 'google_profile' || step === 'google_mobile') && <div className="grid grid-cols-[105px_1fr] gap-3"><Field label="Country"><select className="input" value={countryCode} onChange={event => setCountryCode(event.target.value)}>{countryOptions.map(code => <option key={code}>{code}</option>)}</select></Field><Field label={mode === 'login' && step === 'identify' ? 'Email or mobile' : 'Mobile number'}><Input value={identifier} onChange={event => setIdentifier(event.target.value)} inputMode="tel" placeholder={mode === 'login' && step === 'identify' ? '9876543210 or email' : '9876543210'} required/></Field></div>}
+      {(step === 'identify' || step === 'password' || step === 'google_mobile') && <Field label="Receive OTP by"><select className="input" value={channel} onChange={event => setChannel(event.target.value)}><option value="">Automatic (SMS, then WhatsApp)</option><option value="sms">SMS</option><option value="whatsapp">WhatsApp</option></select></Field>}
       {step === 'google_profile' && <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800"><b>{name}</b><br/>{email}<br/><span className="text-xs">Add a mobile number for bookings and account recovery.</span></div>}
+      {linkingMobile && <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800">Signed in with Google as {email || name}. Verify your mobile to book poojas, donate or register for events.</p>}
       {step === 'password' && <Field label="Staff password" hint="Privileged accounts require password and OTP"><Input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="current-password" required/></Field>}
-      {step === 'otp' && <Field label="6-digit OTP" hint={otpChallenge?.debug_otp ? `Local test OTP: ${otpChallenge.debug_otp}` : `Sent to ${otpChallenge?.destination || activeIdentifier}`}><Input value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" required autoFocus/></Field>}
+      {verifyingOtp && <Field label="6-digit OTP" hint={otpChallenge?.debug_otp ? `Local test OTP: ${otpChallenge.debug_otp}` : `Sent${otpChallenge?.channel ? ` via ${otpChallenge.channel === 'whatsapp' ? 'WhatsApp' : 'SMS'}` : ''} to ${otpChallenge?.destination || activeIdentifier}`}><Input value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" required autoFocus/></Field>}
       {recaptchaRequired && <div><div ref={recaptchaBox}/>{!RECAPTCHA_SITE_KEY && <p className="text-sm text-red-700">reCAPTCHA site key is not configured.</p>}</div>}
       {notice && <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-700">{notice}</p>}
       {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-      <button disabled={busy || (recaptchaRequired && !recaptchaToken) || (step === 'otp' && code.length !== 6)} className="btn-p w-full">{busy ? 'Please wait…' : step === 'otp' ? 'Verify and continue' : step === 'password' ? 'Continue to OTP' : step === 'google_profile' ? 'Complete registration' : mode === 'register' ? 'Register and send OTP' : 'Send login OTP'}</button>
-      {step === 'otp' && <div className="flex gap-2"><button type="button" onClick={() => reset(mode)} className="btn-g flex-1">Start again</button><button type="button" disabled={busy || seconds > 0} onClick={resend} className="btn-g flex-1">{seconds ? `Resend in ${seconds}s` : 'Resend OTP'}</button></div>}
+      <button disabled={busy || (recaptchaRequired && !recaptchaToken) || (verifyingOtp && code.length !== 6)} className="btn-p w-full">{busy ? 'Please wait…' : verifyingOtp ? 'Verify and continue' : step === 'google_mobile' ? 'Send verification OTP' : step === 'password' ? 'Continue to OTP' : step === 'google_profile' ? 'Complete registration' : mode === 'register' ? 'Register and send OTP' : 'Send login OTP'}</button>
+      {verifyingOtp && <div className="flex gap-2"><button type="button" disabled={busy} onClick={() => { if (linkingMobile) { setStep('google_mobile'); setCode(''); setError('') } else reset(mode) }} className="btn-g flex-1">{linkingMobile ? 'Change number' : 'Start again'}</button><button type="button" disabled={busy || seconds > 0} onClick={resend} className="btn-g flex-1">{seconds ? `Resend in ${seconds}s` : 'Resend OTP'}</button></div>}
       {(step === 'password' || step === 'google_profile') && <button type="button" onClick={() => reset(mode)} className="btn-g w-full">Back</button>}
     </form>
     <p className="mt-4 text-center text-xs text-brown-500">OTP expires in 5 minutes. Staff accounts require password plus OTP; public users cannot select privileged roles.</p>
