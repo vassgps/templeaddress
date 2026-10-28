@@ -9,6 +9,7 @@ frontend:
         - test -n "$TEMPLEADDRESS_API_URL"
     build:
       commands:
+        - env | grep '^TEMPLEADDRESS_API_URL=' >> .env.production
         - npm run build
   artifacts:
     baseDirectory: .next
