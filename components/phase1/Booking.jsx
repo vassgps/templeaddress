@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Field, Input, PublicShell } from '@/components/ui'
 import { API_ORIGIN } from '@/lib/api'
 import { clientApi, readAuth, requireAuth } from '@/lib/client-api'
+import StarSelect from './StarSelect'
 
 const Wrap = ({ children }) => <main className="mx-auto max-w-2xl px-4 py-10">{children}</main>
 
@@ -169,7 +170,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
         <Field label="Quantity"><Input type="number" min="1" max="100" value={quantity} onChange={event => setQuantity(event.target.value)} required/></Field>
         <Field label="Family member"><select className="input" defaultValue="" onChange={event => { const member = family.find(row => row.uuid === event.target.value); if (member) { setName(member.name); setStar(member.star_value) } }}><option value="">Enter devotee details</option>{family.map(row => <option key={row.uuid} value={row.uuid}>{row.name}</option>)}</select></Field>
         <Field label="Devotee name"><Input value={name} onChange={event => setName(event.target.value)} required/></Field>
-        <Field label="Birth star"><select className="input" value={star} onChange={event => setStar(event.target.value)}><option value="">Not specified</option>{stars.map(row => <option value={row.code} key={row.code}>{row.name_en}</option>)}</select></Field>
+        <Field label="Birth star"><StarSelect stars={stars} value={star} onChange={event => setStar(event.target.value)}/></Field>
       </>}
       {mode === 'donation' && <Field label="Donor name"><Input value={name} onChange={event => setName(event.target.value)} required/></Field>}
       <Field label="Receipt email" hint="Optional"><Input type="email" value={email} onChange={event => setEmail(event.target.value)}/></Field>

@@ -14,6 +14,7 @@ import { usePathname } from 'next/navigation'
 import ActiveLink from './ActiveLink'
 import LanguageControl from './LanguageControl'
 import { hasAuthSession, subscribeAuth } from '@/lib/client-api'
+import { useDemoPortals } from './DemoPortalGate'
 import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2 } from 'lucide-react'
 
 /* ── BRAND MARK ── */
@@ -174,6 +175,7 @@ export const Money   = ({ v }) => <span className="tabular-nums">₹{Number(v).t
 const pubNav = [['/', 'Home'], ['/temples', 'Temples'], ['/special', 'Special poojas'], ['/festival', 'Festivals'], ['/services', 'Services']]
 
 export function PublicShell({ children, tenant, hideChatbot = false, booking = false }) {
+  const demoPortals = useDemoPortals()
   const [open, setOpen] = useState(false)
   const signedIn = useSyncExternalStore(subscribeAuth, hasAuthSession, () => false)
   const lightHeader = tenant || booking
@@ -230,13 +232,13 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
             <b className="text-white">For temples</b><br/>
             <Link href="/submit-temple" className="hover:text-white">Submit a temple</Link><br/>
             <Link href="/login?next=/account/listings/new&intent=create-profile" className="hover:text-white">Create a profile</Link><br/>
-            <Link href="/vendor" className="hover:text-white">Temple login</Link><br/>
+            {demoPortals && <><Link href="/vendor" className="hover:text-white">Temple login</Link><br/></>}
             <Link href="/sponsor" className="hover:text-white">Sponsor a temple</Link>
           </div>
           <div className="text-sm">
             <b className="text-white">Partners</b><br/>
-            <Link href="/partner" className="hover:text-white">Become a partner</Link><br/>
-            <Link href="/dealer" className="hover:text-white">Dealer portal</Link><br/>
+            {demoPortals && <><Link href="/partner" className="hover:text-white">Become a partner</Link><br/>
+            <Link href="/dealer" className="hover:text-white">Dealer portal</Link><br/></>}
             <Link href="/staff" className="hover:text-white">Staff panel</Link>
           </div>
           <div className="text-sm">

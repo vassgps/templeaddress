@@ -1,5 +1,17 @@
 # TempleAddress — Next.js frontend (SSR, SSG, ISR and Tailwind)
 
+Demo portals are disabled unless `/api/v1/config` returns
+`feature_flags.demo_portals: true` (a JSON boolean). This flag controls the vendor,
+festival admin, service admin, partner and dealer routes, mock staff pages and
+their public footer links. Keep it off on production; API-backed staff routes
+remain available under their existing permissions. The flag defaults off if
+configuration cannot be loaded. It controls demo visibility, not API authorization.
+
+When running behind an ingress, set `TRUSTED_CLIENT_IP_HEADER` only to a header
+the ingress overwrites with the actual client IP (for example `x-real-ip`), and
+block direct access bypassing the ingress. Configure the corresponding proxy
+CIDRs in Django's `CONTACT_REVEAL_TRUSTED_PROXIES`; see the backend README.
+
 ## Authoritative product baseline
 
 The current product requirements are defined only by the following sources:

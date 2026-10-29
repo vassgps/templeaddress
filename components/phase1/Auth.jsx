@@ -129,8 +129,9 @@ export default function Phase1Login({ initialMode = 'login' }) {
     try {
       if (mode === 'register' && step === 'identify') {
         const normalized = mobileIdentifier(countryCode, identifier)
-        const result = await clientApi('auth/register', { method: 'POST', auth: false, body: { name, email, country_code: countryCode, mobile_number: identifier, recaptcha_token: recaptchaToken, channel } })
+        const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: normalized, country_code: countryCode, recaptcha_token: recaptchaToken, channel } })
         if (result.recaptcha_required) { setRecaptchaRequired(true); setNotice('Complete reCAPTCHA, then continue.'); return }
+        if (result.password_required) { setActiveIdentifier(normalized); setLoginChallenge(result.login_challenge_token); setStep('password'); return }
         setActiveIdentifier(result.identifier || normalized); setOtpChallenge(result); setCode(result.debug_otp || ''); setStep('otp'); setSeconds(30)
         return
       }
@@ -150,7 +151,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
     try {
       const result = await clientApi(linkingMobile ? 'auth/mobile-link/verify' : 'auth/otp/verify', {
         method: 'POST', auth: linkingMobile,
-        body: { identifier: activeIdentifier, otp: code, challenge_uuid: otpChallenge?.challenge_uuid, country_code: countryCode },
+        body: { identifier: activeIdentifier, otp: code, challenge_uuid: otpChallenge?.challenge_uuid, country_code: countryCode, ...(mode === 'register' && !linkingMobile ? { profile: { name, email } } : {}) },
       })
       if (linkingMobile) {
         const session = readAuth()
