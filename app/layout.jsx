@@ -1,5 +1,6 @@
 import { Fraunces, Manrope, Anek_Malayalam } from 'next/font/google'
 import './globals.css'
+import DemoPortalGate from '@/components/DemoPortalGate'
 
 /* ── Google Fonts via next/font (zero layout shift, self-hosted at build time) ── */
 const fraunces = Fraunces({
@@ -56,7 +57,7 @@ export default function RootLayout({ children }) {
       className={`${fraunces.variable} ${manrope.variable} ${anekMalayalam.variable}`}
     >
       <body className="bg-brown-50 text-brown-900 antialiased">
-        {children}
+        <DemoPortalGate>{children}</DemoPortalGate>
       </body>
     </html>
   )
