@@ -13,7 +13,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import ActiveLink from './ActiveLink'
 import LanguageControl from './LanguageControl'
-import { hasAuthSession, subscribeAuth } from '@/lib/client-api'
+import { readAuth, subscribeAuth } from '@/lib/client-api'
+import { rolesFor, staffLanding } from '@/lib/staff-access'
 import { useDemoPortals } from './DemoPortalGate'
 import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2 } from 'lucide-react'
 
@@ -177,7 +178,13 @@ const pubNav = [['/', 'Home'], ['/temples', 'Temples'], ['/special', 'Special po
 export function PublicShell({ children, tenant, hideChatbot = false, booking = false }) {
   const demoPortals = useDemoPortals()
   const [open, setOpen] = useState(false)
-  const signedIn = useSyncExternalStore(subscribeAuth, hasAuthSession, () => false)
+  const accountPath = useSyncExternalStore(subscribeAuth, () => {
+    const session = readAuth()
+    if (!session?.access) return '/login'
+    if (rolesFor(session.user).length) return staffLanding(session.user)
+    return session.user?.is_staff ? '/staff' : '/account'
+  }, () => '/login')
+  const signedIn = accountPath !== '/login'
   const lightHeader = tenant || booking
   return (
     <div className={`${tenant ? 'tenant' : ''} ${booking ? 'booking-shell' : ''}`}>
@@ -201,8 +208,8 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
           <div className="flex-1" />
           <LanguageControl />
           {!booking && <Link href="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>}
-          <Link href={signedIn ? '/account' : '/login'} className={`btn !py-2 ${tenant ? 'bg-brown-900 text-white' : booking ? 'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-            {signedIn ? 'Profile' : booking ? 'Login / Register' : 'Login'}
+          <Link href={accountPath} className={`btn !py-2 ${tenant ? 'bg-brown-900 text-white' : booking ? 'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50' : 'bg-white/15 text-white hover:bg-white/25'}`}>
+            {signedIn ? accountPath.startsWith('/staff') ? 'Staff panel' : 'Profile' : booking ? 'Login / Register' : 'Login'}
           </Link>
           <button className={`md:hidden ${lightHeader ? 'text-brown-800' : ''}`} onClick={() => setOpen(!open)}>
             {open ? <X /> : <Menu />}
