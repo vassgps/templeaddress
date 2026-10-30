@@ -182,10 +182,13 @@ export function Phase1Checkout({ mode = 'booking' }) {
     setStep(2)
   }
 
-  function continueFromContact(event) {
+  async function continueFromContact(event) {
     event.preventDefault(); setError('')
+    if (busy) return
     if (localMobile(contact.mobile).length !== 10) return setError('Enter a 10-digit mobile number.')
-    setStep(verified ? 4 : 3)
+    if (verified) return setStep(4)
+    if (mode === 'booking' && !await sendOtp()) return
+    setStep(3)
   }
 
   async function sendOtp() {
@@ -194,6 +197,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
       const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: `+91${localMobile(contact.mobile)}`, country_code: '+91' } })
       if (result.password_required || result.recaptcha_required) throw new Error('Please sign in from the login page to continue.')
       setOtp({ challenge: result, code: result.debug_otp || '' })
+      return true
     } catch (err) { setError(err.message) } finally { setBusy(false) }
   }
 
@@ -273,10 +277,10 @@ export function Phase1Checkout({ mode = 'booking' }) {
     {step === 2 && <form onSubmit={continueFromContact} className="card mt-6 space-y-4 p-6">
       <h2 className="text-xl font-semibold">Contact details</h2>
       <p className="text-sm text-brown-500">Your receipt and booking updates go to this contact.</p>
-      <Field label="Your name"><Input value={contact.name} onChange={event => setContact(value => ({ ...value, name: event.target.value }))} maxLength={160} required/></Field>
-      <Field label="Mobile number" hint={verified ? 'Verified with OTP' : 'We will send an OTP to verify this number.'}><div className="flex"><span className="input w-16 shrink-0 rounded-r-none bg-brown-50 text-center">+91</span><Input value={contact.mobile} onChange={event => setContact(value => ({ ...value, mobile: event.target.value.replace(/\D/g, '').slice(0, 10) }))} inputMode="tel" disabled={verified} required placeholder="98765 43210"/></div></Field>
-      <Field label="Email" hint="Optional, for the receipt"><Input type="email" value={contact.email} onChange={event => setContact(value => ({ ...value, email: event.target.value }))}/></Field>
-      {alert}<div className="flex gap-2"><button type="button" className="btn-g flex-1" onClick={() => setStep(1)}>Back</button><button className="btn-p flex-1">Continue</button></div>
+      <Field label="Your name"><Input value={contact.name} onChange={event => setContact(value => ({ ...value, name: event.target.value }))} maxLength={160} disabled={busy} required/></Field>
+      <Field label="Mobile number" hint={verified ? 'Verified with OTP' : 'We will send an OTP to verify this number.'}><div className="flex"><span className="input w-16 shrink-0 rounded-r-none bg-brown-50 text-center">+91</span><Input value={contact.mobile} onChange={event => setContact(value => ({ ...value, mobile: event.target.value.replace(/\D/g, '').slice(0, 10) }))} inputMode="tel" disabled={verified || busy} required placeholder="98765 43210"/></div></Field>
+      {(mode !== 'booking' || !me) && <Field label="Email" hint="Optional, for the receipt"><Input type="email" value={contact.email} onChange={event => setContact(value => ({ ...value, email: event.target.value }))} disabled={busy}/></Field>}
+      {alert}<div className="flex gap-2"><button type="button" disabled={busy} className="btn-g flex-1" onClick={() => setStep(1)}>Back</button><button disabled={busy} className="btn-p flex-1">{mode === 'booking' && !verified ? (busy ? 'Sending OTP…' : 'Send OTP & continue') : 'Continue'}</button></div>
     </form>}
 
     {step === 3 && <form onSubmit={verifyOtp} className="card mt-6 space-y-4 p-6">
