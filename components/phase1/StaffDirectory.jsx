@@ -1,55 +1,58 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { SShell } from '@/components/pages/partners'
-import { clientApi, requireAuth } from '@/lib/client-api'
-import BookingCorrection from './BookingCorrection'
+import { ArrowUpDown, Eye, ArchiveRestore } from 'lucide-react'
+import { clientApi } from '@/lib/client-api'
+import { canUseStaff } from '@/lib/staff-access'
+import StaffShell, { useStaffUser } from './StaffShell'
+import StaffRecordDetail from './StaffRecordDetail'
+import { useStaffQuery } from './StaffData'
+import { StaffEmpty, StaffModal, StaffNotice, StaffPageHeading, StaffPager, StaffSearch, StaffStatus, money, staffDate, titleCase } from './StaffUI'
 
 const configs = {
-  bookings: { title: 'All bookings', path: 'staff/bookings', columns: ['Booking', 'Listing', 'Contact', 'Amount', 'Status'], order: '-created_at', statuses: ['confirmed', 'completed', 'payment_pending', 'expired'] },
-  users: { title: 'All users', path: 'staff/users', columns: ['Name', 'Mobile', 'Email', 'Verified'], order: '-date_joined', statuses: [] },
-  transactions: { title: 'All transactions', path: 'staff/payment-attempts', columns: ['Payment', 'Booking', 'Method', 'Payer total', 'Status'], order: '-created_at', statuses: ['authorized', 'capture_pending', 'captured', 'failed', 'exception', 'released'] },
-  listings: { title: 'Listing queue', path: 'staff/listings', columns: ['Code', 'Name', 'Type', 'Status'], order: '-created_at', statuses: ['draft', 'review', 'published', 'disabled', 'archived'] },
-}
-
-function RecordFields({ value }) {
-  if (Array.isArray(value)) return <ul className="space-y-3">{value.map((row, index) => <li key={index}><RecordFields value={row}/></li>)}</ul>
-  if (value && typeof value === 'object') return <dl className="space-y-3">{Object.entries(value).map(([key, item]) => <div key={key}><dt className="text-xs font-semibold capitalize text-brown-500">{key.replaceAll('_', ' ')}</dt><dd className="mt-1 break-words"><RecordFields value={item}/></dd></div>)}</dl>
-  return <span>{value == null || value === '' ? 'Not recorded' : String(value)}</span>
+  bookings: { title: 'Bookings', description: 'Find a booking by ID, devotee, temple, pooja or payment reference.', path: 'staff/bookings', columns: [['Booking', 'code'], ['Devotee / contact', 'contact_name'], ['Temple / listing', 'listing__name_en'], ['Pooja / donation', null], ['Created', 'created_at'], ['Amount', 'amount_total'], ['Status', 'status']], order: '-created_at', statuses: ['created', 'payment_pending', 'confirmed', 'completed', 'expired'] },
+  users: { title: 'Users', description: 'Search registered users and inspect their contact details and account status.', path: 'staff/users', columns: [['Name', 'name'], ['Mobile', null], ['Email', null], ['Joined', 'date_joined'], ['Status', null]], order: '-date_joined', statuses: [] },
+  transactions: { title: 'Transactions', description: 'Inspect payments, orders, processing events and payment exceptions.', path: 'staff/payment-attempts', columns: [['Transaction / booking', 'provider_payment_id'], ['Type', null], ['User / guest', 'booking__contact_name'], ['Listing', 'booking__listing__name_en'], ['Date / method', 'created_at'], ['Amount', 'authorised_amount'], ['Status', 'status']], order: '-created_at', statuses: ['authorized', 'capture_pending', 'captured', 'failed', 'exception', 'released'], types: ['booking', 'donation'] },
+  listings: { title: 'All listings', description: 'Find published profiles, saved drafts, disabled and archived listings.', path: 'staff/listings', columns: [['Listing / ID', 'name_en'], ['Type', 'listing_type'], ['Creator', null], ['Created / updated', 'created_at'], ['Status', 'publication_status']], order: '-created_at', statuses: ['draft', 'review', 'published', 'disabled', 'archived'], types: ['temple', 'festival', 'service'] },
 }
 
 export default function StaffDirectory({ kind }) {
-  const config = configs[kind]
-  const router = useRouter()
-  const [search, setSearch] = useState(''), [status, setStatus] = useState(''), [order, setOrder] = useState(config.order), [page, setPage] = useState(1)
-  const [payload, setPayload] = useState(null), [error, setError] = useState(''), [detail, setDetail] = useState(null)
-  const load = useCallback(async () => {
-    if (!requireAuth(router, window.location.pathname)) return
-    const params = new URLSearchParams({ search, status, ordering: order, page: String(page) })
-    setPayload(await clientApi(`${config.path}?${params}`))
-  }, [config.path, search, status, order, page, router])
-  useEffect(() => { setDetail(null); load().catch(error => setError(error.message)) }, [load])
+  const config = configs[kind], me = useStaffUser(), params = useSearchParams(), requestId = useRef(0)
+  const [search, setSearch] = useState(params.get('search') || '')
+  const [query, setQuery] = useState({ search: params.get('search') || '', status: params.get('status') || '', type: '', active: '', ordering: config.order, page: '1', date_from: '', date_to: '' })
+  const { data, loading, error, reload } = useStaffQuery(`${config.path}?${new URLSearchParams(query)}`)
+  const [selected, setSelected] = useState(null), [detailOpen, setDetailOpen] = useState(false), [detailLoading, setDetailLoading] = useState(false), [actionError, setActionError] = useState(''), [archiving, setArchiving] = useState(false), [busy, setBusy] = useState(false)
+  useEffect(() => { const timer = window.setTimeout(() => setQuery(q => ({ ...q, search, page: '1' })), 300); return () => window.clearTimeout(timer) }, [search])
+  useEffect(() => () => { requestId.current++ }, [])
+  function filter(key, value) { setQuery(q => ({ ...q, [key]: value, page: '1' })) }
   async function inspect(row) {
-    try {
-      const key = kind === 'bookings' ? row.code : row.uuid
-      setDetail(kind === 'listings' ? row : await clientApi(`${config.path}/${key}`))
-    } catch (error) { setError(error.message) }
+    const id = ++requestId.current
+    setDetailOpen(true); setDetailLoading(true); setActionError(''); setSelected(null)
+    try { const key = kind === 'bookings' ? row.code : row.uuid; const record = await clientApi(`${config.path}/${key}`); if (id === requestId.current) setSelected(record) }
+    catch (err) { if (id === requestId.current) setActionError(err.message) }
+    finally { if (id === requestId.current) setDetailLoading(false) }
   }
-  async function archive(row) {
-    const action = row.publication_status === 'archived' ? 'restore' : 'archive'
-    const reason = window.prompt(`Reason to ${action} ${row.name_en} (Portal Admin only):`)
-    if (!reason) return
-    try { await clientApi(`staff/listings/${row.uuid}/${action}`, { method: 'POST', body: { reason } }); setDetail(null); await load() } catch (error) { setError(error.message) }
+  function close() { if (busy) return; requestId.current++; setDetailOpen(false); setSelected(null); setArchiving(false) }
+  async function saved() {
+    const key = kind === 'bookings' ? selected.code : selected.uuid
+    setSelected(await clientApi(`${config.path}/${key}`)); reload()
   }
-  const cells = row => kind === 'bookings' ? [row.code, row.listing.name_en, row.contact_name, row.amount_total, row.status]
-    : kind === 'users' ? [row.name || row.username, row.mobile_e164, row.email, row.mobile_verified_at || row.google_verified_at ? 'Verified' : 'Pending']
-      : kind === 'listings' ? [row.code, row.name_en, row.listing_type, row.publication_status]
-        : [row.provider_payment_id, row.booking_code, row.method, row.payer_total || row.authorised_amount, row.status]
-  return <SShell><h1 className="text-2xl font-semibold">{config.title}</h1><div className="my-5 flex flex-wrap gap-3"><input aria-label="Search records" className="input sm:max-w-xs" placeholder="Search" value={search} onChange={event => { setSearch(event.target.value); setPage(1) }}/>{config.statuses.length > 0 && <select aria-label="Filter status" className="input sm:max-w-xs" value={status} onChange={event => { setStatus(event.target.value); setPage(1) }}><option value="">All statuses</option>{config.statuses.map(value => <option key={value}>{value}</option>)}</select>}<select aria-label="Sort records" className="input sm:max-w-xs" value={order} onChange={event => { setOrder(event.target.value); setPage(1) }}><option value={config.order}>Newest first</option><option value={config.order.slice(1)}>Oldest first</option>{kind === 'bookings' && <option value="-amount_total">Highest amount</option>}{kind === 'users' && <option value="name">Name</option>}</select></div>
-    {error && <p role="alert" className="my-3 text-red-700">{error}</p>}<div className="card overflow-x-auto"><table className="w-full"><thead><tr>{config.columns.map(column => <th className="th" key={column}>{column}</th>)}<th className="th">Details</th></tr></thead><tbody>{payload?.results.map(row => <tr key={row.uuid}>{cells(row).map((value, index) => <td className="td" key={index}>{value || '—'}</td>)}<td className="td"><button className="btn-g" onClick={() => inspect(row)}>View</button></td></tr>)}</tbody></table>{payload && !payload.results.length && <p className="p-5">No matching records.</p>}</div>
-    <div className="mt-4 flex items-center gap-4"><button className="btn-g" disabled={!payload?.previous} onClick={() => setPage(page - 1)}>Previous</button><span>Page {page} · {payload?.count || 0} records</span><button className="btn-g" disabled={!payload?.next} onClick={() => setPage(page + 1)}>Next</button></div>
-    {detail && <div role="dialog" aria-modal="true" aria-label="Record details" className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"><div className="card max-h-[85vh] w-full max-w-3xl overflow-auto p-6"><button className="btn-g float-right" onClick={() => setDetail(null)}>Close</button><h2 className="text-xl font-semibold">{detail.code || detail.name || detail.provider_payment_id || 'Record details'}</h2><div className="mt-4 text-sm"><RecordFields value={detail}/></div>{kind === 'bookings' && <BookingCorrection booking={detail} staff onSaved={async () => { setDetail(await clientApi(`staff/bookings/${detail.code}`)); await load() }}/>} {kind === 'listings' && <div className="mt-3 flex flex-wrap gap-2"><Link className="btn-p" href="/staff">Open review queues</Link><button className="btn-g" onClick={() => archive(detail)}>{detail.publication_status === 'archived' ? 'Restore listing' : 'Archive listing'}</button></div>}</div></div>}
-  </SShell>
+  async function archive(event) {
+    event.preventDefault()
+    if (busy) return
+    const reason = new FormData(event.currentTarget).get('reason'), action = selected.publication_status === 'archived' ? 'restore' : 'archive'
+    setBusy(true); setActionError('')
+    try { await clientApi(`staff/listings/${selected.uuid}/${action}`, { method: 'POST', body: { reason } }); setDetailOpen(false); setArchiving(false); setSelected(null); reload() } catch (err) { setActionError(err.message) } finally { setBusy(false) }
+  }
+  function cells(row) {
+    if (kind === 'bookings') return [<b key="code">{row.code}</b>, row.items.map(item => item.devotee_name).filter(Boolean).join(', ') || row.contact_name, <span key="listing">{row.listing.name_en}<small className="block text-brown-500">{row.listing.code}</small></span>, <span key="items">{row.items.map(item => <span className="block" key={item.uuid}>{item.item_name_en} x {item.quantity}<small className="block text-brown-500">{staffDate(item.service_date, false)}</small></span>)}</span>, staffDate(row.created_at), money(row.amount_total), <StaffStatus key="status" value={row.status}/>]
+    if (kind === 'users') return [<span key="name"><b>{row.name || row.username}</b><small className="block text-brown-500">{row.username}</small></span>, row.mobile_e164 || '-', row.email || '-', staffDate(row.date_joined), <StaffStatus key="status" value={row.is_active ? 'active' : 'disabled'}/>]
+    if (kind === 'listings') return [<span key="name"><b>{row.name_en}</b><small className="block text-brown-500">{row.code}</small></span>, titleCase(row.listing_type), row.creator || '-', <span key="date">{staffDate(row.created_at)}<small className="block text-brown-500">Updated {staffDate(row.updated_at)}</small></span>, <StaffStatus key="status" value={row.publication_status}/>]
+    return [<span key="id"><b className="break-all">{row.provider_payment_id || 'Awaiting payment'}</b><small className="block text-brown-500">{row.booking_code || '-'}</small></span>, titleCase(row.transaction_type), row.user_name || '-', <span key="listing">{row.listing_name || '-'}<small className="block text-brown-500">{row.listing_code}</small></span>, <span key="date">{staffDate(row.created_at)}<small className="block text-brown-500">{row.method || 'Method not recorded'}</small></span>, money(row.payer_total ?? row.authorised_amount), <StaffStatus key="status" value={row.status}/>]
+  }
+  return <StaffShell><StaffPageHeading title={config.title} description={config.description} action={kind === 'listings' && <Link className="btn-p" href="/staff/reviews">Review submissions</Link>}/><div className="mb-4 space-y-3 rounded-xl border border-brown-100 bg-white p-4"><div className="flex flex-wrap gap-3"><StaffSearch value={search} onChange={setSearch} placeholder={kind === 'transactions' ? 'Payment, booking, user, listing or gateway' : 'Search name, code or contact'}/>{config.statuses.length > 0 && <select aria-label="Filter status" className="input sm:max-w-[180px]" value={query.status} onChange={e => filter('status', e.target.value)}><option value="">All statuses</option>{config.statuses.map(value => <option key={value} value={value}>{titleCase(value)}</option>)}</select>}{config.types && <select aria-label="Filter type" className="input sm:max-w-[160px]" value={query.type} onChange={e => filter('type', e.target.value)}><option value="">All types</option>{config.types.map(value => <option key={value} value={value}>{titleCase(value)}</option>)}</select>}{kind === 'users' && <select aria-label="Account status" className="input sm:max-w-[180px]" value={query.active} onChange={e => filter('active', e.target.value)}><option value="">All accounts</option><option value="true">Active accounts</option><option value="false">Inactive accounts</option></select>}</div><div className="flex flex-wrap items-end gap-3">{['date_from', 'date_to'].map(key => <label className="text-xs text-brown-500" key={key}>{key === 'date_from' ? 'From' : 'To'}<input type="date" className="input mt-1" value={query[key]} onChange={e => filter(key, e.target.value)}/></label>)}<button className="btn-g !py-2 text-xs" onClick={() => { setSearch(''); setQuery({ search: '', status: '', type: '', active: '', ordering: config.order, page: '1', date_from: '', date_to: '' }) }}>Clear filters</button><span className="text-xs text-brown-500">Select a column heading to sort.</span></div></div><StaffNotice error={error}/><div className="overflow-x-auto rounded-2xl border border-brown-100 bg-white"><table className="w-full text-sm"><thead><tr>{config.columns.map(([label, order]) => <th className="th" key={label}>{order ? <button className={`inline-flex items-center gap-2 text-left ${query.ordering.replace(/^-/, '') === order ? 'text-saffron-700' : ''}`} onClick={() => filter('ordering', query.ordering === order ? `-${order}` : order)}>{label}<ArrowUpDown size={12}/></button> : label}</th>)}<th className="th">Details</th></tr></thead><tbody>{!loading && data?.results.map(row => <tr className="cursor-pointer hover:bg-brown-50/50" key={row.uuid} tabIndex={0} onClick={e => { if (!e.target.closest('button,a')) inspect(row) }} onKeyDown={e => { if (e.target === e.currentTarget && ['Enter', ' '].includes(e.key)) { e.preventDefault(); inspect(row) } }}>{cells(row).map((value, index) => <td className="td max-w-sm" key={index}>{value}</td>)}<td className="td"><button className="btn-g !px-3 !py-2 text-xs" onClick={() => inspect(row)}><Eye size={14}/>View</button></td></tr>)}{(loading || !data?.results.length) && <StaffEmpty loading={loading} columns={config.columns.length + 1}/>}</tbody></table></div><StaffPager payload={data} page={query.page} loading={loading} onChange={page => setQuery(q => ({ ...q, page: String(page) }))}/>
+    {detailOpen && <StaffModal wide title={selected?.code || selected?.name || selected?.name_en || selected?.provider_payment_id || 'Record details'} onClose={close}><StaffNotice error={actionError}/>{detailLoading && <p role="status">Loading selected record...</p>}{selected && <><StaffRecordDetail kind={kind} record={selected} onSaved={saved}/>{kind === 'listings' && canUseStaff(me, 'portal admin') && <div className="mt-6 border-t border-brown-100 pt-5"><button className="btn-g" onClick={() => setArchiving(value => !value)}><ArchiveRestore size={16}/>{selected.publication_status === 'archived' ? 'Restore listing' : 'Archive listing'}</button>{archiving && <form className="mt-4 space-y-3" onSubmit={archive}><label className="block text-sm">Reason<textarea name="reason" className="input mt-2" required maxLength={2000}/></label><button className="btn-p" disabled={busy}>{busy ? 'Saving...' : 'Confirm action'}</button></form>}</div>}</>}</StaffModal>}
+  </StaffShell>
 }

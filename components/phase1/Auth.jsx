@@ -8,6 +8,8 @@ import { clientApi, needsMobileVerification, readAuth, safeNextPath, saveAuth } 
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+import { rolesFor, staffNext } from '@/lib/staff-access'
+
 const countryOptions = ['+91', '+971', '+968', '+1', '+44']
 
 function mobileIdentifier(countryCode, value) {
@@ -56,8 +58,8 @@ export default function Phase1Login() {
       setRecaptchaRequired(false); setRecaptchaToken(''); setNotice('')
       return
     }
-    if (!result.user?.name && !result.user?.is_staff) { setPendingSession(result); setEmail(result.user?.email || ''); setStep('profile'); return }
-    router.replace(result.user?.is_staff ? '/staff' : destination)
+    if (!result.user?.name && !rolesFor(result.user).length && !result.user?.is_staff) { setPendingSession(result); setEmail(result.user?.email || ''); setStep('profile'); return }
+    router.replace(rolesFor(result.user).length ? staffNext(result.user, destination) : destination)
     router.refresh()
   }, [destination, router])
 
@@ -190,7 +192,7 @@ export default function Phase1Login() {
   return <PublicShell><main className="mx-auto max-w-md px-4 py-12">
     <div className="text-center"><TempleMark size={46} className="mx-auto"/>
       <h1 className="mt-4 text-3xl font-semibold">{step === 'profile' ? 'Welcome to TempleAddress' : linkingMobile ? 'Verify your mobile' : step === 'google_profile' ? 'Complete Google sign-in' : 'Login'}</h1>
-      {step === 'identify' && <p className="mt-2 text-sm text-brown-500">Just browsing or submitting a temple&apos;s basic details? You don&apos;t need an account — <Link href="/submit-temple" className="font-semibold text-saffron-700 underline">use the public form</Link>.</p>}
+      {step === 'identify' && <><p className="mt-2 text-sm text-brown-500">Just browsing or submitting a temple&apos;s basic details? You don&apos;t need an account — <Link href="/submit-temple" className="font-semibold text-saffron-700 underline">use the public form</Link>.</p><Link href="/staff/login" className="mt-3 inline-block text-sm font-semibold text-saffron-700 underline">Staff sign in</Link></>}
     </div>
     <form onSubmit={submit} className="card mt-7 space-y-4 p-6">
       {step === 'profile' && <><p className="text-sm text-brown-500">Your mobile is verified. Tell us your name once; it is used as the devotee name for your bookings and can be changed later.</p><Field label="Your name"><Input value={name} onChange={event => setName(event.target.value)} minLength={2} maxLength={160} required autoFocus/></Field><Field label="Email" hint="Optional, for receipts"><Input type="email" value={email} onChange={event => setEmail(event.target.value)}/></Field></>}
