@@ -11,10 +11,12 @@ async function load(slug) {
 export async function generateMetadata({ params }) {
   const { slug } = await params
   const event = await load(slug)
-  return { title: event.name_en, description: event.description_en || `${event.name_en} at ${event.host_listing?.name_en || 'TempleAddress'}.` }
+  return { title: event.name_en, description: event.description_en || `${event.name_en} at ${event.host_listing?.name_en || 'TempleAddress'}.`, alternates: { canonical: `/events/${event.slug}` } }
 }
 
 export default async function Page({ params }) {
   const { slug } = await params
-  return <EventRegistration event={await load(slug)}/>
+  const event = await load(slug)
+  const schema = { '@context': 'https://schema.org', '@type': 'Event', name: event.name_en, description: event.description_en, url: `https://templeaddress.com/events/${event.slug}`, location: { '@type': 'Place', name: event.host_listing?.name_en } }
+  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}/><EventRegistration event={event}/></>
 }

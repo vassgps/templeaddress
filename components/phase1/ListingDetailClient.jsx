@@ -11,6 +11,7 @@ import {
 
 import { clientApi, readAuth } from '@/lib/client-api'
 import { PublicShell } from '@/components/ui'
+import { useDemoPortals } from '@/components/DemoPortalGate'
 import { listingPath } from '@/lib/catalogue'
 
 const tabs = ['Basic Info', 'Details', 'Contact', 'Donations', 'Poojas']
@@ -53,6 +54,11 @@ function ContactPanel({ listing }) {
   return <div className="card p-5">
     <div className="flex items-center gap-2"><ShieldCheck size={18} className="text-emerald-600"/><h3 className="font-semibold">Official contact</h3></div>
     {!contact && <>
+      {(listing.contact?.phone || listing.contact?.whatsapp || listing.contact?.email) && <ul className="mt-3 space-y-1 text-sm font-medium">
+        {listing.contact.phone && <li className="flex items-center gap-2"><Phone size={15}/>{listing.contact.phone}</li>}
+        {listing.contact.whatsapp && <li className="flex items-center gap-2"><MessageCircle size={15}/>{listing.contact.whatsapp}</li>}
+        {listing.contact.email && <li className="flex items-center gap-2"><Mail size={15}/>{listing.contact.email}</li>}
+      </ul>}
       <p className="mt-2 text-sm text-brown-500">Contact details are protected from bots. Sign in with a verified mobile or Google account to reveal the approved phone, WhatsApp or email.</p>
       {authenticated
         ? <button type="button" onClick={reveal} disabled={loading} className="btn-g mt-4 w-full">{loading ? 'Checking…' : 'Reveal contact'}</button>
@@ -96,6 +102,7 @@ function EnquiryForm({ listing }) {
 }
 
 export default function ListingDetailClient({ listing }) {
+  const demoPortals = useDemoPortals()
   const [tab, setTab] = useState(0)
   const gallery = listing.gallery || []
   const hero = listing.cover || gallery[0]?.url
@@ -137,7 +144,7 @@ export default function ListingDetailClient({ listing }) {
           {listing.festival_profile && <section className="card p-5"><h2 className="text-xl font-semibold">Festival details</h2><dl className="mt-3 grid gap-4 sm:grid-cols-2"><Fact label="Organiser" value={listing.festival_profile.organiser}/><Fact label="Venue" value={listing.festival_profile.venue}/><Fact label="Starts" value={listing.festival_profile.start_date}/><Fact label="Ends" value={listing.festival_profile.end_date}/></dl><h3 className="mt-5 font-semibold">Programme</h3>{listing.programmes?.map((row, index) => <p key={index} className="mt-3 border-t pt-3">{row.date} {row.start_time} · {row.name_en} {row.performer}</p>)}</section>}
           <section className="card p-5"><h2 className="font-semibold">Basic details</h2><dl className="mt-4 grid gap-5 sm:grid-cols-2"><Fact label="Name (English)" value={listing.name_en}/><Fact label="Name (Malayalam)" value={listing.name_ml}/><Fact label={`${listingLabel} code`} value={listing.code}/><Fact label="Category" value={listing.category?.name_en}/><Fact label="Main deity" value={profile.main_deity || listing.main_deity}/><Fact label="District" value={listing.district?.name_en}/><Fact label="Opening hours" value={openingText(periods)}/><Fact label="Pincode" value={listing.pincode}/></dl></section>
           {(listing.speciality || listing.guidelines) && <section className="grid gap-4 sm:grid-cols-2">{listing.speciality && <div className="card p-5"><h3 className="font-semibold">Speciality</h3><p className="mt-2 text-sm leading-6 text-brown-700">{listing.speciality}</p></div>}{listing.guidelines && <div className="card p-5"><h3 className="font-semibold">Visitor guidelines</h3><p className="mt-2 text-sm leading-6 text-brown-700">{listing.guidelines}</p></div>}</section>}
-          <section className="grid gap-6 sm:grid-cols-2"><div className="card p-5"><h3 className="font-semibold">Deities</h3><div className="mt-3 flex flex-wrap gap-2">{(listing.deities || []).map(deity => <span key={deity.code} className={`pill ${deity.is_primary ? 'bg-saffron-50 text-saffron-700' : 'bg-brown-100 text-brown-700'}`}>{deity.name_en}{deity.is_primary ? ' · main' : ''}</span>)}</div></div><div className="card p-5"><h3 className="font-semibold">Nearby places</h3>{listing.nearby_places?.length ? <ul className="mt-3 space-y-2 text-sm">{listing.nearby_places.map(place => <li key={place.name_en} className="flex gap-2"><MapPin size={14} className="mt-1 shrink-0 text-saffron-600"/><span>{place.name_en}{place.distance_km ? ` · ${place.distance_km} km` : ''}</span></li>)}</ul> : <p className="mt-2 text-sm text-brown-500">Nearby places have not been published.</p>}</div></section>
+          <section className={`grid gap-6 ${demoPortals ? 'sm:grid-cols-2' : ''}`}><div className="card p-5"><h3 className="font-semibold">Deities</h3><div className="mt-3 flex flex-wrap gap-2">{(listing.deities || []).map(deity => <span key={deity.code} className={`pill ${deity.is_primary ? 'bg-saffron-50 text-saffron-700' : 'bg-brown-100 text-brown-700'}`}>{deity.name_en}{deity.is_primary ? ' · main' : ''}</span>)}</div></div>{demoPortals && <div className="card p-5"><h3 className="font-semibold">Nearby places</h3>{listing.nearby_places?.length ? <ul className="mt-3 space-y-2 text-sm">{listing.nearby_places.map(place => <li key={place.name_en} className="flex gap-2"><MapPin size={14} className="mt-1 shrink-0 text-saffron-600"/><span>{place.name_en}{place.distance_km ? ` · ${place.distance_km} km` : ''}</span></li>)}</ul> : <p className="mt-2 text-sm text-brown-500">Nearby places have not been published.</p>}</div>}</section>
           <section className="card p-5"><h3 className="font-semibold">Gallery</h3>{gallery.length ? <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">{gallery.map((image, index) => <figure key={image.uuid} className={`relative overflow-hidden rounded-xl bg-brown-100 ${index === 0 ? 'col-span-2 row-span-2 aspect-square' : 'aspect-square'}`}><Image src={image.url} alt={image.caption || `${listing.name_en} photo ${index + 1}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover transition duration-300 hover:scale-105"/></figure>)}</div> : <p className="mt-2 text-sm text-brown-500">Verified gallery images have not been published.</p>}</section>
         </>}
 
@@ -156,7 +163,7 @@ export default function ListingDetailClient({ listing }) {
         <div className="card p-5"><h3 className="font-semibold">Quick info</h3><dl className="mt-4 grid gap-4"><Fact label={`${listingLabel} code`} value={listing.code}/><Fact label="Main deity" value={profile.main_deity || listing.main_deity}/><Fact label="Location" value={listing.district?.name_en}/><Fact label="Opening" value={openingText(periods)}/></dl></div>
         <div className="card p-5"><div className="flex items-center gap-2"><BarChart3 size={17}/><h3 className="font-semibold">Listing activity</h3></div><div className="mt-3 grid grid-cols-2 gap-2"><Metric label="Views" value={listing.analytics?.views}/><Metric label="Shares" value={listing.analytics?.shares}/><Metric label="Contacts" value={listing.analytics?.contact_reveals}/><Metric label="Enquiries" value={listing.analytics?.enquiries}/></div></div>
         <div className="card p-5 text-center"><div className="mx-auto w-fit rounded-xl border-4 border-brown-900 bg-white p-2"><QRCodeSVG value={pageUrl} size={112}/></div><p className="mt-3 text-sm font-semibold">{listingLabel} QR code</p><p className="text-xs text-brown-500">Scan to open this verified page.</p></div>
-        <div className="rounded-2xl bg-brown-900 p-5 text-white"><Sparkles size={20} className="text-gold-300"/><h3 className="mt-2 font-semibold">Are you the temple committee?</h3><p className="mt-1 text-sm text-brown-100">Claim this page to propose verified updates and manage Phase 1 features.</p><Link className="btn mt-4 bg-white text-brown-900" href={`/claim/${listing.slug}`}>Claim this temple</Link></div>
+        {demoPortals && <div className="rounded-2xl bg-brown-900 p-5 text-white"><Sparkles size={20} className="text-gold-300"/><h3 className="mt-2 font-semibold">Are you the temple committee?</h3><p className="mt-1 text-sm text-brown-100">Claim this page after the vendor workflow is enabled.</p><Link className="btn mt-4 bg-white text-brown-900" href={`/claim/${listing.slug}`}>Claim this temple</Link></div>}
       </aside>
     </div>
   </main></PublicShell>

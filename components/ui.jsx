@@ -233,7 +233,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
             <Link href="/submit-temple" className="hover:text-white">Submit a temple</Link><br/>
             <Link href="/login?next=/account/listings/new&intent=create-profile" className="hover:text-white">Create a profile</Link><br/>
             {demoPortals && <><Link href="/vendor" className="hover:text-white">Temple login</Link><br/></>}
-            <Link href="/sponsor" className="hover:text-white">Sponsor a temple</Link>
+            {demoPortals && <Link href="/sponsor" className="hover:text-white">Sponsor a temple</Link>}
           </div>
           <div className="text-sm">
             <b className="text-white">Partners</b><br/>
@@ -264,7 +264,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
           </div>
         </div>
       </footer>
-      {!hideChatbot && <Chatbot />}
+      {demoPortals && !hideChatbot && <Chatbot />}
     </div>
   )
 }

@@ -6,6 +6,8 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'templeaddress-cloud.s3.amazonaws.com' },
+      // Listing photos are also served from the bucket's regional endpoint.
+      { protocol: 'https', hostname: 'templeaddress-cloud.s3.ap-south-1.amazonaws.com' },
       { protocol: 'https', hostname: 'fonts.googleapis.com' },
     ],
   },
