@@ -10,6 +10,7 @@ frontend:
     build:
       commands:
         - env | grep '^TEMPLEADDRESS_API_URL=' >> .env.production
+        - env | grep -E '^(NEXT_PUBLIC_APP_ENV|NEXT_PUBLIC_DEMO_PORTALS_ENABLED|TRUSTED_CLIENT_IP_HEADER)=' >> .env.production || true
         - npm run build
   artifacts:
     baseDirectory: .next

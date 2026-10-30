@@ -1,6 +1,7 @@
 import { Fraunces, Manrope, Anek_Malayalam } from 'next/font/google'
 import './globals.css'
 import DemoPortalGate from '@/components/DemoPortalGate'
+import { isProductionSite } from '@/lib/site-env'
 
 /* ── Google Fonts via next/font (zero layout shift, self-hosted at build time) ── */
 const fraunces = Fraunces({
@@ -45,7 +46,7 @@ export const metadata = {
   },
   twitter: { card: 'summary_large_image', site: '@templeaddress' },
   alternates: { canonical: 'https://templeaddress.com' },
-  robots: { index: true, follow: true },
+  robots: isProductionSite() ? { index: true, follow: true } : { index: false, follow: false, nocache: true },
   category: 'travel',
 }
 
