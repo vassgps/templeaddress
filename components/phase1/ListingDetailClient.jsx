@@ -53,6 +53,11 @@ function ContactPanel({ listing }) {
   return <div className="card p-5">
     <div className="flex items-center gap-2"><ShieldCheck size={18} className="text-emerald-600"/><h3 className="font-semibold">Official contact</h3></div>
     {!contact && <>
+      {(listing.contact?.phone || listing.contact?.whatsapp || listing.contact?.email) && <ul className="mt-3 space-y-1 text-sm font-medium">
+        {listing.contact.phone && <li className="flex items-center gap-2"><Phone size={15}/>{listing.contact.phone}</li>}
+        {listing.contact.whatsapp && <li className="flex items-center gap-2"><MessageCircle size={15}/>{listing.contact.whatsapp}</li>}
+        {listing.contact.email && <li className="flex items-center gap-2"><Mail size={15}/>{listing.contact.email}</li>}
+      </ul>}
       <p className="mt-2 text-sm text-brown-500">Contact details are protected from bots. Sign in with a verified mobile or Google account to reveal the approved phone, WhatsApp or email.</p>
       {authenticated
         ? <button type="button" onClick={reveal} disabled={loading} className="btn-g mt-4 w-full">{loading ? 'Checking…' : 'Reveal contact'}</button>
