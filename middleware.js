@@ -10,5 +10,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/vendor/:path*', '/festival-admin/:path*', '/service-admin/:path*', '/partner/:path*', '/dealer/:path*', '/staff/:path*'],
+  matcher: ['/vendor/:path*', '/festival-admin/:path*', '/service-admin/:path*', '/partner/:path*', '/dealer/:path*', '/staff/:path*', '/claim/:path*', '/sponsor/:path*'],
 }
