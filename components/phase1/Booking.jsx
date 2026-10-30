@@ -5,22 +5,11 @@ import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Field, Input, PublicShell } from '@/components/ui'
 import { API_ORIGIN } from '@/lib/api'
-import { clientApi, readAuth, requireAuth } from '@/lib/client-api'
+import { clientApi, readAuth, requireAuth, saveAuth } from '@/lib/client-api'
 import StarSelect from './StarSelect'
+import { earliestDate, indiaDate } from '@/lib/booking-dates'
 
 const Wrap = ({ children }) => <main className="mx-auto max-w-2xl px-4 py-10">{children}</main>
-
-function indiaDate(value = new Date()) {
-  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(value)
-  const pick = type => parts.find(part => part.type === type)?.value
-  return `${pick('year')}-${pick('month')}-${pick('day')}`
-}
-
-function earliestDate(item) {
-  if (item?.is_live) return indiaDate()
-  const value = new Date(Date.now() + Number(item?.lead_time_hours || 0) * 3600000)
-  return indiaDate(value)
-}
 
 function loadRazorpay() {
   if (window.Razorpay) return Promise.resolve()
@@ -64,6 +53,49 @@ async function openPayment({ booking, config, user, mode }) {
   })
 }
 
+const STEPS = { booking: ['Pooja', 'Contact', 'Verify', 'Summary'], donation: ['Donation', 'Contact', 'Verify', 'Summary'] }
+const PRASADAM = [['collection', 'Collect at temple counter'], ['not_applicable', 'Not applicable']]
+const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const localMobile = value => String(value || '').replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '')
+
+function Stepper({ labels, step }) {
+  return <ol className="mt-5 flex items-center gap-2" aria-label="Booking steps">{labels.map((label, index) => <li key={label} className="flex flex-1 items-center gap-2">
+    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${index + 1 <= step ? 'bg-saffron-600 text-white' : 'bg-brown-100 text-brown-500'}`} aria-current={index + 1 === step ? 'step' : undefined}>{index + 1 < step ? '✓' : index + 1}</span>
+    <span className={`hidden text-sm sm:inline ${index + 1 === step ? 'font-semibold' : 'text-brown-500'}`}>{label}</span>
+    {index < labels.length - 1 && <span className={`h-px flex-1 ${index + 1 < step ? 'bg-saffron-600' : 'bg-brown-200'}`}/>}
+  </li>)}</ol>
+}
+
+// One devotee line for a pooja or special pooja; prefilled from the signed-in profile or a saved family member.
+function AddForm({ option, me, family, stars, onAdd, onCancel, busy }) {
+  const self = { name: me?.name || '', star: me?.default_ritual_details?.star_value || '' }
+  const [who, setWho] = useState(me ? 'me' : 'other')
+  const [devotee, setDevotee] = useState(self.name)
+  const [star, setStar] = useState(self.star)
+  const [date, setDate] = useState(option.item_type === 'special_pooja' ? option.occurrence.date : earliestDate(option))
+  const [quantity, setQuantity] = useState(1)
+  const [prasadam, setPrasadam] = useState('collection')
+  function choose(value) {
+    setWho(value)
+    const member = family.find(row => row.uuid === value)
+    if (value === 'me') { setDevotee(self.name); setStar(self.star) } else if (member) { setDevotee(member.name); setStar(member.star_value || '') } else { setDevotee(''); setStar('') }
+  }
+  const chip = (value, label) => <button type="button" key={value} onClick={() => choose(value)} aria-pressed={who === value} className={`rounded-full border px-3 py-1 text-sm ${who === value ? 'border-saffron-600 bg-saffron-50 font-semibold text-saffron-700' : 'border-brown-200'}`}>{label}</button>
+  return <form onSubmit={event => { event.preventDefault(); onAdd({ who, devotee_name: devotee.trim(), star_value: star, service_date: date, quantity: Number(quantity), prasadam }) }} className="mt-4 space-y-4 border-t pt-4">
+    <div><p className="text-sm font-semibold">Who is this pooja for?</p><div className="mt-2 flex flex-wrap gap-2">{me && chip('me', `Me${self.name ? ` (${self.name})` : ''}`)}{family.map(row => chip(row.uuid, row.name))}{chip('other', 'Someone else')}</div></div>
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label="Devotee name"><Input value={devotee} onChange={event => setDevotee(event.target.value)} maxLength={160} required placeholder="Name for the sankalpam"/></Field>
+      <Field label="Nakshatra (star)"><StarSelect stars={stars} value={star} onChange={event => setStar(event.target.value)}/></Field>
+      {option.item_type === 'special_pooja'
+        ? <Field label="Date"><p className="input bg-brown-50">{option.occurrence.date} · {option.occurrence.start_time?.slice(0, 5)}</p></Field>
+        : <Field label="Pooja date" hint={option.is_live ? 'Live pooja: today only, until its end time.' : `Book at least ${option.lead_time_hours || 0} hours ahead; tomorrow closes at 7:30 PM.`}><Input type="date" min={earliestDate(option)} max={option.is_live ? indiaDate() : undefined} value={date} onChange={event => setDate(event.target.value)} required/></Field>}
+      <Field label="Prasadam"><select className="input" value={prasadam} onChange={event => setPrasadam(event.target.value)}>{PRASADAM.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+      <Field label="Quantity"><Input type="number" min="1" max="20" value={quantity} onChange={event => setQuantity(event.target.value)} required/></Field>
+    </div>
+    <div className="flex gap-2"><button disabled={busy} className="btn-p flex-1">{busy ? 'Checking availability…' : `Add to booking · ${money(Number(option.price) * Number(quantity || 0))}`}</button><button type="button" onClick={onCancel} className="btn-g flex-1">Cancel</button></div>
+  </form>
+}
+
 export function Phase1Checkout({ mode = 'booking' }) {
   const { slug } = useParams()
   const search = useSearchParams()
@@ -73,18 +105,17 @@ export function Phase1Checkout({ mode = 'booking' }) {
   const resumeCode = search.get('resume')
   const [listing, setListing] = useState(null)
   const [config, setConfig] = useState(null)
-  const [user, setUser] = useState(null)
-  const [pending, setPending] = useState(null)
-  const [selected, setSelected] = useState(requested)
-  const [amount, setAmount] = useState('')
-  const [serviceDate, setServiceDate] = useState('')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [star, setStar] = useState('')
+  const [me, setMe] = useState(null)
   const [stars, setStars] = useState([])
   const [family, setFamily] = useState([])
-  const [quantity, setQuantity] = useState(1)
-  const [quote, setQuote] = useState(null)
+  const [pending, setPending] = useState(null)
+  const [step, setStep] = useState(1)
+  const [cart, setCart] = useState([])
+  const [editing, setEditing] = useState(mode === 'booking' ? requested : '')
+  const [query, setQuery] = useState('')
+  const [donation, setDonation] = useState({ purpose: requested, amount: '', name: '' })
+  const [contact, setContact] = useState({ name: '', mobile: '', email: '' })
+  const [otp, setOtp] = useState({ challenge: null, code: '' })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -94,31 +125,85 @@ export function Phase1Checkout({ mode = 'booking' }) {
     const specials = (listing?.events || []).filter(row => row.registration_mode === 'paid_booking').flatMap(event => (event.occurrences || []).filter(occurrence => occurrence.status === 'scheduled').map(occurrence => ({ ...event, uuid: occurrence.uuid, target_uuid: occurrence.uuid, item_type: 'special_pooja', occurrence, name_en: `${event.name_en} — ${occurrence.date}` })))
     return [...poojas, ...specials]
   }, [listing, mode])
-  const item = options.find(row => row.uuid === selected)
+  const visible = options.filter(row => !query || `${row.name_en} ${row.name_ml || ''}`.toLowerCase().includes(query.toLowerCase()))
+  const total = cart.reduce((sum, row) => sum + row.amount, 0)
+  const verified = Boolean(me?.mobile_verified_at)
+  const labels = STEPS[mode]
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }) }, [step])
 
-  useEffect(() => {
-    clientApi('master-values/star', { auth: false }).then(setStars).catch(error => setError(error.message))
-    if (readAuth()?.access) clientApi('me/family-members').then(data => setFamily(data.results || data)).catch(error => setError(error.message))
-  }, [])
+  function applyProfile(user) {
+    setMe(user)
+    if (user) {
+      setContact(value => ({ name: value.name || user.name || '', mobile: user.mobile_e164 ? localMobile(user.mobile_e164) : value.mobile, email: value.email || user.email || '' }))
+      setDonation(value => ({ ...value, name: value.name || user.name || '' }))
+      clientApi('me/family-members').then(data => setFamily(data.results || data)).catch(() => setFamily([]))
+    }
+  }
 
   useEffect(() => {
     Promise.all([
-      clientApi(`listings/${slug}`, { auth: false }),
-      clientApi('config', { auth: false }),
-      clientApi('me').catch(() => null),
+      clientApi(`listings/${slug}`, { auth: false }), clientApi('config', { auth: false }), clientApi('master-values/star', { auth: false }).catch(() => []),
+      readAuth()?.access ? clientApi('me').catch(() => null) : Promise.resolve(null),
       resumeCode ? clientApi(`me/bookings/${resumeCode}`) : Promise.resolve(null),
-    ]).then(([data, platform, me, resumed]) => {
-      setConfig(platform); setListing(data); setUser(me); setPending(resumed)
-      setName(me?.name || resumed?.contact_name || ''); setEmail(me?.email || resumed?.contact_email || '')
-      const specialOccurrences = (data.events || []).filter(row => row.registration_mode === 'paid_booking').flatMap(row => row.occurrences || [])
-      const rows = mode === 'donation' ? data.donation_purposes : [...(data.poojas || []), ...specialOccurrences]
-      const initial = requested || rows?.[0]?.uuid || ''
-      setSelected(initial)
-      const picked = rows?.find(row => row.uuid === initial) || rows?.[0]
-      if (mode === 'donation') setAmount(picked?.suggested_amount || '100')
-      else setServiceDate(earliestDate(picked))
+    ]).then(([data, platform, starRows, user, resumed]) => {
+      setListing(data); setConfig(platform); setStars(starRows); setPending(resumed); applyProfile(user)
+      if (mode === 'donation') {
+        const purpose = data.donation_purposes?.find(row => row.uuid === requested) || data.donation_purposes?.[0]
+        setDonation(value => ({ ...value, purpose: purpose?.uuid || '', amount: purpose?.suggested_amount || '101' }))
+      }
     }).catch(err => setError(err.message))
   }, [slug, mode, requested, resumeCode])
+
+  async function addToCart(option, line) {
+    setBusy(true); setError('')
+    const item = { item_type: option.item_type, target_uuid: option.target_uuid, quantity: line.quantity, devotee_name: line.devotee_name, star_kind: line.star_value ? 'nakshatra' : '', star_value: line.star_value, prasadam: { method: line.prasadam }, ...(option.item_type === 'pooja' ? { service_date: line.service_date } : {}) }
+    const key = `${option.target_uuid}:${line.service_date}`
+    try {
+      if (cart.some(row => row.key === key)) throw new Error('This pooja is already in your booking for that date. Remove it first to change the details.')
+      await clientApi('bookings/quote', { method: 'POST', auth: false, body: { listing_uuid: listing.uuid, items: [item] } })
+      setCart(rows => [...rows, { key, item, name: option.name_en, date: option.item_type === 'special_pooja' ? option.occurrence.date : line.service_date, devotee: line.devotee_name, star: stars.find(row => row.code === line.star_value)?.name_en || '', quantity: line.quantity, amount: Number(option.price) * line.quantity }])
+      setEditing('')
+      // Remember the devotee's own star the first time they give it, so later bookings are prefilled.
+      if (line.who === 'me' && line.star_value && me && !me.default_ritual_details?.star_value) {
+        const default_ritual_details = { ...(me.default_ritual_details || {}), star_kind: 'nakshatra', star_value: line.star_value }
+        clientApi('me', { method: 'PATCH', body: { default_ritual_details } }).then(setMe).catch(() => null)
+      }
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
+
+  function continueFromChoice(event) {
+    event.preventDefault(); setError('')
+    if (mode === 'donation') {
+      const purpose = options.find(row => row.uuid === donation.purpose)
+      if (!purpose || !(Number(donation.amount) > 0)) return setError('Choose a purpose and enter an amount.')
+      setCart([{ key: purpose.uuid, item: { item_type: 'donation', target_uuid: purpose.uuid, amount: String(donation.amount) }, name: purpose.name_en, devotee: donation.name, quantity: 1, amount: Number(donation.amount) }])
+      setContact(value => ({ ...value, name: value.name || donation.name }))
+    } else if (!cart.length) return setError('Add at least one pooja to continue.')
+    setStep(2)
+  }
+
+  function continueFromContact(event) {
+    event.preventDefault(); setError('')
+    if (localMobile(contact.mobile).length !== 10) return setError('Enter a 10-digit mobile number.')
+    setStep(verified ? 4 : 3)
+  }
+
+  async function sendOtp() {
+    setBusy(true); setError('')
+    try {
+      const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: `+91${localMobile(contact.mobile)}`, country_code: '+91' } })
+      if (result.password_required || result.recaptcha_required) throw new Error('Please sign in from the login page to continue.')
+      setOtp({ challenge: result, code: result.debug_otp || '' })
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
+
+  async function verifyOtp(event) {
+    event.preventDefault(); setBusy(true); setError('')
+    try {
+      const result = await clientApi('auth/otp/verify', { method: 'POST', auth: false, body: { identifier: otp.challenge.identifier, challenge_uuid: otp.challenge.challenge_uuid, otp: otp.code, profile: { name: contact.name, ...(contact.email ? { email: contact.email } : {}) } } })
+      saveAuth(result); applyProfile(result.user); setStep(4)
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
 
   async function pay(booking) {
     if (new Date(booking.payment_deadline_at) <= new Date()) throw new Error('This booking hold has expired. Create a new booking.')
@@ -126,26 +211,19 @@ export function Phase1Checkout({ mode = 'booking' }) {
     if (booking.payment_order?.status !== 'open' || new Date(booking.payment_order.expires_at) <= new Date()) {
       payable = await clientApi(`me/bookings/${booking.code}/payment-orders`, { method: 'POST', headers: { 'Idempotency-Key': crypto.randomUUID() } })
     }
-    await openPayment({ booking: payable, config, user, mode })
+    await openPayment({ booking: payable, config, user: me, mode })
+    await clientApi(`me/bookings/${payable.code}/payment-check`, { method: 'POST', body: {} }).catch(() => null)
     router.push(`/receipt/${payable.code}`)
   }
 
-  async function submit(event) {
-    event.preventDefault()
-    const next = `/${mode === 'donation' ? 'donate' : 'book'}/${slug}${selected ? `?${mode === 'donation' ? 'purpose' : 'pooja'}=${selected}` : ''}`
-    const auth = requireAuth(router, next, { verifiedMobile: true })
-    if (!auth) return
-    setBusy(true); setError(''); setQuote(null)
-    const raw = mode === 'donation'
-      ? { item_type: 'donation', target_uuid: selected, amount }
-      : { item_type: item.item_type, target_uuid: item.target_uuid, ...(item.item_type === 'pooja' ? { service_date: serviceDate } : {}), quantity: Number(quantity), devotee_name: name, star_kind: star ? 'nakshatra' : '', star_value: star }
+  async function confirmAndPay() {
+    setBusy(true); setError('')
     try {
-      const preview = await clientApi('bookings/quote', { method: 'POST', body: { listing_uuid: listing.uuid, items: [raw] } })
-      setQuote(preview)
+      if (me && !me.name && contact.name) clientApi('me', { method: 'PATCH', body: { name: contact.name } }).catch(() => null)
       idempotency.current ||= crypto.randomUUID()
       const booking = await clientApi('bookings', {
         method: 'POST', headers: { 'Idempotency-Key': idempotency.current, 'X-Client': 'web' },
-        body: { listing_uuid: listing.uuid, contact_name: name, contact_email: email, items: [raw] },
+        body: { listing_uuid: listing.uuid, contact_name: contact.name, contact_email: contact.email, items: cart.map(row => row.item) },
       })
       setPending(booking)
       await pay(booking)
@@ -157,28 +235,69 @@ export function Phase1Checkout({ mode = 'booking' }) {
     try { await pay(pending) } catch (err) { setError(err.message) } finally { setBusy(false) }
   }
 
-  if (!listing) return <PublicShell booking><Wrap><p>{error || 'Loading checkout…'}</p></Wrap></PublicShell>
-  if (pending) return <PublicShell booking><Wrap><p className="text-sm font-semibold uppercase tracking-wide text-saffron-600">Payment pending</p><h1 className="mt-2 text-3xl font-semibold">Booking {pending.code}</h1><div className="card mt-6 space-y-3 p-6"><p>{pending.listing.name_en}</p><p className="text-sm text-brown-500">{pending.items.map(row => row.item_name_en).join(', ')} · ₹{pending.amount_total}</p><p className="text-sm text-brown-500">Complete payment before {new Date(pending.payment_deadline_at).toLocaleString()}.</p>{error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}<button onClick={resumePayment} disabled={busy} className="btn-p w-full">{busy ? 'Opening Razorpay…' : `Continue payment ₹${pending.amount_total}`}</button><Link href="/account" className="btn-g w-full">Back to account</Link></div></Wrap></PublicShell>
-  return <PublicShell booking><Wrap>
-    <p className="text-sm font-semibold uppercase tracking-wide text-saffron-600">{mode === 'donation' ? 'Donation' : 'Pooja booking'}</p>
-    <h1 className="mt-2 text-3xl font-semibold">{listing.name_en}</h1>
-    <p className="mt-2 text-sm text-brown-500">Razorpay only. TempleAddress convenience fee is ₹0. Razorpay is the fee bearer and shows any method-specific charge in its secure window.</p>
-    <form onSubmit={submit} className="card mt-6 space-y-4 p-6">
-      <Field label={mode === 'donation' ? 'Donation purpose' : 'Pooja'}><select className="input" required value={selected} onChange={event => { setSelected(event.target.value); setQuote(null); const picked = options.find(row => row.uuid === event.target.value); if (mode === 'donation') setAmount(picked?.suggested_amount || '100'); else setServiceDate(earliestDate(picked)) }}>{options.map(row => <option key={row.uuid} value={row.uuid}>{row.name_en}{row.price ? ` — ₹${row.price}` : ''}{row.is_live ? ' — Live today' : ''}</option>)}</select></Field>
-      {mode === 'donation' ? <Field label="Amount ₹"><Input type="number" min="1" step="0.01" value={amount} onChange={event => setAmount(event.target.value)} required/></Field> : <>
-        {item?.item_type === 'special_pooja' ? <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-700">Scheduled for {item.occurrence.date} at {item.occurrence.start_time}. Capacity {item.occurrence.capacity}.</p> : <Field label="Service date" hint={item?.is_live ? 'Live pooja is bookable today until its end time.' : `Minimum lead time: ${item?.lead_time_hours || 0} hours. Final availability is checked by the server.`}><Input type="date" min={earliestDate(item)} value={serviceDate} onChange={event => setServiceDate(event.target.value)} required/></Field>}
-        <Field label="Quantity"><Input type="number" min="1" max="100" value={quantity} onChange={event => setQuantity(event.target.value)} required/></Field>
-        <Field label="Family member"><select className="input" defaultValue="" onChange={event => { const member = family.find(row => row.uuid === event.target.value); if (member) { setName(member.name); setStar(member.star_value) } }}><option value="">Enter devotee details</option>{family.map(row => <option key={row.uuid} value={row.uuid}>{row.name}</option>)}</select></Field>
-        <Field label="Devotee name"><Input value={name} onChange={event => setName(event.target.value)} required/></Field>
-        <Field label="Birth star"><StarSelect stars={stars} value={star} onChange={event => setStar(event.target.value)}/></Field>
-      </>}
-      {mode === 'donation' && <Field label="Donor name"><Input value={name} onChange={event => setName(event.target.value)} required/></Field>}
-      <Field label="Receipt email" hint="Optional"><Input type="email" value={email} onChange={event => setEmail(event.target.value)}/></Field>
-      {quote && <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">Platform amount: ₹{quote.amount_total}. Convenience fee: ₹0.</p>}
-      {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-      {!options.length ? <p className="text-sm text-brown-500">No active online items are available.</p> : <button disabled={busy} className="btn-p w-full">{busy ? 'Preparing secure payment…' : `Confirm and pay ₹${mode === 'donation' ? amount || '0' : Number(item?.price || 0) * Number(quantity || 0)}`}</button>}
-    </form>
-  </Wrap></PublicShell>
+  const alert = error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>
+  if (!listing) return <PublicShell booking><Wrap><p>{error || 'Loading…'}</p></Wrap></PublicShell>
+  if (pending) return <PublicShell booking><Wrap><p className="text-sm font-semibold uppercase tracking-wide text-saffron-600">Payment pending</p><h1 className="mt-2 text-3xl font-semibold">Booking {pending.code}</h1><div className="card mt-6 space-y-3 p-6"><p>{pending.listing.name_en}</p><p className="text-sm text-brown-500">{pending.items.map(row => row.item_name_en).join(', ')} · {money(pending.amount_total)}</p><p className="text-sm text-brown-500">Complete payment before {new Date(pending.payment_deadline_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}.</p>{alert}<button onClick={resumePayment} disabled={busy} className="btn-p w-full">{busy ? 'Opening Razorpay…' : `Continue payment ${money(pending.amount_total)}`}</button><Link href="/account" className="btn-g w-full">Back to account</Link></div></Wrap></PublicShell>
+
+  return <PublicShell booking><main className="mx-auto max-w-3xl px-4 py-8">
+    <h1 className="text-3xl font-semibold">{listing.name_en}</h1>
+    <p className="mt-1 text-sm text-brown-500">{labels[step - 1]} · {listing.code}</p>
+    <Stepper labels={labels} step={step}/>
+
+    {step === 1 && mode === 'booking' && <section className="mt-6 space-y-4">
+      <div className="card p-5"><h2 className="text-xl font-semibold">Available poojas</h2><Input className="input mt-3" placeholder="Search pooja name" value={query} onChange={event => setQuery(event.target.value)} aria-label="Search poojas"/>
+        <p className="mt-2 text-xs text-brown-500">Showing {visible.length} of {options.length} poojas · TempleAddress fee ₹0; Razorpay shows any payment-method charge in its window.</p></div>
+      {!options.length && <p className="card p-5 text-sm text-brown-500">Online booking is not available for this listing yet.</p>}
+      {visible.map(option => <article key={option.uuid} className={`card p-5 ${editing === option.uuid ? 'ring-2 ring-saffron-300' : ''}`}>
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="text-lg font-semibold">{option.name_en}</h3>{option.name_ml && <p className="text-sm text-brown-500">{option.name_ml}</p>}
+          <div className="mt-2 flex flex-wrap gap-2 text-xs">{option.is_live && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">Live today</span>}{option.item_type === 'special_pooja' && <span className="rounded-full bg-blue-100 px-2 py-0.5 text-blue-800">Special pooja</span>}{option.lead_time_hours > 0 && !option.is_live && <span className="rounded-full bg-brown-100 px-2 py-0.5">Book {option.lead_time_hours}h ahead</span>}</div></div>
+          <div className="text-right"><p className="text-xl font-semibold text-saffron-700">{money(option.price)}</p>{editing !== option.uuid && <button type="button" className="btn-g mt-2" onClick={() => { setEditing(option.uuid); setError('') }}>+ Add</button>}</div></div>
+        {editing === option.uuid && <AddForm option={option} me={me} family={family} stars={stars} busy={busy} onAdd={line => addToCart(option, line)} onCancel={() => setEditing('')}/>}
+      </article>)}
+      {alert}
+      <form onSubmit={continueFromChoice} className="card sticky bottom-3 flex flex-wrap items-center justify-between gap-3 p-4">
+        <div className="text-sm">{cart.length ? <ul>{cart.map(row => <li key={row.key} className="flex items-center gap-2">{row.name} · {row.date} · {row.devotee} <b>{money(row.amount)}</b><button type="button" className="text-red-700" aria-label={`Remove ${row.name}`} onClick={() => setCart(rows => rows.filter(item => item.key !== row.key))}>✕</button></li>)}</ul> : 'No poojas added yet.'}</div>
+        <button className="btn-p" disabled={!cart.length}>Continue · {money(total)}</button>
+      </form>
+    </section>}
+
+    {step === 1 && mode === 'donation' && <form onSubmit={continueFromChoice} className="card mt-6 space-y-4 p-6">
+      <Field label="Donation purpose"><select className="input" value={donation.purpose} onChange={event => { const purpose = options.find(row => row.uuid === event.target.value); setDonation(value => ({ ...value, purpose: event.target.value, amount: purpose?.suggested_amount || value.amount })) }} required>{options.map(row => <option key={row.uuid} value={row.uuid}>{row.name_en}</option>)}</select></Field>
+      <Field label="Amount ₹"><Input type="number" min="1" step="0.01" value={donation.amount} onChange={event => setDonation(value => ({ ...value, amount: event.target.value }))} required/></Field>
+      <div className="flex flex-wrap gap-2">{[101, 251, 501, 1001].map(value => <button type="button" key={value} className="btn-g" onClick={() => setDonation(row => ({ ...row, amount: String(value) }))}>₹{value}</button>)}</div>
+      <Field label="Donor name"><Input value={donation.name} onChange={event => setDonation(value => ({ ...value, name: event.target.value }))} maxLength={160} required/></Field>
+      <p className="text-xs text-brown-500">TempleAddress fee ₹0. You receive an official payment receipt.</p>
+      {alert}<button className="btn-p w-full">Continue · {money(donation.amount)}</button>
+    </form>}
+
+    {step === 2 && <form onSubmit={continueFromContact} className="card mt-6 space-y-4 p-6">
+      <h2 className="text-xl font-semibold">Contact details</h2>
+      <p className="text-sm text-brown-500">Your receipt and booking updates go to this contact.</p>
+      <Field label="Your name"><Input value={contact.name} onChange={event => setContact(value => ({ ...value, name: event.target.value }))} maxLength={160} required/></Field>
+      <Field label="Mobile number" hint={verified ? 'Verified with OTP' : 'We will send an OTP to verify this number.'}><div className="flex"><span className="input w-16 shrink-0 rounded-r-none bg-brown-50 text-center">+91</span><Input value={contact.mobile} onChange={event => setContact(value => ({ ...value, mobile: event.target.value.replace(/\D/g, '').slice(0, 10) }))} inputMode="tel" disabled={verified} required placeholder="98765 43210"/></div></Field>
+      <Field label="Email" hint="Optional, for the receipt"><Input type="email" value={contact.email} onChange={event => setContact(value => ({ ...value, email: event.target.value }))}/></Field>
+      {alert}<div className="flex gap-2"><button type="button" className="btn-g flex-1" onClick={() => setStep(1)}>Back</button><button className="btn-p flex-1">Continue</button></div>
+    </form>}
+
+    {step === 3 && <form onSubmit={verifyOtp} className="card mt-6 space-y-4 p-6">
+      <h2 className="text-xl font-semibold">Verify your mobile</h2>
+      <p className="text-sm text-brown-500">+91 {contact.mobile} · New devotee accounts are created automatically.</p>
+      {otp.challenge && <Field label="6-digit OTP" hint={otp.challenge.debug_otp ? `Local test OTP: ${otp.challenge.debug_otp}` : `Sent to ${otp.challenge.destination}`}><Input value={otp.code} onChange={event => setOtp(value => ({ ...value, code: event.target.value.replace(/\D/g, '').slice(0, 6) }))} inputMode="numeric" autoComplete="one-time-code" required autoFocus/></Field>}
+      {alert}
+      {otp.challenge ? <button disabled={busy || otp.code.length !== 6} className="btn-p w-full">{busy ? 'Verifying…' : 'Verify & continue'}</button> : <button type="button" onClick={sendOtp} disabled={busy} className="btn-p w-full">{busy ? 'Sending…' : 'Send OTP'}</button>}
+      <button type="button" className="btn-g w-full" onClick={() => { setStep(2); setOtp({ challenge: null, code: '' }) }}>Back</button>
+    </form>}
+
+    {step === 4 && <section className="card mt-6 space-y-4 p-6">
+      <h2 className="text-xl font-semibold">Summary</h2>
+      <ul className="divide-y">{cart.map(row => <li key={row.key} className="flex justify-between gap-3 py-3 text-sm"><span><b>{row.name}</b>{mode === 'booking' && <span className="block text-brown-500">{row.date} · {row.devotee}{row.star ? ` · ${row.star}` : ''} · × {row.quantity}</span>}</span><b>{money(row.amount)}</b></li>)}</ul>
+      <div className="flex justify-between border-t pt-3 text-lg font-semibold"><span>Total</span><span>{money(total)}</span></div>
+      <p className="text-xs text-brown-500">TempleAddress convenience fee ₹0. Razorpay may add a payment-method charge, shown in its secure window before you pay.</p>
+      <p className="text-sm">{contact.name} · +91 {contact.mobile}{contact.email ? ` · ${contact.email}` : ''}</p>
+      {alert}
+      <div className="flex gap-2"><button type="button" className="btn-g flex-1" onClick={() => setStep(2)}>Back</button><button onClick={confirmAndPay} disabled={busy} className="btn-p flex-1">{busy ? 'Opening Razorpay…' : `Pay ${money(total)}`}</button></div>
+    </section>}
+  </main></PublicShell>
 }
 
 export function Phase1Receipt() {
@@ -201,11 +320,15 @@ export function Phase1Receipt() {
     let cancelled = false; let timer
     async function load(attempt = 0) {
       try {
-        const row = await clientApi(`me/bookings/${bookingCode}`)
+        // While unpaid, ask the server to check Razorpay directly; it never trusts the browser's success callback.
+        const current = await clientApi(`me/bookings/${bookingCode}`)
+        const row = current.status === 'payment_pending' && !current.receipt_number
+          ? await clientApi(`me/bookings/${bookingCode}/payment-check`, { method: 'POST', body: {} }).catch(() => current)
+          : current
         if (cancelled) return
         setBooking(row)
         if (row.receipt_number) setReceipt(await clientApi(`me/receipts/${row.receipt_number}`))
-        else if (attempt < 15) timer = window.setTimeout(() => load(attempt + 1), 1500)
+        else if (attempt < 15) timer = window.setTimeout(() => load(attempt + 1), 2000)
         else if (row.status === 'payment_pending') setError('Payment has not been confirmed. You can continue it from My Account while the hold is valid.')
         else setError('Payment confirmation is still pending. Check My Account shortly.')
       } catch (err) { if (!cancelled) setError(err.message) }
@@ -217,7 +340,7 @@ export function Phase1Receipt() {
     <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Payment receipt</p><h1 className="mt-2 text-3xl font-semibold">{receipt?.number || bookingCode}</h1>
     {error && <p className="mt-4 rounded-xl bg-amber-50 p-3 text-amber-800">{error}</p>}
     {!receipt && !error && <p className="mt-5">Waiting for Razorpay confirmation…</p>}
-    {receipt && <div className="card mt-6 p-6"><div className="grid gap-3 text-sm sm:grid-cols-2"><p><span className="text-brown-500">Booking</span><br/><b>{receipt.snapshot.booking_code}</b></p><p><span className="text-brown-500">Status</span><br/><b>{booking?.status}</b></p><p><span className="text-brown-500">Paid</span><br/><b>₹{receipt.snapshot.amount}</b></p><p><span className="text-brown-500">Issued</span><br/><b>{new Date(receipt.issued_at).toLocaleString()}</b></p></div><div className="mt-5 border-t pt-4">{receipt.snapshot.items?.map(row => <div key={row.code} className="flex justify-between py-2"><span>{row.name} × {row.quantity}</span><b>₹{row.amount}</b></div>)}</div><p className="mt-4 text-xs text-brown-500">Official payment receipt.</p></div>}
+    {receipt && <div className="card mt-6 p-6"><div className="grid gap-3 text-sm sm:grid-cols-2"><p><span className="text-brown-500">Booking</span><br/><b>{receipt.snapshot.booking_code}</b></p><p><span className="text-brown-500">Status</span><br/><b>{booking?.status}</b></p><p><span className="text-brown-500">Paid</span><br/><b>₹{receipt.snapshot.amount}</b></p><p><span className="text-brown-500">Issued</span><br/><b>{new Date(receipt.issued_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</b></p></div><div className="mt-5 border-t pt-4">{receipt.snapshot.items?.map(row => <div key={row.code} className="flex justify-between py-2"><span>{row.name} × {row.quantity}</span><b>₹{row.amount}</b></div>)}</div><p className="mt-4 text-xs text-brown-500">Official payment receipt.</p></div>}
     {receipt && <button className="btn-p mt-5" onClick={downloadPdf}>Download PDF</button>}
     <Link href="/account" className="btn-g mt-5">Back to account</Link>
   </Wrap></PublicShell>

@@ -18,12 +18,13 @@ function mobileIdentifier(countryCode, value) {
   return `+${digits.startsWith(country) && digits.length > 10 ? digits : `${country}${digits}`}`
 }
 
-export default function Phase1Login({ initialMode = 'login' }) {
+// One login for every public user, as in the prototype: mobile OTP or Google. New devotees are created on first
+// verified login and asked for their name once. Staff are sent to the password step by the server.
+export default function Phase1Login() {
   const router = useRouter()
   const params = useSearchParams()
   const googleButton = useRef(null)
   const recaptchaBox = useRef(null)
-  const [mode, setMode] = useState(params.get('auth') === 'register' || initialMode === 'register' ? 'register' : 'login')
   const [step, setStep] = useState('identify')
   const [countryCode, setCountryCode] = useState('+91')
   const [identifier, setIdentifier] = useState('')
@@ -34,8 +35,8 @@ export default function Phase1Login({ initialMode = 'login' }) {
   const [loginChallenge, setLoginChallenge] = useState('')
   const [otpChallenge, setOtpChallenge] = useState(null)
   const [code, setCode] = useState('')
-  const [channel, setChannel] = useState('')
   const [googleSignup, setGoogleSignup] = useState(null)
+  const [pendingSession, setPendingSession] = useState(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
@@ -55,12 +56,13 @@ export default function Phase1Login({ initialMode = 'login' }) {
       setRecaptchaRequired(false); setRecaptchaToken(''); setNotice('')
       return
     }
+    if (!result.user?.name && !result.user?.is_staff) { setPendingSession(result); setEmail(result.user?.email || ''); setStep('profile'); return }
     router.replace(result.user?.is_staff ? '/staff' : destination)
     router.refresh()
   }, [destination, router])
 
-  function reset(nextMode = mode) {
-    setMode(nextMode); setStep('identify'); setError(''); setNotice(''); setPassword('')
+  function reset() {
+    setStep('identify'); setError(''); setNotice(''); setPassword('')
     setLoginChallenge(''); setOtpChallenge(null); setCode(''); setGoogleSignup(null)
     setRecaptchaRequired(false); setRecaptchaToken('')
   }
@@ -80,11 +82,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
     if (!recaptchaRequired || !RECAPTCHA_SITE_KEY || !recaptchaBox.current) return
     const render = () => window.grecaptcha?.ready(() => {
       if (!recaptchaBox.current || recaptchaBox.current.dataset.rendered) return
-      window.grecaptcha.render(recaptchaBox.current, {
-        sitekey: RECAPTCHA_SITE_KEY,
-        callback: token => setRecaptchaToken(token),
-        'expired-callback': () => setRecaptchaToken(''),
-      })
+      window.grecaptcha.render(recaptchaBox.current, { sitekey: RECAPTCHA_SITE_KEY, callback: token => setRecaptchaToken(token), 'expired-callback': () => setRecaptchaToken('') })
       recaptchaBox.current.dataset.rendered = 'true'
     })
     if (window.grecaptcha) render()
@@ -113,7 +111,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
         },
       })
       googleButton.current.replaceChildren()
-      window.google.accounts.id.renderButton(googleButton.current, { theme: 'outline', size: 'large', width: 350, shape: 'pill', text: mode === 'register' ? 'signup_with' : 'signin_with' })
+      window.google.accounts.id.renderButton(googleButton.current, { theme: 'outline', size: 'large', width: 320, shape: 'pill', text: 'continue_with', locale: 'en' })
     }
     if (window.google?.accounts?.id) setup()
     else {
@@ -122,27 +120,22 @@ export default function Phase1Login({ initialMode = 'login' }) {
       document.head.appendChild(script)
       return () => script.remove()
     }
-  }, [finish, mode, step])
+  }, [finish, step])
 
-  async function begin(event, staffPassword = '') {
-    event?.preventDefault(); setBusy(true); setError(''); setNotice('')
+  async function requestOtp({ staffPassword = '', channel = '' } = {}) {
+    setBusy(true); setError(''); setNotice('')
     try {
-      if (mode === 'register' && step === 'identify') {
-        const normalized = mobileIdentifier(countryCode, identifier)
-        const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: normalized, country_code: countryCode, recaptcha_token: recaptchaToken, channel } })
-        if (result.recaptcha_required) { setRecaptchaRequired(true); setNotice('Complete reCAPTCHA, then continue.'); return }
-        if (result.password_required) { setActiveIdentifier(normalized); setLoginChallenge(result.login_challenge_token); setStep('password'); return }
-        setActiveIdentifier(result.identifier || normalized); setOtpChallenge(result); setCode(result.debug_otp || ''); setStep('otp'); setSeconds(30)
-        return
-      }
       const normalized = activeIdentifier || mobileIdentifier(countryCode, identifier)
       const result = await clientApi('auth/otp/request', {
         method: 'POST', auth: false,
-        body: { identifier: normalized, country_code: countryCode, password: staffPassword, login_challenge_token: loginChallenge, recaptcha_token: recaptchaToken, channel },
+        body: { identifier: normalized, country_code: countryCode, password: staffPassword || undefined, login_challenge_token: loginChallenge || undefined, recaptcha_token: recaptchaToken, ...(channel ? { channel } : {}) },
       })
       if (result.recaptcha_required) { setRecaptchaRequired(true); setNotice('Complete reCAPTCHA, then continue.'); return }
       if (result.password_required) { setActiveIdentifier(normalized); setLoginChallenge(result.login_challenge_token); setStep('password'); return }
-      if (result.otp_sent) { setActiveIdentifier(result.identifier || normalized); setOtpChallenge(result); setCode(result.debug_otp || ''); setStep('otp'); setSeconds(30) }
+      if (result.otp_sent) {
+        setActiveIdentifier(result.identifier || normalized); setOtpChallenge(result); setCode(result.debug_otp || ''); setStep('otp'); setSeconds(30)
+        if (channel) setNotice(`OTP sent via ${channel === 'whatsapp' ? 'WhatsApp' : 'SMS'}.`)
+      }
     } catch (err) { setError(err.message) } finally { setBusy(false) }
   }
 
@@ -151,7 +144,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
     try {
       const result = await clientApi(linkingMobile ? 'auth/mobile-link/verify' : 'auth/otp/verify', {
         method: 'POST', auth: linkingMobile,
-        body: { identifier: activeIdentifier, otp: code, challenge_uuid: otpChallenge?.challenge_uuid, country_code: countryCode, ...(mode === 'register' && !linkingMobile ? { profile: { name, email } } : {}) },
+        body: { identifier: activeIdentifier, otp: code, challenge_uuid: otpChallenge?.challenge_uuid, country_code: countryCode },
       })
       if (linkingMobile) {
         const session = readAuth()
@@ -161,12 +154,18 @@ export default function Phase1Login({ initialMode = 'login' }) {
     } catch (err) { setError(err.message) } finally { setBusy(false) }
   }
 
+  async function saveProfile(event) {
+    event.preventDefault(); setBusy(true); setError('')
+    try {
+      const user = await clientApi('me', { method: 'PATCH', body: { name: name.trim(), ...(email ? { email } : {}) } })
+      finish({ ...pendingSession, user: { ...pendingSession.user, ...user } })
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
+
   async function requestMobile(event) {
     event?.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
-      const result = await clientApi('auth/mobile-link/request', {
-        method: 'POST', body: { mobile_number: identifier, country_code: countryCode, channel },
-      })
+      const result = await clientApi('auth/mobile-link/request', { method: 'POST', body: { mobile_number: identifier, country_code: countryCode } })
       setActiveIdentifier(result.identifier); setOtpChallenge(result); setCode(result.debug_otp || '')
       setStep('google_mobile_otp'); setSeconds(30)
     } catch (err) { setError(err.message) } finally { setBusy(false) }
@@ -174,44 +173,41 @@ export default function Phase1Login({ initialMode = 'login' }) {
 
   async function completeGoogle(event) {
     event.preventDefault(); setBusy(true); setError('')
-    try {
-      const result = await clientApi('auth/google', { method: 'POST', auth: false, body: { provider: 'google', signup_token: googleSignup.signup_token, country_code: countryCode, mobile_number: identifier } })
-      finish(result)
-    } catch (err) { setError(err.message) } finally { setBusy(false) }
+    try { finish(await clientApi('auth/google', { method: 'POST', auth: false, body: { provider: 'google', signup_token: googleSignup.signup_token, country_code: countryCode, mobile_number: identifier } })) }
+    catch (err) { setError(err.message) } finally { setBusy(false) }
   }
 
-  async function resend() {
+  function resend(channel = '') {
     if (seconds) return
     if (linkingMobile) return requestMobile()
-    setBusy(true); setError('')
-    try {
-      const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: loginChallenge ? mobileIdentifier(countryCode, identifier) : activeIdentifier, country_code: countryCode, password: loginChallenge ? password : undefined, login_challenge_token: loginChallenge || undefined, recaptcha_token: recaptchaToken, channel } })
-      if (result.recaptcha_required) { setRecaptchaRequired(true); setNotice('Complete reCAPTCHA, then continue.'); return }
-      if (result.password_required) { setLoginChallenge(result.login_challenge_token); setStep('password'); return }
-      setActiveIdentifier(result.identifier || activeIdentifier); setOtpChallenge(result); setCode(result.debug_otp || ''); setSeconds(30)
-    } catch (err) { setError(err.message) } finally { setBusy(false) }
+    return requestOtp({ staffPassword: loginChallenge ? password : '', channel })
   }
 
+  const submit = step === 'profile' ? saveProfile : verifyingOtp ? verify : step === 'google_mobile' ? requestMobile : step === 'google_profile' ? completeGoogle
+    : event => { event.preventDefault(); requestOtp({ staffPassword: step === 'password' ? password : '' }) }
+  const mobileField = <Field label="Mobile number"><div className="flex"><select aria-label="Country code" className="input w-24 shrink-0 rounded-r-none" value={countryCode} onChange={event => setCountryCode(event.target.value)} disabled={verifyingOtp}>{countryOptions.map(value => <option key={value}>{value}</option>)}</select><Input value={verifyingOtp ? identifier || activeIdentifier : identifier} onChange={event => setIdentifier(event.target.value)} inputMode="tel" autoComplete="tel" placeholder="98765 43210" required disabled={verifyingOtp} aria-label="Mobile number"/></div></Field>
+
   return <PublicShell><main className="mx-auto max-w-md px-4 py-12">
-    <div className="text-center"><TempleMark size={46} className="mx-auto"/><h1 className="mt-4 text-3xl font-semibold">{linkingMobile ? 'Verify your mobile' : step === 'google_profile' ? 'Complete Google registration' : mode === 'register' ? 'Create your account' : 'Welcome back'}</h1><p className="mt-2 text-sm text-brown-500">Secure OTP and Google authentication for devotees, listing members and staff.</p></div>
-    {step === 'identify' && <div className="mt-7 grid grid-cols-2 rounded-xl bg-brown-50 p-1"><button type="button" onClick={() => reset('login')} className={`rounded-lg px-3 py-2 text-sm ${mode === 'login' ? 'bg-white font-semibold shadow-sm' : ''}`}>Login</button><button type="button" onClick={() => reset('register')} className={`rounded-lg px-3 py-2 text-sm ${mode === 'register' ? 'bg-white font-semibold shadow-sm' : ''}`}>Register</button></div>}
-    {step === 'identify' && GOOGLE_CLIENT_ID && <><div className="card mt-4 flex justify-center p-5"><div ref={googleButton}/></div><div className="my-4 flex items-center gap-3 text-xs text-brown-400"><span className="h-px flex-1 bg-brown-100"/>or continue with OTP<span className="h-px flex-1 bg-brown-100"/></div></>}
-    <form onSubmit={verifyingOtp ? verify : step === 'google_mobile' ? requestMobile : step === 'google_profile' ? completeGoogle : event => begin(event, step === 'password' ? password : '')} className={`card ${step !== 'identify' || !GOOGLE_CLIENT_ID ? 'mt-7' : ''} space-y-4 p-6`}>
-      {step === 'identify' && mode === 'register' && <><Field label="Full name"><Input value={name} onChange={event => setName(event.target.value)} minLength={2} maxLength={160} required/></Field><Field label="Email" hint="Optional"><Input type="email" value={email} onChange={event => setEmail(event.target.value)}/></Field></>}
-      {(step === 'identify' || step === 'google_profile' || step === 'google_mobile') && <div className="grid grid-cols-[105px_1fr] gap-3"><Field label="Country"><select className="input" value={countryCode} onChange={event => setCountryCode(event.target.value)}>{countryOptions.map(code => <option key={code}>{code}</option>)}</select></Field><Field label={mode === 'login' && step === 'identify' ? 'Email or mobile' : 'Mobile number'}><Input value={identifier} onChange={event => setIdentifier(event.target.value)} inputMode="tel" placeholder={mode === 'login' && step === 'identify' ? '9876543210 or email' : '9876543210'} required/></Field></div>}
-      {(step === 'identify' || step === 'password' || step === 'google_mobile') && <Field label="Receive OTP by"><select className="input" value={channel} onChange={event => setChannel(event.target.value)}><option value="">Automatic (SMS, then WhatsApp)</option><option value="sms">SMS</option><option value="whatsapp">WhatsApp</option></select></Field>}
-      {step === 'google_profile' && <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800"><b>{name}</b><br/>{email}<br/><span className="text-xs">Add a mobile number for bookings and account recovery.</span></div>}
-      {linkingMobile && <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800">Signed in with Google as {email || name}. Verify your mobile to book poojas, donate or register for events.</p>}
-      {step === 'password' && <Field label="Staff password" hint="Privileged accounts require password and OTP"><Input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="current-password" required/></Field>}
-      {verifyingOtp && <Field label="6-digit OTP" hint={otpChallenge?.debug_otp ? `Local test OTP: ${otpChallenge.debug_otp}` : `Sent${otpChallenge?.channel ? ` via ${otpChallenge.channel === 'whatsapp' ? 'WhatsApp' : 'SMS'}` : ''} to ${otpChallenge?.destination || activeIdentifier}`}><Input value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" required autoFocus/></Field>}
+    <div className="text-center"><TempleMark size={46} className="mx-auto"/>
+      <h1 className="mt-4 text-3xl font-semibold">{step === 'profile' ? 'Welcome to TempleAddress' : linkingMobile ? 'Verify your mobile' : step === 'google_profile' ? 'Complete Google sign-in' : 'Login'}</h1>
+      {step === 'identify' && <p className="mt-2 text-sm text-brown-500">Just browsing or submitting a temple&apos;s basic details? You don&apos;t need an account — <Link href="/submit-temple" className="font-semibold text-saffron-700 underline">use the public form</Link>.</p>}
+    </div>
+    <form onSubmit={submit} className="card mt-7 space-y-4 p-6">
+      {step === 'profile' && <><p className="text-sm text-brown-500">Your mobile is verified. Tell us your name once; it is used as the devotee name for your bookings and can be changed later.</p><Field label="Your name"><Input value={name} onChange={event => setName(event.target.value)} minLength={2} maxLength={160} required autoFocus/></Field><Field label="Email" hint="Optional, for receipts"><Input type="email" value={email} onChange={event => setEmail(event.target.value)}/></Field></>}
+      {(step === 'identify' || step === 'otp') && mobileField}
+      {(step === 'google_profile' || step === 'google_mobile' || step === 'google_mobile_otp') && <>{linkingMobile ? <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800">Signed in with Google as {email || name}. Verify your mobile to book poojas, donate or register for events.</p> : <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800"><b>{name}</b><br/>{email}<br/><span className="text-xs">Add a mobile number for bookings and account recovery.</span></div>}{mobileField}</>}
+      {step === 'password' && <><p className="text-sm text-brown-500">{activeIdentifier}</p><Field label="Staff password" hint="Staff accounts need a password and an OTP."><Input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="current-password" required autoFocus/></Field></>}
+      {verifyingOtp && <Field label="Enter the 6-digit code" hint={otpChallenge?.debug_otp ? `Local test OTP: ${otpChallenge.debug_otp}` : `Sent to ${otpChallenge?.destination || activeIdentifier}`}><Input value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" required autoFocus/></Field>}
       {recaptchaRequired && <div><div ref={recaptchaBox}/>{!RECAPTCHA_SITE_KEY && <p className="text-sm text-red-700">reCAPTCHA site key is not configured.</p>}</div>}
       {notice && <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-700">{notice}</p>}
       {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-      <button disabled={busy || (recaptchaRequired && !recaptchaToken) || (verifyingOtp && code.length !== 6)} className="btn-p w-full">{busy ? 'Please wait…' : verifyingOtp ? 'Verify and continue' : step === 'google_mobile' ? 'Send verification OTP' : step === 'password' ? 'Continue to OTP' : step === 'google_profile' ? 'Complete registration' : mode === 'register' ? 'Register and send OTP' : 'Send login OTP'}</button>
-      {verifyingOtp && <div className="flex gap-2"><button type="button" disabled={busy} onClick={() => { if (linkingMobile) { setStep('google_mobile'); setCode(''); setError('') } else reset(mode) }} className="btn-g flex-1">{linkingMobile ? 'Change number' : 'Start again'}</button><button type="button" disabled={busy || seconds > 0} onClick={resend} className="btn-g flex-1">{seconds ? `Resend in ${seconds}s` : 'Resend OTP'}</button></div>}
-      {(step === 'password' || step === 'google_profile') && <button type="button" onClick={() => reset(mode)} className="btn-g w-full">Back</button>}
+      <button disabled={busy || (recaptchaRequired && !recaptchaToken) || (verifyingOtp && code.length !== 6)} className="btn-p w-full">{busy ? 'Please wait…' : step === 'profile' ? 'Save and continue' : verifyingOtp ? 'Verify & continue' : step === 'google_mobile' ? 'Send OTP' : step === 'password' ? 'Continue to OTP' : step === 'google_profile' ? 'Complete sign-in' : 'Send OTP'}</button>
+      {verifyingOtp && <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><button type="button" disabled={busy} onClick={() => { if (linkingMobile) { setStep('google_mobile'); setCode(''); setError('') } else reset() }} className="text-saffron-700 underline">Change number</button>
+        {seconds ? <span className="text-brown-500">Resend in {seconds}s</span> : <span className="flex gap-3"><button type="button" disabled={busy} onClick={() => resend()} className="text-saffron-700 underline">Resend</button>{!linkingMobile && <button type="button" disabled={busy} onClick={() => resend('whatsapp')} className="text-saffron-700 underline">Send via WhatsApp</button>}</span>}</div>}
+      {(step === 'password' || step === 'google_profile') && <button type="button" onClick={reset} className="btn-g w-full">Back</button>}
+      {step === 'identify' && GOOGLE_CLIENT_ID && <><div className="flex items-center gap-3 text-xs text-brown-400"><span className="h-px flex-1 bg-brown-100"/>or<span className="h-px flex-1 bg-brown-100"/></div><div className="flex justify-center" ref={googleButton}/></>}
+      {step === 'identify' && <p className="text-center text-xs text-brown-500">New devotees are created automatically on first login.</p>}
     </form>
-    <p className="mt-4 text-center text-xs text-brown-500">OTP expires in 5 minutes. Staff accounts require password plus OTP; public users cannot select privileged roles.</p>
-    <p className="mt-3 text-center text-sm"><Link href="/temples" className="text-saffron-600">Continue browsing without login</Link></p>
+    <p className="mt-4 text-center text-sm"><Link href="/temples" className="text-saffron-600">Continue browsing without login</Link></p>
   </main></PublicShell>
 }
