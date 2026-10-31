@@ -6,7 +6,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Field, Input, PublicShell, Logo } from '@/components/ui'
 import { CreditCard, Phone, Download, Printer, Share2 } from 'lucide-react'
 import { API_ORIGIN } from '@/lib/api'
-import { clientApi, readAuth, requireAuth, saveAuth } from '@/lib/client-api'
+import { clientApi, isVerifiedUser, readAuth, requireAuth, saveAuth } from '@/lib/client-api'
 import StarSelect from './StarSelect'
 import { earliestDate, indiaDate } from '@/lib/booking-dates'
 import OtpInput from './OtpInput'
@@ -138,7 +138,8 @@ export function Phase1Checkout({ mode = 'booking' }) {
   }, [listing, mode])
   const visible = options.filter(row => !query || `${row.name_en} ${row.name_ml || ''}`.toLowerCase().includes(query.toLowerCase()))
   const total = cart.reduce((sum, row) => sum + row.amount, 0)
-  const verified = Boolean(me?.mobile_verified_at)
+  const verified = isVerifiedUser(me)
+  const mobileOptional = verified && !me?.mobile_verified_at
   const labels = mode === 'booking' ? ['Pooja Details', 'Devotee Information', 'Verify Mobile', 'Payment'] : STEPS[mode]
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }) }, [step])
   useEffect(() => {
@@ -207,7 +208,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
   async function continueFromContact(event) {
     event.preventDefault(); setError('')
     if (busy) return
-    if (localMobile(contact.mobile).length !== 10) return setError('Enter a 10-digit mobile number.')
+    if (localMobile(contact.mobile).length !== 10 && !(mobileOptional && !contact.mobile)) return setError('Enter a 10-digit mobile number.')
     if (verified) return setStep(4)
     if (mode === 'booking' && !await sendOtp()) return
     setStep(3)
@@ -250,7 +251,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
       idempotency.current ||= crypto.randomUUID()
       const booking = await clientApi('bookings', {
         method: 'POST', headers: { 'Idempotency-Key': idempotency.current, 'X-Client': 'web' },
-        body: { listing_uuid: listing.uuid, contact_name: contact.name, contact_email: contact.email, items: cart.map(row => row.item) },
+        body: { listing_uuid: listing.uuid, contact_name: contact.name, contact_email: contact.email, ...(mobileOptional && contact.mobile ? { contact_mobile: `+91${localMobile(contact.mobile)}` } : {}), items: cart.map(row => row.item) },
       })
       setPending(booking)
       await pay(booking)
@@ -309,7 +310,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
       <h2 className="text-xl font-semibold">{mode === 'booking' ? 'Devotee Information' : 'Contact details'}</h2>
       <p className="text-sm text-brown-500">Your receipt and booking updates go to this contact.</p>
       <Field label="Your name"><Input value={contact.name} onChange={event => setContact(value => ({ ...value, name: event.target.value }))} maxLength={160} disabled={busy} required/></Field>
-      <Field label="Mobile number" hint={verified ? 'Verified with OTP' : 'We will send an OTP to verify this number.'}><div className="flex"><span className="input w-16 shrink-0 rounded-r-none bg-brown-50 text-center">+91</span><Input value={contact.mobile} onChange={event => setContact(value => ({ ...value, mobile: event.target.value.replace(/\D/g, '').slice(0, 10) }))} inputMode="tel" disabled={verified || busy} required placeholder="98765 43210"/></div></Field>
+      <Field label={mobileOptional ? 'Mobile number (optional)' : 'Mobile number'} hint={me?.mobile_verified_at ? 'Verified with OTP' : mobileOptional ? 'Signed in with Google. Add a number for WhatsApp/SMS booking updates.' : 'We will send an OTP to verify this number.'}><div className="flex"><span className="input w-16 shrink-0 rounded-r-none bg-brown-50 text-center">+91</span><Input value={contact.mobile} onChange={event => setContact(value => ({ ...value, mobile: event.target.value.replace(/\D/g, '').slice(0, 10) }))} inputMode="tel" disabled={Boolean(me?.mobile_verified_at) || busy} required={!mobileOptional} placeholder="98765 43210"/></div></Field>
       {(mode !== 'booking' || !me) && <Field label="Email" hint="Optional, for the receipt"><Input type="email" value={contact.email} onChange={event => setContact(value => ({ ...value, email: event.target.value }))} disabled={busy}/></Field>}
       {mode === 'booking' && <div><h2>Order Summary</h2><div className="flex justify-between text-sm"><span>Poojas ({cart.length})</span><span>{money(total)}</span></div><div className={styles.total}><span>Total</span><span>{money(total)}</span></div></div>}
       {alert}<div className="flex gap-2"><button type="button" disabled={busy} className="btn-g flex-1" onClick={() => setStep(1)}>Back</button><button disabled={busy} className="btn-p flex-1">{mode === 'booking' && !verified ? (busy ? 'Sending OTP…' : 'Send OTP & continue') : 'Continue'}</button></div>
@@ -332,7 +333,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
       <ul className="divide-y">{cart.map(row => <li key={row.key} className="flex justify-between gap-3 py-3 text-sm"><span><b>{row.name}</b>{mode === 'booking' && <span className="block text-brown-500">{row.date} · {row.devotee}{row.star ? ` · ${row.star}` : ''} · × {row.quantity}</span>}</span><b>{money(row.amount)}</b></li>)}</ul>
       <div className="flex justify-between border-t pt-3 text-lg font-semibold"><span>Total</span><span>{money(total)}</span></div>
       <p className="text-xs text-brown-500">TempleAddress convenience fee ₹0. Razorpay may add a payment-method charge, shown in its secure window before you pay.</p>
-      <p className="text-sm">{contact.name} · +91 {contact.mobile}{contact.email ? ` · ${contact.email}` : ''}</p>
+      <p className="text-sm">{[contact.name, contact.mobile && `+91 ${contact.mobile}`, contact.email].filter(Boolean).join(' · ')}</p>
       {alert}
       <div className="flex gap-2"><button type="button" className="btn-g flex-1" onClick={() => setStep(2)}>Back</button><button onClick={confirmAndPay} disabled={busy} className="btn-p flex-1">{busy ? 'Opening Razorpay…' : `Pay ${money(total)}`}</button></div>
     </section>}
