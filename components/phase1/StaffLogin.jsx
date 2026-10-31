@@ -14,6 +14,7 @@ const countryOptions = ['+91', '+971', '+968', '+1', '+44']
 export default function StaffLogin() {
   const router = useRouter(), params = useSearchParams(), captchaBox = useRef(null)
   const captchaWidget = useRef(null), passwordChallenge = useRef(''), captchaPolicy = useRef(null)
+  const verificationPending = useRef(false)
   const [countryCode, setCountryCode] = useState('+91')
   const [role, setRole] = useState('moderator'), [identifier, setIdentifier] = useState(''), [password, setPassword] = useState('')
   const [method, setMethod] = useState('otp'), [challenge, setChallenge] = useState(null), [code, setCode] = useState('')
@@ -68,7 +69,7 @@ export default function StaffLogin() {
       if (!result.otp_sent && !result.mfa_required) throw new Error('Could not start verification. Please try again.')
       setCaptchaRequired(false); setCaptchaToken('')
       setChallenge(result); setCode(''); setSeconds(60)
-      setNotice(method === 'totp' ? 'Enter the code from your enrolled authenticator.' : 'Enter the code sent to your registered mobile.')
+      setNotice(method === 'totp' ? 'Enter the code from your enrolled authenticator.' : result.debug_otp ? 'Development mode: no SMS or WhatsApp was sent.' : 'Enter the code sent to your registered mobile.')
     } catch (err) {
       setError(err.message); setCaptchaToken('')
       if (captchaWidget.current !== null) window.grecaptcha?.reset(captchaWidget.current)
@@ -76,25 +77,27 @@ export default function StaffLogin() {
   }
   async function verify(event) {
     event.preventDefault()
-    if (busy) return
+    if (busy || verificationPending.current) return
+    // Keep the one-time challenge locked until navigation unmounts this form.
+    verificationPending.current = true
     setBusy(true); setError('')
     try {
       const result = await clientApi('auth/staff/mfa', { method: 'POST', auth: false, body: { identifier: challenge.identifier || identifier.trim(), otp: code, challenge_uuid: challenge.challenge_uuid, mfa_method: method, login_challenge_token: challenge.login_challenge_token } })
       if (!canUseStaff(result.user, role)) throw new Error('This account is not assigned the selected staff role.')
       saveAuth(result); setPassword('')
       router.replace(staffNext(result.user, params.get('next') || (role === 'accountant' ? '/staff/payouts' : '/staff'))); router.refresh()
-    } catch (err) { setError(err.message) } finally { setBusy(false) }
+    } catch (err) { verificationPending.current = false; setBusy(false); setError(err.message) }
   }
   return <PublicShell><main className={styles.authPage}><div className={styles.authPanel}>
     <header className={styles.authHeader}><h1>{challenge ? 'Verify your identity' : 'Staff sign in'}</h1><TempleMark size={32}/></header>
     <div className={`${styles.authBody} space-y-4`}>
-    <p className={styles.hint}>{challenge ? method === 'totp' ? 'Use the code from your enrolled authenticator app.' : 'Enter the 6-digit code sent to your registered mobile.' : 'Use your mobile number or email and password to continue.'}</p>
+    <p className={styles.hint}>{challenge ? method === 'totp' ? 'Use the code from your enrolled authenticator app.' : challenge.debug_otp ? 'Enter the development test code shown below.' : 'Enter the 6-digit code sent to your registered mobile.' : 'Use your mobile number or email and password to continue.'}</p>
     <form onSubmit={challenge ? verify : start} className="space-y-4">
     {!challenge ? <>
       <div className="flex items-end gap-2"><Field label="Country code" className="w-24 shrink-0"><select aria-label="Country code" className="input" disabled={busy} value={countryCode} onChange={event => { setCountryCode(event.target.value); resetProof() }}>{countryOptions.map(value => <option key={value}>{value}</option>)}</select></Field><Field label="Mobile number or email" className="min-w-0 flex-1"><Input autoComplete="username" required disabled={busy} value={identifier} onChange={event => { setIdentifier(event.target.value); resetProof() }} placeholder="Registered mobile number or email"/></Field></div>
       <Field label="Password"><Input type="password" autoComplete="current-password" required disabled={busy} value={password} onChange={event => setPassword(event.target.value)}/></Field>
       <div className="grid gap-3 sm:grid-cols-2"><Field label="Role"><select className="input capitalize" disabled={busy} value={role} onChange={event => { setRole(event.target.value); resetProof() }}>{staffRoles.map(value => <option key={value} value={value}>{value}</option>)}</select></Field><Field label="Verification method"><select className="input" disabled={busy} value={method} onChange={event => { setMethod(event.target.value); resetProof() }}><option value="otp">Mobile OTP</option><option value="totp">Authenticator app</option></select></Field></div>
-    </> : <OtpInput value={code} onChange={setCode} disabled={busy} label={method === 'totp' ? 'Authenticator code' : 'Enter the 6-digit code'}/>}
+    </> : <OtpInput value={code} onChange={setCode} disabled={busy} label={method === 'totp' ? 'Authenticator code' : 'Enter the 6-digit code'} hint={method === 'otp' && challenge.debug_otp ? `Development test code: ${challenge.debug_otp}` : undefined}/>}
     {captchaRequired === null && !challenge && <p role="status" className={styles.hint}>Loading verification…</p>}
     {captchaRequired === true && !challenge && <div><div ref={captchaBox}/>{!siteKey && <p role="alert" className="text-sm text-red-700">reCAPTCHA site key is not configured.</p>}</div>}
     {notice && <p role="status" className="rounded-xl bg-blue-50 p-3 text-sm text-blue-700">{notice}</p>}
