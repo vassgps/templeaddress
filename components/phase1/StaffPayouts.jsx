@@ -10,7 +10,7 @@ import { staffDownload, useStaffQuery } from './StaffData'
 import { StaffDetails, StaffEmpty, StaffModal, StaffNotice, StaffPageHeading, StaffPager, StaffSearch, StaffStatus, money, staffDate, titleCase } from './StaffUI'
 
 export default function StaffPayouts() {
-  const me = useStaffUser(), readId = useRef(0)
+  const me = useStaffUser(), readId = useRef(0), exportPending = useRef(false)
   const [tab, setTab] = useState('current'), [query, setQuery] = useState({ status: 'pending', search: '', ordering: 'created_at', page: '1' }), [search, setSearch] = useState(''), [history, setHistory] = useState({ search: '', page: '1' }), [historySearch, setHistorySearch] = useState('')
   const payouts = useStaffQuery(`finance/payouts?${new URLSearchParams(query)}`), batches = useStaffQuery(`finance/payout-exports?${new URLSearchParams(history)}`), overview = useStaffQuery('finance/overview')
   const [chosen, setChosen] = useState(new Map()), [confirm, setConfirm] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState(''), [selected, setSelected] = useState(null), [batch, setBatch] = useState(null), [importCode, setImportCode] = useState(''), [bankResult, setBankResult] = useState(null)
@@ -20,9 +20,9 @@ export default function StaffPayouts() {
   function filter(key, value) { setQuery(q => ({ ...q, [key]: value, page: '1' })); setChosen(new Map()) }
   function toggle(row) { setChosen(values => { const updated = new Map(values); if (updated.has(row.uuid)) updated.delete(row.uuid); else updated.set(row.uuid, row); return updated }) }
   async function exportBatch() {
-    if (busy) return
-    setBusy(true); setError('')
-    try { const result = await clientApi('finance/payout-exports', { method: 'POST', headers: { 'Idempotency-Key': crypto.randomUUID() }, body: chosen.size ? { payout_uuids: [...chosen.keys()] } : {} }); setConfirm(false); setChosen(new Map()); setNotice(`${result.code} generated with ${result.row_count} payout(s). Exported payouts are awaiting bank results.`); setTab('history'); setHistory({ search: '', page: '1' }); setHistorySearch(''); refresh(); await staffDownload(`finance/payout-exports/${result.code}/file`, `${result.code}.xlsx`) } catch (err) { setError(err.message) } finally { setBusy(false) }
+    if (exportPending.current) return
+    exportPending.current = true; setBusy(true); setError('')
+    try { const result = await clientApi('finance/payout-exports', { method: 'POST', headers: { 'Idempotency-Key': crypto.randomUUID() }, body: chosen.size ? { payout_uuids: [...chosen.keys()] } : {} }); setConfirm(false); setChosen(new Map()); setNotice(`${result.code} generated with ${result.row_count} payout(s). Exported payouts are awaiting bank results.`); setTab('history'); setHistory({ search: '', page: '1' }); setHistorySearch(''); refresh(); await staffDownload(`finance/payout-exports/${result.code}/file`, `${result.code}.xlsx`) } catch (err) { setError(err.message) } finally { exportPending.current = false; setBusy(false) }
   }
   async function inspect(row) { const id = ++readId.current; try { const value = await clientApi(`finance/payouts/${row.uuid}`); if (id === readId.current) { setSelected(value); setError('') } } catch (err) { if (id === readId.current) setError(err.message) } }
   async function inspectBatch(row) { const id = ++readId.current; try { const value = await clientApi(`finance/payout-exports/${row.code}`); if (id === readId.current) { setBatch(value); setError('') } } catch (err) { if (id === readId.current) setError(err.message) } }
