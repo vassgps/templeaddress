@@ -139,7 +139,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
     if (window.google?.accounts?.id) setup()
     else {
       const script = document.createElement('script')
-      script.src = 'https://accounts.google.com/gsi/client'; script.async = true; script.defer = true; script.onload = setup
+      script.src = 'https://accounts.google.com/gsi/client?hl=en'; script.async = true; script.defer = true; script.onload = setup
       document.head.appendChild(script)
       return () => script.remove()
     }
