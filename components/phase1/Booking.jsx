@@ -3,11 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { Field, Input, PublicShell } from '@/components/ui'
+import { Field, Input, PublicShell, Logo } from '@/components/ui'
+import { CreditCard, Phone, Download, Printer, Share2 } from 'lucide-react'
 import { API_ORIGIN } from '@/lib/api'
 import { clientApi, readAuth, requireAuth, saveAuth } from '@/lib/client-api'
 import StarSelect from './StarSelect'
 import { earliestDate, indiaDate } from '@/lib/booking-dates'
+import OtpInput from './OtpInput'
+import styles from './Template.module.css'
 
 const Wrap = ({ children }) => <main className="mx-auto max-w-2xl px-4 py-10">{children}</main>
 
@@ -58,7 +61,11 @@ const PRASADAM = [['collection', 'Collect at temple counter'], ['not_applicable'
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const localMobile = value => String(value || '').replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '')
 
-function Stepper({ labels, step }) {
+function Stepper({ labels, step, original = false }) {
+  if (original) return <ol className={styles.stepper} aria-label="Booking steps">{labels.map((label, index) => <li key={label} className={styles.step} aria-current={index + 1 === step ? 'step' : undefined} aria-label={`${index + 1}. ${label}`}>
+    <span className={`${styles.stepDot} ${index + 1 <= step ? styles.stepActive : ''}`} title={label}>{index + 1}</span>
+    {index < labels.length - 1 && <span className={`${styles.stepLine} ${index + 1 < step ? styles.stepDone : ''}`}/>}
+  </li>)}</ol>
   return <ol className="mt-5 flex items-center gap-2" aria-label="Booking steps">{labels.map((label, index) => <li key={label} className="flex flex-1 items-center gap-2">
     <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${index + 1 <= step ? 'bg-saffron-600 text-white' : 'bg-brown-100 text-brown-500'}`} aria-current={index + 1 === step ? 'step' : undefined}>{index + 1 < step ? '✓' : index + 1}</span>
     <span className={`hidden text-sm sm:inline ${index + 1 === step ? 'font-semibold' : 'text-brown-500'}`}>{label}</span>
@@ -67,7 +74,7 @@ function Stepper({ labels, step }) {
 }
 
 // One devotee line for a pooja or special pooja; prefilled from the signed-in profile or a saved family member.
-function AddForm({ option, me, family, stars, onAdd, onCancel, busy }) {
+function AddForm({ option, me, family, stars, onAdd, onCancel, busy, error }) {
   const self = { name: me?.name || '', star: me?.default_ritual_details?.star_value || '' }
   const [who, setWho] = useState(me ? 'me' : 'other')
   const [devotee, setDevotee] = useState(self.name)
@@ -92,7 +99,8 @@ function AddForm({ option, me, family, stars, onAdd, onCancel, busy }) {
       <Field label="Prasadam"><select className="input" value={prasadam} onChange={event => setPrasadam(event.target.value)}>{PRASADAM.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
       <Field label="Quantity"><Input type="number" min="1" max="20" value={quantity} onChange={event => setQuantity(event.target.value)} required/></Field>
     </div>
-    <div className="flex gap-2"><button disabled={busy} className="btn-p flex-1">{busy ? 'Checking availability…' : `Add to booking · ${money(Number(option.price) * Number(quantity || 0))}`}</button><button type="button" onClick={onCancel} className="btn-g flex-1">Cancel</button></div>
+    {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+    <div className="flex gap-2"><button type="submit" disabled={busy} className="btn-p flex-1">{busy ? 'Checking availability…' : `Add to booking · ${money(Number(option.price) * Number(quantity || 0))}`}</button><button type="button" disabled={busy} onClick={onCancel} className="btn-g flex-1">Cancel</button></div>
   </form>
 }
 
@@ -112,10 +120,13 @@ export function Phase1Checkout({ mode = 'booking' }) {
   const [step, setStep] = useState(1)
   const [cart, setCart] = useState([])
   const [editing, setEditing] = useState(mode === 'booking' ? requested : '')
+  const [showSelection, setShowSelection] = useState(false)
+  const selectionDialog = useRef(null)
   const [query, setQuery] = useState('')
   const [donation, setDonation] = useState({ purpose: requested, amount: '', name: '' })
   const [contact, setContact] = useState({ name: '', mobile: '', email: '' })
   const [otp, setOtp] = useState({ challenge: null, code: '' })
+  const [resendSeconds, setResendSeconds] = useState(0)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -128,8 +139,18 @@ export function Phase1Checkout({ mode = 'booking' }) {
   const visible = options.filter(row => !query || `${row.name_en} ${row.name_ml || ''}`.toLowerCase().includes(query.toLowerCase()))
   const total = cart.reduce((sum, row) => sum + row.amount, 0)
   const verified = Boolean(me?.mobile_verified_at)
-  const labels = STEPS[mode]
+  const labels = mode === 'booking' ? ['Pooja Details', 'Devotee Information', 'Verify Mobile', 'Payment'] : STEPS[mode]
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }) }, [step])
+  useEffect(() => {
+    const dialog = selectionDialog.current
+    if (showSelection && dialog && !dialog.open) dialog.showModal()
+    return () => { if (dialog?.open) dialog.close() }
+  }, [showSelection])
+  useEffect(() => {
+    if (mode !== 'booking' || !resendSeconds) return
+    const timer = window.setInterval(() => setResendSeconds(value => Math.max(0, value - 1)), 1000)
+    return () => window.clearInterval(timer)
+  }, [mode, resendSeconds])
 
   function applyProfile(user) {
     setMe(user)
@@ -179,6 +200,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
       setCart([{ key: purpose.uuid, item: { item_type: 'donation', target_uuid: purpose.uuid, amount: String(donation.amount) }, name: purpose.name_en, devotee: donation.name, quantity: 1, amount: Number(donation.amount) }])
       setContact(value => ({ ...value, name: value.name || donation.name }))
     } else if (!cart.length) return setError('Add at least one pooja to continue.')
+    setShowSelection(false)
     setStep(2)
   }
 
@@ -197,6 +219,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
       const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: `+91${localMobile(contact.mobile)}`, country_code: '+91' } })
       if (result.password_required || result.recaptcha_required) throw new Error('Please sign in from the login page to continue.')
       setOtp({ challenge: result, code: result.debug_otp || '' })
+      if (mode === 'booking') setResendSeconds(30)
       return true
     } catch (err) { setError(err.message) } finally { setBusy(false) }
   }
@@ -243,27 +266,35 @@ export function Phase1Checkout({ mode = 'booking' }) {
   if (!listing) return <PublicShell booking><Wrap><p>{error || 'Loading…'}</p></Wrap></PublicShell>
   if (pending) return <PublicShell booking><Wrap><p className="text-sm font-semibold uppercase tracking-wide text-saffron-600">Payment pending</p><h1 className="mt-2 text-3xl font-semibold">Booking {pending.code}</h1><div className="card mt-6 space-y-3 p-6"><p>{pending.listing.name_en}</p><p className="text-sm text-brown-500">{pending.items.map(row => row.item_name_en).join(', ')} · {money(pending.amount_total)}</p><p className="text-sm text-brown-500">Complete payment before {new Date(pending.payment_deadline_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}.</p>{alert}<button onClick={resumePayment} disabled={busy} className="btn-p w-full">{busy ? 'Opening Razorpay…' : `Continue payment ${money(pending.amount_total)}`}</button><Link href="/account" className="btn-g w-full">Back to account</Link></div></Wrap></PublicShell>
 
-  return <PublicShell booking><main className="mx-auto max-w-3xl px-4 py-8">
-    <h1 className="text-3xl font-semibold">{listing.name_en}</h1>
-    <p className="mt-1 text-sm text-brown-500">{labels[step - 1]} · {listing.code}</p>
-    <Stepper labels={labels} step={step}/>
+  return <PublicShell booking><main className={mode === 'booking' ? styles.bookingPage : 'mx-auto max-w-3xl px-4 py-8'}>
+    <header className={mode === 'booking' ? styles.pageHeader : undefined}><h1 className="text-3xl font-semibold">{listing.name_en}</h1>
+    <p className="mt-1 text-sm text-brown-500">{labels[step - 1]} · {listing.code}</p></header>
+    <Stepper labels={labels} step={step} original={mode === 'booking'}/>
 
-    {step === 1 && mode === 'booking' && <section className="mt-6 space-y-4">
-      <div className="card p-5"><h2 className="text-xl font-semibold">Available poojas</h2><Input className="input mt-3" placeholder="Search pooja name" value={query} onChange={event => setQuery(event.target.value)} aria-label="Search poojas"/>
-        <p className="mt-2 text-xs text-brown-500">Showing {visible.length} of {options.length} poojas · TempleAddress fee ₹0; Razorpay shows any payment-method charge in its window.</p></div>
-      {!options.length && <p className="card p-5 text-sm text-brown-500">Online booking is not available for this listing yet.</p>}
-      {visible.map(option => <article key={option.uuid} className={`card p-5 ${editing === option.uuid ? 'ring-2 ring-saffron-300' : ''}`}>
-        <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="text-lg font-semibold">{option.name_en}</h3>{option.name_ml && <p className="text-sm text-brown-500">{option.name_ml}</p>}
+    {step === 1 && mode === 'booking' && <div className={styles.selectionStage}>
+      <section className={styles.section}><h2>Available Poojas</h2><Input placeholder="Search pooja name" value={query} onChange={event => setQuery(event.target.value)} aria-label="Search poojas"/>
+        <p className={`${styles.hint} mt-3`}>Showing {visible.length} of {options.length} poojas</p>
+      {!options.length && <p className="py-5 text-sm text-brown-500">Online booking is not available for this listing yet.</p>}
+      {visible.map(option => <article key={option.uuid} className={`${styles.poojaCard} ${editing === option.uuid ? 'ring-2 ring-saffron-300' : ''}`}>
+        <div className={styles.poojaHeader}><div><h3>{option.name_en}</h3>{option.name_ml && <p className="text-sm text-brown-500">{option.name_ml}</p>}
           <div className="mt-2 flex flex-wrap gap-2 text-xs">{option.is_live && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">Live today</span>}{option.item_type === 'special_pooja' && <span className="rounded-full bg-blue-100 px-2 py-0.5 text-blue-800">Special pooja</span>}{option.lead_time_hours > 0 && !option.is_live && <span className="rounded-full bg-brown-100 px-2 py-0.5">Book {option.lead_time_hours}h ahead</span>}</div></div>
-          <div className="text-right"><p className="text-xl font-semibold text-saffron-700">{money(option.price)}</p>{editing !== option.uuid && <button type="button" className="btn-g mt-2" onClick={() => { setEditing(option.uuid); setError('') }}>+ Add</button>}</div></div>
-        {editing === option.uuid && <AddForm option={option} me={me} family={family} stars={stars} busy={busy} onAdd={line => addToCart(option, line)} onCancel={() => setEditing('')}/>}
+          <div className="text-right"><p className={styles.price}>{money(option.price)}</p>{editing !== option.uuid && <button type="button" disabled={busy} className="btn-g mt-2" onClick={() => { setEditing(option.uuid); setError('') }}>+ Add</button>}</div></div>
+        {editing === option.uuid && <AddForm option={option} me={me} family={family} stars={stars} busy={busy} error={error} onAdd={line => addToCart(option, line)} onCancel={() => { setEditing(''); setError('') }}/>}
       </article>)}
-      {alert}
-      <form onSubmit={continueFromChoice} className="card sticky bottom-3 flex flex-wrap items-center justify-between gap-3 p-4">
-        <div className="text-sm">{cart.length ? <ul>{cart.map(row => <li key={row.key} className="flex items-center gap-2">{row.name} · {row.date} · {row.devotee} <b>{money(row.amount)}</b><button type="button" className="text-red-700" aria-label={`Remove ${row.name}`} onClick={() => setCart(rows => rows.filter(item => item.key !== row.key))}>✕</button></li>)}</ul> : 'No poojas added yet.'}</div>
-        <button className="btn-p" disabled={!cart.length}>Continue · {money(total)}</button>
-      </form>
-    </section>}
+      {!editing && !showSelection && alert}</section>
+      {cart.length > 0 && <button type="button" className={styles.summaryBar} aria-haspopup="dialog" aria-controls="selected-poojas-dialog" aria-expanded={showSelection} onClick={() => setShowSelection(true)}>
+        <span className={styles.summaryInfo} aria-live="polite"><strong>{cart.length} Pooja{cart.length > 1 ? 's' : ''} added</strong><span>Total {money(total)}</span></span><span className={styles.summaryContinue}>Continue Booking →</span>
+      </button>}
+      {showSelection && <dialog id="selected-poojas-dialog" ref={selectionDialog} className={styles.selectionDialog} aria-labelledby="selected-poojas-title" onCancel={() => setShowSelection(false)} onClick={event => { if (event.target === event.currentTarget) setShowSelection(false) }}>
+      <form onSubmit={continueFromChoice}>
+        <div className={styles.selectionHeader}><h2 id="selected-poojas-title">Selected Poojas</h2><button type="button" className="btn-g" aria-label="Close selected poojas" onClick={() => setShowSelection(false)}>✕</button></div>
+        {cart.length ? <ul>{cart.map(row => <li key={row.key} className={styles.summaryItem}><b>{row.name}</b><p>{row.devotee} · {row.star || 'Star not specified'}</p><p>{row.date} · Qty {row.quantity} · {money(row.amount)}</p><div className={styles.summaryActions}><button type="button" className="text-red-700 underline" aria-label={`Remove ${row.name} for ${row.devotee}`} onClick={() => setCart(rows => rows.filter(item => item.key !== row.key))}>Remove</button></div></li>)}</ul> : <p className={styles.hint}>No poojas added yet.</p>}
+        <div className={styles.total}><span>Total</span><span>{money(total)}</span></div>
+        {alert}<button className="btn-p mt-4 w-full" disabled={!cart.length || busy}>Continue Booking</button>
+        <button type="button" className="btn-g mt-2 w-full" onClick={() => setShowSelection(false)}>Add more poojas</button>
+        <p className={`${styles.hint} mt-3`}>TempleAddress fee ₹0. Razorpay shows any payment-method charge before you pay.</p>
+      </form></dialog>}
+    </div>}
 
     {step === 1 && mode === 'donation' && <form onSubmit={continueFromChoice} className="card mt-6 space-y-4 p-6">
       <Field label="Donation purpose"><select className="input" value={donation.purpose} onChange={event => { const purpose = options.find(row => row.uuid === event.target.value); setDonation(value => ({ ...value, purpose: event.target.value, amount: purpose?.suggested_amount || value.amount })) }} required>{options.map(row => <option key={row.uuid} value={row.uuid}>{row.name_en}</option>)}</select></Field>
@@ -274,26 +305,30 @@ export function Phase1Checkout({ mode = 'booking' }) {
       {alert}<button className="btn-p w-full">Continue · {money(donation.amount)}</button>
     </form>}
 
-    {step === 2 && <form onSubmit={continueFromContact} className="card mt-6 space-y-4 p-6">
-      <h2 className="text-xl font-semibold">Contact details</h2>
+    {step === 2 && <form onSubmit={continueFromContact} className={mode === 'booking' ? `${styles.section} ${styles.formCard} space-y-4` : 'card mt-6 space-y-4 p-6'}>
+      <h2 className="text-xl font-semibold">{mode === 'booking' ? 'Devotee Information' : 'Contact details'}</h2>
       <p className="text-sm text-brown-500">Your receipt and booking updates go to this contact.</p>
       <Field label="Your name"><Input value={contact.name} onChange={event => setContact(value => ({ ...value, name: event.target.value }))} maxLength={160} disabled={busy} required/></Field>
       <Field label="Mobile number" hint={verified ? 'Verified with OTP' : 'We will send an OTP to verify this number.'}><div className="flex"><span className="input w-16 shrink-0 rounded-r-none bg-brown-50 text-center">+91</span><Input value={contact.mobile} onChange={event => setContact(value => ({ ...value, mobile: event.target.value.replace(/\D/g, '').slice(0, 10) }))} inputMode="tel" disabled={verified || busy} required placeholder="98765 43210"/></div></Field>
       {(mode !== 'booking' || !me) && <Field label="Email" hint="Optional, for the receipt"><Input type="email" value={contact.email} onChange={event => setContact(value => ({ ...value, email: event.target.value }))} disabled={busy}/></Field>}
+      {mode === 'booking' && <div><h2>Order Summary</h2><div className="flex justify-between text-sm"><span>Poojas ({cart.length})</span><span>{money(total)}</span></div><div className={styles.total}><span>Total</span><span>{money(total)}</span></div></div>}
       {alert}<div className="flex gap-2"><button type="button" disabled={busy} className="btn-g flex-1" onClick={() => setStep(1)}>Back</button><button disabled={busy} className="btn-p flex-1">{mode === 'booking' && !verified ? (busy ? 'Sending OTP…' : 'Send OTP & continue') : 'Continue'}</button></div>
     </form>}
 
-    {step === 3 && <form onSubmit={verifyOtp} className="card mt-6 space-y-4 p-6">
+    {step === 3 && <form onSubmit={verifyOtp} className={mode === 'booking' ? `${styles.section} ${styles.formCard} ${styles.verify} space-y-4` : 'card mt-6 space-y-4 p-6'}>
+      {mode === 'booking' && <div className={styles.centerIcon}><Phone size={42}/></div>}
       <h2 className="text-xl font-semibold">Verify your mobile</h2>
       <p className="text-sm text-brown-500">+91 {contact.mobile} · New devotee accounts are created automatically.</p>
-      {otp.challenge && <Field label="6-digit OTP" hint={otp.challenge.debug_otp ? `Local test OTP: ${otp.challenge.debug_otp}` : `Sent to ${otp.challenge.destination}`}><Input value={otp.code} onChange={event => setOtp(value => ({ ...value, code: event.target.value.replace(/\D/g, '').slice(0, 6) }))} inputMode="numeric" autoComplete="one-time-code" required autoFocus/></Field>}
+      {otp.challenge && (mode === 'booking' ? <OtpInput value={otp.code} onChange={code => setOtp(value => ({ ...value, code }))} disabled={busy} hint={otp.challenge.debug_otp ? `Local test OTP: ${otp.challenge.debug_otp}` : `Sent to ${otp.challenge.destination}`}/> : <Field label="6-digit OTP" hint={otp.challenge.debug_otp ? `Local test OTP: ${otp.challenge.debug_otp}` : `Sent to ${otp.challenge.destination}`}><Input value={otp.code} onChange={event => setOtp(value => ({ ...value, code: event.target.value.replace(/\D/g, '').slice(0, 6) }))} inputMode="numeric" autoComplete="one-time-code" required autoFocus/></Field>)}
       {alert}
       {otp.challenge ? <button disabled={busy || otp.code.length !== 6} className="btn-p w-full">{busy ? 'Verifying…' : 'Verify & continue'}</button> : <button type="button" onClick={sendOtp} disabled={busy} className="btn-p w-full">{busy ? 'Sending…' : 'Send OTP'}</button>}
+      {mode === 'booking' && otp.challenge && <button type="button" disabled={busy || resendSeconds > 0} onClick={sendOtp} className="text-sm text-saffron-700 underline">{resendSeconds ? `Resend OTP in ${resendSeconds}s` : 'Resend OTP'}</button>}
       <button type="button" className="btn-g w-full" onClick={() => { setStep(2); setOtp({ challenge: null, code: '' }) }}>Back</button>
     </form>}
 
-    {step === 4 && <section className="card mt-6 space-y-4 p-6">
-      <h2 className="text-xl font-semibold">Summary</h2>
+    {step === 4 && <section className={mode === 'booking' ? `${styles.section} ${styles.formCard} space-y-4` : 'card mt-6 space-y-4 p-6'}>
+      {mode === 'booking' && <div className="text-center"><div className={styles.centerIcon}><CreditCard size={42}/></div><h2>Complete Payment</h2><p className={styles.hint}>Secure online payment checkout</p></div>}
+      <h2 className="text-xl font-semibold">{mode === 'booking' ? 'Order Summary' : 'Summary'}</h2>
       <ul className="divide-y">{cart.map(row => <li key={row.key} className="flex justify-between gap-3 py-3 text-sm"><span><b>{row.name}</b>{mode === 'booking' && <span className="block text-brown-500">{row.date} · {row.devotee}{row.star ? ` · ${row.star}` : ''} · × {row.quantity}</span>}</span><b>{money(row.amount)}</b></li>)}</ul>
       <div className="flex justify-between border-t pt-3 text-lg font-semibold"><span>Total</span><span>{money(total)}</span></div>
       <p className="text-xs text-brown-500">TempleAddress convenience fee ₹0. Razorpay may add a payment-method charge, shown in its secure window before you pay.</p>
@@ -310,6 +345,17 @@ export function Phase1Receipt() {
   const [booking, setBooking] = useState(null)
   const [receipt, setReceipt] = useState(null)
   const [error, setError] = useState('')
+  const [sharing, setSharing] = useState(false)
+  async function shareReceipt() {
+    setSharing(true)
+    try {
+      const blob = await clientApi(`me/receipts/${receipt.number}/pdf`, { responseType: 'blob' })
+      const file = new File([blob], `${receipt.number}.pdf`, { type: 'application/pdf' })
+      if (navigator.canShare?.({ files: [file] })) await navigator.share({ title: 'TempleAddress Booking Receipt', files: [file] })
+      else if (navigator.share) await navigator.share({ title: 'TempleAddress Booking Receipt', text: `Receipt ${receipt.number} · Booking ${receipt.snapshot.booking_code} · ${receipt.snapshot.currency} ${receipt.snapshot.amount}` })
+      else await downloadPdf()
+    } catch (err) { if (err.name !== 'AbortError') setError(err.message) } finally { setSharing(false) }
+  }
   async function downloadPdf() {
     try {
       const response = await fetch(`${API_ORIGIN}/me/receipts/${receipt.number}/pdf`, { headers: { Authorization: `Bearer ${readAuth()?.access}` } })
@@ -340,12 +386,18 @@ export function Phase1Receipt() {
     load()
     return () => { cancelled = true; window.clearTimeout(timer) }
   }, [router, bookingCode])
-  return <PublicShell><Wrap>
-    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Payment receipt</p><h1 className="mt-2 text-3xl font-semibold">{receipt?.number || bookingCode}</h1>
-    {error && <p className="mt-4 rounded-xl bg-amber-50 p-3 text-amber-800">{error}</p>}
+  return <PublicShell><main className={styles.receiptPage}>
+    <div className={styles.toolbar}><Link href="/account" className="font-semibold">Back to account</Link>{receipt && <div className="flex flex-wrap gap-2"><button className="btn-g" onClick={downloadPdf}><Download size={16}/>Download PDF</button><button className="btn-g" onClick={() => window.print()}><Printer size={16}/>Print</button><a className="btn-wa" target="_blank" rel="noopener noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`TempleAddress Receipt ${receipt.number}\nBooking: ${receipt.snapshot.booking_code}\nPaid: ${receipt.snapshot.currency} ${receipt.snapshot.amount}`)}`}><Share2 size={16}/>WhatsApp</a><button className="btn-g" disabled={sharing} onClick={shareReceipt}>{sharing ? 'Preparing…' : 'Share'}</button></div>}</div>
+    {error && <p role="alert" className="mb-4 rounded-xl bg-amber-50 p-3 text-amber-800">{error}</p>}
     {!receipt && !error && <p className="mt-5">Waiting for Razorpay confirmation…</p>}
-    {receipt && <div className="card mt-6 p-6"><div className="grid gap-3 text-sm sm:grid-cols-2"><p><span className="text-brown-500">Booking</span><br/><b>{receipt.snapshot.booking_code}</b></p><p><span className="text-brown-500">Status</span><br/><b>{booking?.status}</b></p><p><span className="text-brown-500">Paid</span><br/><b>₹{receipt.snapshot.amount}</b></p><p><span className="text-brown-500">Issued</span><br/><b>{new Date(receipt.issued_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</b></p></div><div className="mt-5 border-t pt-4">{receipt.snapshot.items?.map(row => <div key={row.code} className="flex justify-between py-2"><span>{row.name} × {row.quantity}</span><b>₹{row.amount}</b></div>)}</div><p className="mt-4 text-xs text-brown-500">Official payment receipt.</p></div>}
-    {receipt && <button className="btn-p mt-5" onClick={downloadPdf}>Download PDF</button>}
-    <Link href="/account" className="btn-g mt-5">Back to account</Link>
-  </Wrap></PublicShell>
+    {receipt && <article id="booking-receipt" className={styles.receiptCard}>
+      <header className={styles.receiptBrand}><div><Logo/><h1 className="mt-3">Booking Receipt</h1><p className={styles.hint}>Receipt No: {receipt.number}</p><h2 className={styles.templeTitle}>{booking?.listing.name_en}</h2></div><span className={styles.status}>{booking?.status?.replaceAll('_', ' ')}</span></header>
+      <div className={styles.meta}><p><b>Booking Code:</b> {receipt.snapshot.booking_code}</p><p><b>Issued:</b> {new Date(receipt.issued_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p><p><b>Name:</b> {booking?.contact_name || '—'}</p><p><b>Mobile:</b> {booking?.contact_mobile || '—'}</p></div>
+      <section className={styles.receiptSection}><h2>Temple Receipt</h2><p className={styles.hint}>Booking items and amounts recorded at payment.</p><div className={styles.tableScroll}><table className={styles.itemTable}><thead><tr><th scope="col">Item</th><th scope="col">Code</th><th scope="col">Qty</th><th scope="col">Amount</th></tr></thead><tbody>{receipt.snapshot.items?.map((row, index) => <tr key={`${row.code}:${index}`}><td>{row.name}</td><td>{row.code}</td><td>{row.quantity}</td><td>{receipt.snapshot.currency} {row.amount}</td></tr>)}</tbody></table></div><div className={styles.total}><span>Booking Amount</span><span>{receipt.snapshot.currency} {receipt.snapshot.amount}</span></div></section>
+      {booking?.items?.length > 0 && <section className={styles.receiptSection}><h2>Current Booking Details</h2><p className={styles.hint}>Devotee and ritual details include any saved booking corrections.</p><div className={styles.tableScroll}><table className={styles.itemTable}><thead><tr>{['Item', 'Name', 'Star', 'Booking Date', 'Delivery', 'Qty'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{booking.items.map(item => <tr key={item.uuid}><td>{item.item_name_en}</td><td>{item.devotee_name || '—'}</td><td>{item.star_value || '—'}</td><td>{item.service_date || '—'}{item.service_time ? ` ${item.service_time.slice(0, 5)}` : ''}</td><td>{PRASADAM.find(([value]) => value === item.prasadam_snapshot?.method)?.[1] || item.prasadam_snapshot?.method || '—'}</td><td>{item.quantity}</td></tr>)}</tbody></table></div></section>}
+      <section className={styles.receiptSection}><h2>Payment Details</h2><div className={styles.invoiceRow}><span>Payment ID</span><b>{receipt.snapshot.provider_payment_id || '—'}</b></div><div className={styles.invoiceRow}><span>Paid on</span><span>{receipt.snapshot.paid_at ? new Date(receipt.snapshot.paid_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'}</span></div><div className={styles.total}><span>Paid Amount</span><span>{receipt.snapshot.currency} {receipt.snapshot.amount}</span></div></section>
+      <p className={`${styles.hint} mt-5`}>Official payment receipt issued by TempleAddress.</p>
+    </article>}
+    {receipt && booking?.listing.slug && <div className="mt-5 flex flex-wrap gap-3"><Link href={`/${booking.items.every(item => item.item_type === 'donation') ? 'donate' : 'book'}/${booking.listing.slug}`} className="btn-p">Book again</Link><Link href="/temples" className="btn-g">View temples</Link></div>}
+  </main></PublicShell>
 }
