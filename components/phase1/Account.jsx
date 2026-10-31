@@ -11,22 +11,39 @@ import PoojaCatalogue from './PoojaCatalogue'
 import AccountFeatures from './AccountFeatures'
 import BookingCorrection from './BookingCorrection'
 import { apiCollection } from '@/lib/catalogue'
+import { indiaDate } from '@/lib/booking-dates'
+import styles from './Template.module.css'
 
 const Wrap = ({ children }) => <main className="mx-auto max-w-5xl px-4 py-9">{children}</main>
 const ErrorBox = ({ value }) => value ? <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{value}</p> : null
 
 export function Phase1Account() {
   const router = useRouter(); const [me, setMe] = useState(null); const [bookings, setBookings] = useState([]); const [error, setError] = useState(''); const [loggingOut, setLoggingOut] = useState(false)
+  const [filter, setFilter] = useState('all'), [query, setQuery] = useState(''), [loading, setLoading] = useState(true)
   const reloadBookings = () => apiCollection('me/bookings', clientApi).then(setBookings)
   useEffect(() => {
     if (!requireAuth(router, '/account')) return
-    Promise.all([clientApi('me'), apiCollection('me/bookings', clientApi)]).then(([user, rows]) => { setMe(user); setBookings(rows) }).catch(err => setError(err.message))
+    Promise.all([clientApi('me'), apiCollection('me/bookings', clientApi)]).then(([user, rows]) => { setMe(user); setBookings(rows) }).catch(err => setError(err.message)).finally(() => setLoading(false))
   }, [router])
   async function signOut() { setLoggingOut(true); try { await logout() } finally { router.replace('/login'); router.refresh() } }
-  return <PublicShell><Wrap><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm text-saffron-600">Verified devotee account</p><h1 className="text-3xl font-semibold">{me?.name || 'My account'}</h1><p className="text-sm text-brown-500">{me?.mobile_e164}</p></div><div className="flex gap-2"><Link href="/account/listings" className="btn-g">My listings</Link><button className="btn-g" disabled={loggingOut} onClick={signOut}>{loggingOut ? 'Signing out…' : 'Logout'}</button></div></div><ErrorBox value={error}/>
-    <section className="mt-7"><h2 className="text-2xl font-semibold">Bookings and donations</h2><div className="mt-3 space-y-3">{!bookings.length && <div className="card p-5">No bookings yet. <Link className="text-saffron-600" href="/temples">Browse temples</Link></div>}{bookings.map(row => { const payable = row.status === 'payment_pending' && new Date(row.payment_deadline_at) > new Date(); const donation = row.items.every(item => item.item_type === 'donation'); return <div className="card flex flex-wrap items-center justify-between gap-4 p-4" key={row.uuid}><div><b>{row.code}</b><p className="text-sm text-brown-500">{row.listing.name_en} · {row.items.map(i => i.item_name_en).join(', ')}</p><p className="text-xs text-brown-500">{row.status.replaceAll('_', ' ')} · ₹{row.amount_total}</p></div>{row.receipt_number ? <Link className="btn-p" href={`/receipt/${row.code}`}>Receipt</Link> : payable ? <Link className="btn-p" href={`/${donation ? 'donate' : 'book'}/${row.listing.slug}?resume=${row.code}`}>Continue payment</Link> : <span className="pill bg-stone-100 text-stone-600">No receipt</span>}<BookingCorrection booking={row} onSaved={reloadBookings}/></div> })}</div></section>
+  const upcoming = row => row.items.some(item => item.status === 'confirmed' && item.service_date >= indiaDate())
+  const matches = row => filter === 'all' || (filter === 'upcoming' ? upcoming(row) : filter === 'incomplete' ? row.status === 'payment_pending' : Boolean(row.receipt_number))
+  const visible = bookings.filter(row => matches(row) && `${row.code} ${row.listing.name_en} ${row.items.map(item => `${item.item_name_en} ${item.devotee_name}`).join(' ')}`.toLowerCase().includes(query.toLowerCase()))
+  return <PublicShell><main className={styles.accountPage}>
+    <section className={styles.profileBanner}><div className={styles.profileIdentity}><div className={styles.avatar} aria-hidden="true">{me?.name?.trim().charAt(0).toUpperCase() || 'U'}</div><div><h1>{me?.name || 'My account'}</h1><p className={styles.profileContact}>{me?.mobile_e164}</p>{me?.email && <p className={styles.profileContact}>{me.email}</p>}</div></div><div className="flex flex-wrap gap-2"><Link href="/account/listings" className="btn-g">My listings</Link><button className="btn-g" disabled={loggingOut} onClick={signOut}>{loggingOut ? 'Signing out…' : 'Logout'}</button></div></section><ErrorBox value={error}/>
+    <div className={styles.stats}>{[['all', 'Total bookings', bookings.length], ['upcoming', 'Upcoming', bookings.filter(upcoming).length], ['incomplete', 'Incomplete', bookings.filter(row => row.status === 'payment_pending').length], ['receipts', 'Receipts', bookings.filter(row => row.receipt_number).length]].map(([value, label, count]) => <button key={value} className={styles.stat} aria-label={`Show ${label.toLowerCase()}`} onClick={() => { setFilter(value); document.getElementById('account-bookings')?.scrollIntoView({ behavior: 'smooth' }) }}><span>{label}</span><strong>{loading ? '—' : count}</strong></button>)}</div>
+    <section className={styles.quickActions}><h2>Book Poojas & Services</h2><p className={styles.hint}>Find temples and services for your next booking.</p><div className="mt-3 flex flex-wrap gap-2"><Link href="/temples" className="btn-p">Book a pooja</Link><Link href="/services" className="btn-g">Explore services</Link><Link href="/temples" className="btn-g">Explore temples</Link></div></section>
+    <section id="account-bookings" className="mt-7 scroll-mt-24"><h2 className="text-2xl font-semibold">My Bookings & Donations</h2>
+      <div className={styles.filters}>{[['all', 'All'], ['upcoming', 'Upcoming'], ['incomplete', 'Incomplete'], ['receipts', 'With receipts']].map(([value, label]) => <button key={value} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</div>
+      <Input type="search" aria-label="Search bookings" placeholder="Search booking code, temple, pooja or devotee" value={query} onChange={event => setQuery(event.target.value)}/>
+      <div className="mt-3 space-y-3">{loading ? <p role="status" className="card p-5">Loading bookings…</p> : !visible.length && !error && <div className="card p-5">{bookings.length ? 'No bookings match your search.' : 'No bookings yet.'} <Link className="text-saffron-600" href="/temples">Browse temples</Link></div>}
+      {visible.map(row => { const payable = row.status === 'payment_pending' && new Date(row.payment_deadline_at) > new Date(); const donation = row.items.every(item => item.item_type === 'donation'); return <article className={styles.bookingRecord} key={row.uuid}>
+        <div className={styles.recordTop}><div><b>{row.listing.name_en}</b><p className={styles.hint}>Booking Code: {row.code}</p></div><span className={styles.status}>{row.status.replaceAll('_', ' ')}</span></div>
+        <div className={styles.recordItems}>{row.items.map(item => <div key={item.uuid} className={styles.recordItem}><div><b>{item.item_name_en}</b><p className={styles.hint}>{[item.devotee_name, item.star_value, item.service_date, item.service_time?.slice(0, 5)].filter(Boolean).join(' · ')}</p></div><span>Qty {item.quantity} · ₹{item.amount}</span></div>)}</div>
+        <div className={styles.recordTop}><b>Total: ₹{row.amount_total}</b><div className={styles.recordActions}>{row.receipt_number ? <Link className="btn-p" href={`/receipt/${row.code}`}>View receipt</Link> : payable ? <Link className="btn-p" href={`/${donation ? 'donate' : 'book'}/${row.listing.slug}?resume=${row.code}`}>Continue payment</Link> : <span className="pill bg-stone-100 text-stone-600">No receipt</span>}</div></div><BookingCorrection booking={row} onSaved={reloadBookings}/>
+      </article> })}</div></section>
     {me && <AccountFeatures me={me}/>}
-  </Wrap></PublicShell>
+  </main></PublicShell>
 }
 
 export function MyListings() {
