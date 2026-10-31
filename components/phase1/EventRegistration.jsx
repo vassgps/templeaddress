@@ -15,7 +15,7 @@ export default function EventRegistration({ event }) {
   const upcoming = event.occurrences.filter(row => row.status === 'scheduled')
   async function register(e) {
     e.preventDefault()
-    if (!requireAuth(router, `/events/${event.slug}`, { verifiedMobile: true })) return
+    if (!requireAuth(router, `/events/${event.slug}`, { verified: true })) return
     if (!requestKey.current || requestKey.current.occurrenceId !== occurrenceId) requestKey.current = { occurrenceId, key: crypto.randomUUID() }
     setBusy(true); setError('')
     try { setResult(await clientApi(`events/${event.uuid}/occurrences/${occurrenceId}/registrations`, { method: 'POST', headers: { 'Idempotency-Key': requestKey.current.key }, body: { attendees } })) }

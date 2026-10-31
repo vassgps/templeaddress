@@ -1,10 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { PublicShell, Field, Input } from '@/components/ui'
-import { clientApi, logout, requireAuth } from '@/lib/client-api'
+import { canLinkGoogle, canLinkMobile, clientApi, logout, readAuth, requireAuth, saveAuth } from '@/lib/client-api'
 import ListingRevisionEditor from './ListingRevisionEditor'
 import EventEditor from './EventEditor'
 import PoojaCatalogue from './PoojaCatalogue'
@@ -16,6 +16,39 @@ import styles from './Template.module.css'
 
 const Wrap = ({ children }) => <main className="mx-auto max-w-5xl px-4 py-9">{children}</main>
 const ErrorBox = ({ value }) => value ? <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{value}</p> : null
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
+// Links Google to the signed-in mobile account; the server refuses a Google account already used elsewhere.
+function LinkGoogle({ onLinked }) {
+  const button = useRef(null)
+  const [error, setError] = useState(''), [busy, setBusy] = useState(false)
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return
+    const setup = () => {
+      if (!window.google?.accounts?.id || !button.current) return
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async ({ credential }) => {
+          setBusy(true); setError('')
+          try {
+            const result = await clientApi('auth/google', { method: 'POST', body: { provider: 'google', credential } })
+            if (result.user?.uuid !== readAuth()?.user?.uuid) throw new Error('Your session changed. Please sign in again.')
+            saveAuth(result); onLinked(result.user)
+          } catch (err) { setError(err.message) } finally { setBusy(false) }
+        },
+      })
+      button.current.replaceChildren()
+      window.google.accounts.id.renderButton(button.current, { theme: 'outline', size: 'large', width: 280, shape: 'pill', text: 'continue_with', locale: 'en' })
+    }
+    if (window.google?.accounts?.id) return setup()
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client?hl=en'; script.async = true; script.defer = true; script.onload = setup
+    document.head.appendChild(script)
+    return () => script.remove()
+  }, [onLinked])
+  if (!GOOGLE_CLIENT_ID) return null
+  return <section className="card mt-5 space-y-3 p-5"><h2 className="text-xl font-semibold">Link Google</h2><p className={styles.hint}>Sign in with Google or your mobile OTP to reach this same account.</p><div ref={button} aria-busy={busy}/>{busy && <p role="status" className={styles.hint}>Linking…</p>}<ErrorBox value={error}/></section>
+}
 
 export function Phase1Account() {
   const router = useRouter(); const [me, setMe] = useState(null); const [bookings, setBookings] = useState([]); const [error, setError] = useState(''); const [loggingOut, setLoggingOut] = useState(false)
@@ -30,7 +63,8 @@ export function Phase1Account() {
   const matches = row => filter === 'all' || (filter === 'upcoming' ? upcoming(row) : filter === 'incomplete' ? row.status === 'payment_pending' : Boolean(row.receipt_number))
   const visible = bookings.filter(row => matches(row) && `${row.code} ${row.listing.name_en} ${row.items.map(item => `${item.item_name_en} ${item.devotee_name}`).join(' ')}`.toLowerCase().includes(query.toLowerCase()))
   return <PublicShell><main className={styles.accountPage}>
-    <section className={styles.profileBanner}><div className={styles.profileIdentity}><div className={styles.avatar} aria-hidden="true">{me?.name?.trim().charAt(0).toUpperCase() || 'U'}</div><div><h1>{me?.name || 'My account'}</h1><p className={styles.profileContact}>{me?.mobile_e164}</p>{me?.email && <p className={styles.profileContact}>{me.email}</p>}</div></div><div className="flex flex-wrap gap-2"><Link href="/account/listings" className="btn-g">My listings</Link><button className="btn-g" disabled={loggingOut} onClick={signOut}>{loggingOut ? 'Signing out…' : 'Logout'}</button></div></section><ErrorBox value={error}/>
+    <section className={styles.profileBanner}><div className={styles.profileIdentity}><div className={styles.avatar} aria-hidden="true">{me?.name?.trim().charAt(0).toUpperCase() || 'U'}</div><div><h1>{me?.name || 'My account'}</h1><p className={styles.profileContact}>{me?.mobile_e164 || (canLinkMobile(me) && <Link href="/login?link=mobile&next=/account" className="font-semibold text-white underline">Add mobile number</Link>)}</p>{me?.email && <p className={styles.profileContact}>{me.email}</p>}</div></div><div className="flex flex-wrap gap-2"><Link href="/account/listings" className="btn-g">My listings</Link><button className="btn-g" disabled={loggingOut} onClick={signOut}>{loggingOut ? 'Signing out…' : 'Logout'}</button></div></section><ErrorBox value={error}/>
+    {canLinkGoogle(me) && <LinkGoogle onLinked={setMe}/>}
     <div className={styles.stats}>{[['all', 'Total bookings', bookings.length], ['upcoming', 'Upcoming', bookings.filter(upcoming).length], ['incomplete', 'Incomplete', bookings.filter(row => row.status === 'payment_pending').length], ['receipts', 'Receipts', bookings.filter(row => row.receipt_number).length]].map(([value, label, count]) => <button key={value} className={styles.stat} aria-label={`Show ${label.toLowerCase()}`} onClick={() => { setFilter(value); document.getElementById('account-bookings')?.scrollIntoView({ behavior: 'smooth' }) }}><span>{label}</span><strong>{loading ? '—' : count}</strong></button>)}</div>
     <section className={styles.quickActions}><h2>Book Poojas & Services</h2><p className={styles.hint}>Find temples and services for your next booking.</p><div className="mt-3 flex flex-wrap gap-2"><Link href="/temples" className="btn-p">Book a pooja</Link><Link href="/services" className="btn-g">Explore services</Link><Link href="/temples" className="btn-g">Explore temples</Link></div></section>
     <section id="account-bookings" className="mt-7 scroll-mt-24"><h2 className="text-2xl font-semibold">My Bookings & Donations</h2>

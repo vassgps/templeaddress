@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { PublicShell, Field, Input, TempleMark } from '@/components/ui'
-import { clientApi, needsMobileVerification, readAuth, safeNextPath, saveAuth } from '@/lib/client-api'
+import { canLinkMobile, clientApi, readAuth, safeNextPath, saveAuth } from '@/lib/client-api'
 import OtpInput from './OtpInput'
 import styles from './Template.module.css'
 import { cleanMobile, mobileError, mobileLimits, validMobile } from '@/lib/auth-phone'
@@ -48,15 +48,17 @@ export default function Phase1Login({ initialMode = 'login' }) {
   const [recaptchaRequired, setRecaptchaRequired] = useState(null)
   const [recaptchaToken, setRecaptchaToken] = useState('')
   const destination = safeNextPath(params.get('next') || params.get('redirect'), '/account')
+  const linkRequested = params.get('link') === 'mobile'
   const linkingMobile = step === 'google_mobile' || step === 'google_mobile_otp'
   const verifyingOtp = step === 'otp' || step === 'google_mobile_otp'
   const showCaptcha = step === 'identify' && recaptchaRequired === true
   const phoneValid = validMobile(identifier, countryCode)
   const phoneLimits = mobileLimits(countryCode)
 
-  const finish = useCallback(result => {
+  // Google sign-in completes on its own. The mobile step only runs when a Google devotee asks to add one (/login?link=mobile).
+  const finish = useCallback((result, { linkMobile = false } = {}) => {
     saveAuth(result)
-    if (needsMobileVerification(result.user)) {
+    if (linkMobile && canLinkMobile(result.user)) {
       setName(result.user.name || ''); setEmail(result.user.email || '')
       const mobileCountry = countryOptions.find(code => result.user.mobile_e164?.startsWith(code)) || '+91'
       setCountryCode(mobileCountry); setIdentifier(cleanMobile(result.user.mobile_e164 || '', mobileCountry)); setActiveIdentifier('')
@@ -78,8 +80,8 @@ export default function Phase1Login({ initialMode = 'login' }) {
 
   useEffect(() => {
     const session = readAuth()
-    if (session?.access) finish(session)
-  }, [finish])
+    if (session?.access) finish(session, { linkMobile: linkRequested })
+  }, [finish, linkRequested])
 
   useEffect(() => {
     let active = true
@@ -137,7 +139,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
     if (window.google?.accounts?.id) setup()
     else {
       const script = document.createElement('script')
-      script.src = 'https://accounts.google.com/gsi/client'; script.async = true; script.defer = true; script.onload = setup
+      script.src = 'https://accounts.google.com/gsi/client?hl=en'; script.async = true; script.defer = true; script.onload = setup
       document.head.appendChild(script)
       return () => script.remove()
     }
@@ -225,16 +227,16 @@ export default function Phase1Login({ initialMode = 'login' }) {
 
   return <PublicShell><main className={styles.authPage}>
     <div className={styles.authPanel}>
-    <header className={styles.authHeader}><h1>{step === 'profile' ? 'Welcome to TempleAddress' : linkingMobile ? 'Verify your mobile' : step === 'google_profile' ? 'Complete Google sign-in' : 'Please login to continue'}</h1><TempleMark size={32}/></header>
+    <header className={styles.authHeader}><h1>{step === 'profile' ? 'Welcome to TempleAddress' : linkingMobile ? 'Add your mobile' : step === 'google_profile' ? 'Complete Google sign-in' : 'Please login to continue'}</h1><TempleMark size={32}/></header>
     <div className={styles.authBody}>
     {step === 'identify' && <nav className={styles.authToggle} aria-label="Account access">{['login', 'register'].map(value => <a key={value} href={`/${value}${destination !== '/account' ? `?next=${encodeURIComponent(destination)}` : ''}`} aria-current={mode === value ? 'page' : undefined} className={mode === value ? styles.selected : undefined} onClick={event => { event.preventDefault(); reset(); setMode(value); setName(''); setEmail('') }}>{value === 'login' ? 'Login' : 'Register'}</a>)}</nav>}
     <form onSubmit={submit} className="space-y-4">
       {step === 'identify' && <p className={styles.hint}>{mode === 'register' ? 'Create account and verify with OTP.' : 'Use your mobile number to receive OTP.'}</p>}
       {step === 'identify' && mode === 'register' && <Field label="Full name"><Input value={name} onChange={event => setName(event.target.value)} minLength={2} maxLength={160} autoComplete="name" placeholder="Enter your name" required disabled={busy}/></Field>}
-      {step === 'profile' && <><p className="text-sm text-brown-500">Your mobile is verified. Tell us your name once; it is used as the devotee name for your bookings and can be changed later.</p><Field label="Your name"><Input value={name} onChange={event => setName(event.target.value)} minLength={2} maxLength={160} required autoFocus/></Field><Field label="Email" hint="Optional, for receipts"><Input type="email" value={email} onChange={event => setEmail(event.target.value)}/></Field></>}
+      {step === 'profile' && <><p className="text-sm text-brown-500">{pendingSession?.user?.mobile_verified_at ? 'Your mobile is verified.' : 'You are signed in with Google.'} Tell us your name once; it is used as the devotee name for your bookings and can be changed later.</p><Field label="Your name"><Input value={name} onChange={event => setName(event.target.value)} minLength={2} maxLength={160} required autoFocus/></Field><Field label="Email" hint="Optional, for receipts"><Input type="email" value={email} onChange={event => setEmail(event.target.value)}/></Field></>}
       {(step === 'identify' || step === 'otp') && mobileField}
       {step === 'identify' && mode === 'register' && <Field label="Email (optional)"><Input type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} disabled={busy}/></Field>}
-      {(step === 'google_profile' || step === 'google_mobile' || step === 'google_mobile_otp') && <>{linkingMobile ? <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800">Signed in with Google as {email || name}. Verify your mobile to book poojas, donate or register for events.</p> : <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800"><b>{name}</b><br/>{email}<br/><span className="text-xs">Add a mobile number for bookings and account recovery.</span></div>}{mobileField}</>}
+      {(step === 'google_profile' || step === 'google_mobile' || step === 'google_mobile_otp') && <>{linkingMobile ? <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800">Signed in with Google as {email || name}. Add a mobile number to receive booking updates by WhatsApp and SMS. It is optional.</p> : <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800"><b>{name}</b><br/>{email}<br/><span className="text-xs">Add a mobile number for bookings and account recovery.</span></div>}{mobileField}</>}
       {step === 'password' && <><p className="text-sm text-brown-500">{activeIdentifier}</p><Field label="Staff password" hint="Staff accounts need a password and an OTP."><Input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="current-password" required autoFocus/></Field></>}
       {verifyingOtp && <OtpInput value={code} onChange={setCode} disabled={busy} label="Enter the 6-digit code" hint={otpChallenge?.debug_otp ? `Local test OTP: ${otpChallenge.debug_otp}` : `Sent to ${otpChallenge?.destination || activeIdentifier}`}/>}
       {step === 'identify' && recaptchaRequired === null && <p role="status" className={styles.hint}>Loading verification…</p>}
@@ -245,6 +247,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
       {verifyingOtp && <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><button type="button" disabled={busy} onClick={() => { if (linkingMobile) { setStep('google_mobile'); setCode(''); setError('') } else reset() }} className="text-saffron-700 underline">Change number</button>
         {seconds ? <span className="text-brown-500">Resend in {seconds}s</span> : <span className="flex gap-3"><button type="button" disabled={busy} onClick={() => resend()} className="text-saffron-700 underline">Resend</button>{!linkingMobile && <button type="button" disabled={busy} onClick={() => resend('whatsapp')} className="text-saffron-700 underline">Send via WhatsApp</button>}</span>}</div>}
       {(step === 'password' || step === 'google_profile') && <button type="button" onClick={reset} className="btn-g w-full">Back</button>}
+      {step === 'google_mobile' && <button type="button" disabled={busy} onClick={() => { router.replace(destination); router.refresh() }} className="btn-g w-full">Skip for now</button>}
       {step === 'identify' && GOOGLE_CLIENT_ID && <><div className="flex items-center gap-3 text-xs text-brown-400"><span className="h-px flex-1 bg-brown-100"/>OR<span className="h-px flex-1 bg-brown-100"/></div><div className={styles.googleCard}><p className={styles.hint}>Use Google as an alternative to phone OTP {mode === 'register' ? 'signup' : 'login'}.</p><div className="flex justify-center" ref={googleButton}/></div></>}
     </form>
     {step === 'identify' && <div className="mt-5 space-y-3 text-center text-sm"><Link href="/staff/login" className="block text-saffron-700 underline">Staff sign in</Link><p className={styles.hint}>Submitting a temple&apos;s basic details? <Link href="/submit-temple" className="text-saffron-700 underline">Use the public form</Link>.</p></div>}
